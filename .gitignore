@@ -1,0 +1,62 @@
+# ===============================
+# ASP.NET Core / .NET build fajlovi
+# ===============================
+bin/
+obj/
+out/
+
+# ===============================
+# Visual Studio / IDE fajlovi
+# ===============================
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/
+.idea/
+
+# ===============================
+# NuGet
+# ===============================
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ===============================
+# ASP.NET Core runtime files
+# ===============================
+*.dbmdl
+*.bak
+*.backup
+*.log
+*.ndb
+*.sql
+*.pdb
+*.cache
+
+# ===============================
+# Publish output
+# ===============================
+publish/
+
+# ===============================
+# Entity Framework Migrations (opciono)
+# ===============================
+Migrations/
+
+# ===============================
+# Test results
+# ===============================
+TestResults/
+*.trx
+
+# ===============================
+# OS generisani fajlovi
+# ===============================
+.DS_Store
+Thumbs.db
