@@ -15,9 +15,10 @@ public class Subject
 
     public bool IsDeleted { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+
 
     public virtual ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
 
-    public virtual User Professor { get; set; } 
+    public virtual User Professor { get; set; } //navigation property
 }

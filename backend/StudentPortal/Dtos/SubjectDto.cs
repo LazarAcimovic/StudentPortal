@@ -8,5 +8,7 @@
         public int ProfessorId { get; set; }
         public string ProfessorFirstName { get; set; }
         public string ProfessorLastName { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }
