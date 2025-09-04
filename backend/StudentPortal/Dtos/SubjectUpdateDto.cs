@@ -5,5 +5,7 @@
         public string SubjectName { get; set; }
         public int Etcs { get; set; }
         public int ProfessorId { get; set; }
+
+        public bool isDeleted { get; set; }
     }
 }

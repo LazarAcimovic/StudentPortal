@@ -26,8 +26,8 @@ builder.Services.AddScoped<IGradeRepository, GradeRepository>();
 
 // Registracija servisa za Dependency Injection
 builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<ISubjectService, SubjectService>();
-//builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 //builder.Services.AddScoped<IGradeService, GradeService>();
 
 builder.Services.AddAutoMapper(cfg =>

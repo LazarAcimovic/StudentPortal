@@ -13,9 +13,12 @@ public class SubjectRepository : ISubjectRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Subject>> GetAllSubjectAsync()
+    // Include() se koristi za sve predmete
+    public async Task<IEnumerable<Subject>> GetAllSubjectsAsync()
     {
-        return await _context.Subjects.AsNoTracking().ToListAsync();
+        return await _context.Subjects
+            .Include(s => s.Professor)
+            .ToListAsync();
     }
 
     public async Task<Subject> GetSubjectByIdAsync(int id)
