@@ -39,10 +39,20 @@ public class EnrollmentRepository : IEnrollmentRepository
                              .FirstOrDefaultAsync(e => e.StudentId == studentId && e.SubjectId == subjectId);
     }
 
-    public async Task AddEnrollmentAsync(Enrollment enrollment)
+    public async Task<Enrollment> AddEnrollmentAsync(Enrollment enrollment)
     {
+        _context.Users.Any(x => x.Id == enrollment.StudentId && !x.IsDeleted);
+
         await _context.Enrollments.AddAsync(enrollment);
         await _context.SaveChangesAsync();
+
+        var createdEnrollment = await _context.Enrollments
+             .Include(e => e.Student)
+             .Include(e => e.Subject)
+             .FirstOrDefaultAsync(e => e.SubjectId == enrollment.SubjectId && e.StudentId == enrollment.StudentId);
+
+        return createdEnrollment;
+
     }
 
     public async Task UpdateEnrollmentAsync(Enrollment enrollment)

@@ -22,8 +22,7 @@ public  class User
 
     public RoleEnum UserRole { get; set; }
 
-    public DateTime CreatedAt { get; set; }
-    //Sa IEnumerable replace ICollecti9on
+    public DateTime? CreatedAt { get; set; }
 
     public virtual ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
 

@@ -28,5 +28,15 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StudentLastName, opt => opt.MapFrom(src => src.Student.LastName))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject.SubjectName));
         CreateMap<EnrollmentCreateDto, Enrollment>();
+
+        //mapiranja za grades
+
+        CreateMap<Grade, GradeDto>()
+    .ForMember(dest => dest.StudentFirstName, opt => opt.MapFrom(src => src.Student.FirstName))
+    .ForMember(dest => dest.StudentLastName, opt => opt.MapFrom(src => src.Student.LastName))
+    .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject.SubjectName));
+
+        CreateMap<GradeCreateDto, Grade>();
+        CreateMap<GradeUpdateDto, Grade>();
     }
 }

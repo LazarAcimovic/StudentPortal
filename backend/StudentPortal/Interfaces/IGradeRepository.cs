@@ -4,9 +4,10 @@ namespace StudentPortal.Interfaces;
 
 public interface IGradeRepository
 {
-    Task<IEnumerable<Grade>> GetAllGradeAsync();
+    Task<IEnumerable<Grade>> GetAllGradesAsync();
     Task<Grade> GetGradeByIdAsync(int id);
-    Task AddGradeAsync(Grade grade);
+    Task<Grade> AddGradeAsync(Grade grade);
+    Task<IEnumerable<Grade>> GetGradeByStudentIdAsync(int studentId);
     Task UpdateGradeAsync(Grade grade);
     Task DeleteGradeAsync(int id);
 }

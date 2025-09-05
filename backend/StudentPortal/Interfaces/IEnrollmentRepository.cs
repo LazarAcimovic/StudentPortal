@@ -6,7 +6,7 @@ public interface IEnrollmentRepository
 {
     Task<IEnumerable<Enrollment>> GetAllEnrollmentsAsync();
     Task<Enrollment> GetEnrollmentByIdAsync(int id);
-    Task AddEnrollmentAsync(Enrollment enrollment);
+    Task<Enrollment> AddEnrollmentAsync(Enrollment enrollment);
     Task UpdateEnrollmentAsync(Enrollment enrollment);
     Task DeleteEnrollmentAsync(int id);
 

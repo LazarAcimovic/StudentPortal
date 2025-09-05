@@ -43,8 +43,8 @@ public class SubjectService : ISubjectService
 
         var subject = _mapper.Map<Subject>(subjectDto);
 
-        await _subjectRepository.AddSubjectAsync(subject);
-        return _mapper.Map<SubjectDto>(subject);
+        var createdSubject = await _subjectRepository.AddSubjectAsync(subject);
+        return _mapper.Map<SubjectDto>(createdSubject);
     }
 
     public async Task<bool> UpdateSubjectAsync(int id, SubjectUpdateDto subjectDto)

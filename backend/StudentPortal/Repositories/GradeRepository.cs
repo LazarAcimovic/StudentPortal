@@ -13,7 +13,7 @@ public class GradeRepository : IGradeRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Grade>> GetAllGradeAsync()
+    public async Task<IEnumerable<Grade>> GetAllGradesAsync()
     {
         return await _context.Grades.AsNoTracking().ToListAsync();
     }
@@ -25,10 +25,29 @@ public class GradeRepository : IGradeRepository
                              .FirstOrDefaultAsync(g => g.Id == id);
     }
 
-    public async Task AddGradeAsync(Grade grade)
+    public async Task<IEnumerable<Grade>> GetGradeByStudentIdAsync(int studentId)
+    {
+        return await _context.Grades
+                             .Include(g => g.Enrollment)
+                             .Where(g => g.Enrollment.StudentId == studentId)
+                             .Include(g => g.Student) 
+                             .Include(g => g.Subject) 
+                             .ToListAsync();
+    }
+
+    public async Task<Grade> AddGradeAsync(Grade grade)
     {
         await _context.Grades.AddAsync(grade);
         await _context.SaveChangesAsync();
+
+        var createdGrade = await _context.Grades
+                                         .Include(g => g.Enrollment) 
+                                         .ThenInclude(e => e.Student) 
+                                         .Include(g => g.Enrollment) 
+                                         .ThenInclude(e => e.Subject) 
+                                         .FirstOrDefaultAsync(g => g.Id == grade.Id); 
+
+        return createdGrade;
     }
 
     public async Task UpdateGradeAsync(Grade grade)

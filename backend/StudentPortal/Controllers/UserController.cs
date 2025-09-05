@@ -1,26 +1,113 @@
-using Microsoft.AspNetCore.Mvc;
-using StudentPortal.Models.Entities;
+﻿using Microsoft.AspNetCore.Mvc;
+using StudentPortal.Dtos;
+using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-      
-        [HttpGet]
-        public IEnumerable<User> Get()
+        private readonly IUserService _userService;
+
+        public UserController(IUserService userService)
         {
-            using (var context = new StudentPortalApiContext())
+            _userService = userService;
+        }
+
+        // GET: api/user
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
+        {
+            try
             {
-                //da getujemo sve usere
-                //return context.Users.ToList();
+                var users = await _userService.GetAllUsersAsync();
+                if (users == null || !users.Any())
+                {
+                    return NotFound("No users available.");
+                }
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
-                //addujemo usera u bazu
+        // GET: api/user/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<UserDto>> GetUserById(int id)
+        {
+            try
+            {
+                var user = await _userService.GetUserByIdAsync(id);
+                if (user == null)
+                {
+                    return NotFound($"User with ID {id} not found.");
+                }
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
+        // POST: api/user
+        [HttpPost]
+        public async Task<ActionResult<UserDto>> AddUser([FromBody] UserCreateDto userDto)
+        {
+            try
+            {
+                var newUser = await _userService.AddUserAsync(userDto);
+                if (newUser == null)
+                {
+                    return BadRequest("User could not be created.");
+                }
 
-                //get user by id
-                return context.Users.Where(user => user.Id == 1).ToList();
+                return CreatedAtAction(nameof(GetUserById), new { id = newUser.Id }, newUser);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // PUT: api/user/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDto userDto)
+        {
+            try
+            {
+                var success = await _userService.UpdateUserAsync(id, userDto);
+                if (!success)
+                {
+                    return NotFound($"User with ID {id} not found or update failed.");
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // DELETE: api/user/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            try
+            {
+                var success = await _userService.DeleteUserAsync(id);
+                if (!success)
+                {
+                    return NotFound($"User with ID {id} not found or deletion failed.");
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
     }

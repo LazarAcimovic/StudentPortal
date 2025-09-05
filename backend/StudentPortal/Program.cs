@@ -28,7 +28,7 @@ builder.Services.AddScoped<IGradeRepository, GradeRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
-//builder.Services.AddScoped<IGradeService, GradeService>();
+builder.Services.AddScoped<IGradeService, GradeService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
