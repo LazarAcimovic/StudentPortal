@@ -57,9 +57,7 @@ public class EnrollmentService : IEnrollmentService
 
         var newEnrollment = _mapper.Map<Enrollment>(enrollmentDto);
 
-        await _enrollmentRepository.AddEnrollmentAsync(newEnrollment);
-
-        var createdEnrollment = await _enrollmentRepository.GetEnrollmentByIdAsync(newEnrollment.Id);
+       var createdEnrollment = await _enrollmentRepository.AddEnrollmentAsync(newEnrollment);
 
         return _mapper.Map<EnrollmentDto>(createdEnrollment);
     }

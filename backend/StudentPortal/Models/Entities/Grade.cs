@@ -13,7 +13,10 @@ public  class Grade
 
     public string Comment { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
-    public virtual Enrollment Enrollment { get; set; } 
+    public virtual Enrollment Enrollment { get; set; }
+
+    public virtual User Student { get; set; }
+    public virtual Subject Subject { get; set; }
 }

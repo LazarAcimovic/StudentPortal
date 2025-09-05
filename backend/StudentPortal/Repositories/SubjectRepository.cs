@@ -24,14 +24,19 @@ public class SubjectRepository : ISubjectRepository
     public async Task<Subject> GetSubjectByIdAsync(int id)
     {
         return await _context.Subjects.AsNoTracking()
-                             .Include(s => s.Professor) //to include professor
+                             .Include(s => s.Professor) 
                              .FirstOrDefaultAsync(s => s.Id == id);
     }
 
-    public async Task AddSubjectAsync(Subject subject)
+    public async Task<Subject> AddSubjectAsync(Subject subject)
     {
         await _context.Subjects.AddAsync(subject);
         await _context.SaveChangesAsync();
+
+        var createdSubject = await _context.Subjects
+    .Include(s => s.Professor)
+    .FirstOrDefaultAsync(s => s.Id == subject.Id);
+        return createdSubject;
     }
 
     public async Task UpdateSubjectAsync(Subject subject)

@@ -13,7 +13,7 @@ public class Enrollment
 
     public bool IsDeleted { get; set; }
 
-    public DateTime EnrolledAt { get; set; }
+    public DateTime? EnrolledAt { get; set; }
 
     public virtual ICollection<Grade> Grades { get; set; } = new List<Grade>();
 
