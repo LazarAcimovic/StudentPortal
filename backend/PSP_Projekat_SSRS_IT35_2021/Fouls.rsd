@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SharedDataSet xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/shareddatasetdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <DataSet Name="DataSet1">
+    <Query>
+      <DataSourceReference>Euroleague</DataSourceReference>
+      <CommandText>	select day_name, sum(fouls_committed) as number_of_fouls
+	from Fact_PlayerGame_Stats fps
+	join Dim_Date dd on  fps.date_id = dd.date_key
+	group by day_name</CommandText>
+    </Query>
+    <Fields>
+      <Field Name="day_name">
+        <DataField>day_name</DataField>
+        <rd:TypeName>System.String</rd:TypeName>
+      </Field>
+      <Field Name="number_of_fouls">
+        <DataField>number_of_fouls</DataField>
+        <rd:TypeName>System.Int32</rd:TypeName>
+      </Field>
+    </Fields>
+  </DataSet>
+</SharedDataSet>

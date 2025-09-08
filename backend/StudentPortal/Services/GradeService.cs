@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using StudentPortal.Dtos;
-using StudentPortal.Models.Entities;
 using StudentPortal.Interfaces;
+using StudentPortal.Models.Entities;
+using StudentPortal.Repositories;
 
 namespace StudentPortal.Services;
 
@@ -30,19 +31,31 @@ public class GradeService : IGradeService
         return _mapper.Map<IEnumerable<GradeDto>>(grades);
     }
 
+    public async Task<GradeDto> GetGradeByIdAsync(int id)
+    {
+        var grade = await _gradeRepository.GetGradeByIdAsync(id);
+        if (grade== null) return null;
+
+        return _mapper.Map<GradeDto>(grade);
+    }
+
     public async Task<GradeDto> AddGradeAsync(GradeCreateDto gradeDto)
     {
         // only applied if student is enrolled
         var enrollment = await _enrollmentRepository.GetEnrollmentByStudentAndSubjectIdAsync(gradeDto.StudentId, gradeDto.SubjectId);
-        if (enrollment == null)
+        if (enrollment != null)
+        {
+            var grade = _mapper.Map<Grade>(gradeDto);
+            var createdGrade = await _gradeRepository.AddGradeAsync(grade);
+
+            return _mapper.Map<GradeDto>(createdGrade);
+        }
+        else
         {
             return null;
         }
 
-        var grade = _mapper.Map<Grade>(gradeDto);
-        var createdGrade = await _gradeRepository.AddGradeAsync(grade);
-
-        return _mapper.Map<GradeDto>(createdGrade);
+      
     }
 
     public async Task<GradeDto> UpdateGradeAsync(int id, GradeUpdateDto gradeDto)

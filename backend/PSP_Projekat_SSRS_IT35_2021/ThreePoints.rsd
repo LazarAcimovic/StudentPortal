@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SharedDataSet xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/shareddatasetdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <DataSet Name="DataSet1">
+    <Query>
+      <DataSourceReference>Euroleague</DataSourceReference>
+      <CommandText>
+WITH RankedPlayers AS (
+    SELECT
+        dg.game_name,
+        dr.round AS round_name,
+        dp.player_name_clean AS player_name,
+        fps.three_points_made AS total_threes,
+        RANK() OVER (PARTITION BY dg.game_name, dr.round ORDER BY fps.three_points_made DESC) AS player_rank
+    FROM
+        Fact_PlayerGame_Stats fps
+    JOIN
+        Dim_Player dp ON fps.player_id = dp.player_id
+    JOIN
+        Dim_Game dg ON fps.game_id = dg.game_id
+    JOIN
+        Dim_Round dr ON fps.round_id = dr.round_id
+)
+SELECT
+    game_name,
+    round_name,
+    player_name,
+    total_threes
+FROM
+    RankedPlayers
+WHERE
+    player_rank = 1
+ORDER BY
+    game_name ASC,
+    round_name ASC,
+    total_threes DESC;</CommandText>
+    </Query>
+    <Fields>
+      <Field Name="game_name">
+        <DataField>game_name</DataField>
+        <rd:TypeName>System.String</rd:TypeName>
+      </Field>
+      <Field Name="round_name">
+        <DataField>round_name</DataField>
+        <rd:TypeName>System.String</rd:TypeName>
+      </Field>
+      <Field Name="player_name">
+        <DataField>player_name</DataField>
+        <rd:TypeName>System.String</rd:TypeName>
+      </Field>
+      <Field Name="total_threes">
+        <DataField>total_threes</DataField>
+        <rd:TypeName>System.Int16</rd:TypeName>
+      </Field>
+    </Fields>
+  </DataSet>
+</SharedDataSet>

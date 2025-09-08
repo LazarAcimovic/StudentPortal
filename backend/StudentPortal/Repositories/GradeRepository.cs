@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
+using System.Diagnostics;
 
 namespace StudentPortal.Repositories;
 
@@ -15,13 +16,21 @@ public class GradeRepository : IGradeRepository
 
     public async Task<IEnumerable<Grade>> GetAllGradesAsync()
     {
-        return await _context.Grades.AsNoTracking().ToListAsync();
+        return await _context.Grades
+                               .Include(g => g.Enrollment)
+                               .ThenInclude(e => e.Student)
+                               .Include(g => g.Enrollment)
+                               .ThenInclude(e => e.Subject)
+                               .ToListAsync();
     }
 
     public async Task<Grade> GetGradeByIdAsync(int id)
     {
         return await _context.Grades.AsNoTracking()
                              .Include(g => g.Enrollment)
+                              .ThenInclude(e => e.Student)
+                               .Include(g => g.Enrollment)
+                               .ThenInclude(e => e.Subject)
                              .FirstOrDefaultAsync(g => g.Id == id);
     }
 
@@ -29,9 +38,8 @@ public class GradeRepository : IGradeRepository
     {
         return await _context.Grades
                              .Include(g => g.Enrollment)
+                             .ThenInclude(e => e.Student)
                              .Where(g => g.Enrollment.StudentId == studentId)
-                             .Include(g => g.Student) 
-                             .Include(g => g.Subject) 
                              .ToListAsync();
     }
 

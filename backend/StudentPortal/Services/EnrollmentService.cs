@@ -26,10 +26,10 @@ public class EnrollmentService : IEnrollmentService
         return _mapper.Map<IEnumerable<EnrollmentDto>>(enrollments);
     }
 
-    public async Task<IEnumerable<EnrollmentDto>> GetEnrollmentsByStudentIdAsync(int studentId)
+    public async Task<EnrollmentDto> GetEnrollmentByIdAsync(int studentId)
     {
         var enrollments = await _enrollmentRepository.GetEnrollmentByIdAsync(studentId);
-        return _mapper.Map<IEnumerable<EnrollmentDto>>(enrollments);
+        return _mapper.Map<EnrollmentDto>(enrollments);
     }
 
     public async Task<EnrollmentDto> AddEnrollmentAsync(EnrollmentCreateDto enrollmentDto)

@@ -1,4 +1,4 @@
-﻿/*using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Interfaces;
 
@@ -80,7 +80,7 @@ namespace StudentPortal.Controllers
             try
             {
                 var success = await _gradeService.UpdateGradeAsync(id, gradeDto);
-                if (!success)
+                if (success == null)
                 {
                     return NotFound($"Grade with ID {id} not found or update failed.");
                 }
@@ -111,4 +111,4 @@ namespace StudentPortal.Controllers
             }
         }
     }
-}*/
+}

@@ -2,7 +2,7 @@
 {
     public class GradeUpdateDto
     {
-        public int GradeValue { get; set; }
+        public int StudentGrade { get; set; }
         public string Comment { get; set; }
     }
 }

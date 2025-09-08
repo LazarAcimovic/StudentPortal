@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36221.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F14B399A-7131-4C87-9E4B-1186C45EF12D}") = "PSP_Projekat_SSRS_IT35_2021", "PSP_Projekat_SSRS_IT35_2021.rptproj", "{C0E6672E-AC81-016F-577E-FF61116908A5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Default = Debug|Default
+		DebugLocal|Default = DebugLocal|Default
+		Release|Default = Release|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C0E6672E-AC81-016F-577E-FF61116908A5}.Debug|Default.ActiveCfg = Debug
+		{C0E6672E-AC81-016F-577E-FF61116908A5}.Debug|Default.Build.0 = Debug
+		{C0E6672E-AC81-016F-577E-FF61116908A5}.Debug|Default.Deploy.0 = Debug
+		{C0E6672E-AC81-016F-577E-FF61116908A5}.DebugLocal|Default.ActiveCfg = DebugLocal
+		{C0E6672E-AC81-016F-577E-FF61116908A5}.DebugLocal|Default.Build.0 = DebugLocal
+		{C0E6672E-AC81-016F-577E-FF61116908A5}.Release|Default.ActiveCfg = Release
+		{C0E6672E-AC81-016F-577E-FF61116908A5}.Release|Default.Build.0 = Release
+		{C0E6672E-AC81-016F-577E-FF61116908A5}.Release|Default.Deploy.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F3F04F8E-3FA6-4278-9A96-7E3BECA4D457}
+	EndGlobalSection
+EndGlobal

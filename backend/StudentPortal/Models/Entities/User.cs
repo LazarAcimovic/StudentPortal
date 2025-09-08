@@ -24,7 +24,7 @@ public  class User
 
     public DateTime? CreatedAt { get; set; }
 
-    public virtual ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
+    public virtual IEnumerable<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
 
-    public virtual ICollection<Subject> Subjects { get; set; } = new List<Subject>();
+    public virtual IEnumerable<Subject> Subjects { get; set; } = new List<Subject>();
 }

@@ -3,7 +3,7 @@
     public class GradeCreateDto
     {
         public int EnrollmentId { get; set; }
-        public int GradeValue { get; set; }
+        public int StudentGrade { get; set; }
         public string Comment { get; set; }
 
         public int StudentId { get; set; }
