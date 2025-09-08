@@ -53,9 +53,7 @@ public class UserService : IUserService
         // AutoMapper će automatski ignorisati null polja
         _mapper.Map(userDto, userToUpdate);
 
-        // Validacija
-        // ...
-
+    
         await _userRepository.UpdateUserAsync(userToUpdate);
         return true;
     }

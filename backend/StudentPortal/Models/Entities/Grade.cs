@@ -17,6 +17,5 @@ public  class Grade
 
     public virtual Enrollment Enrollment { get; set; }
 
-    public virtual User Student { get; set; }
-    public virtual Subject Subject { get; set; }
+
 }

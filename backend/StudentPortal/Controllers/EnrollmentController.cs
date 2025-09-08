@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Interfaces;
-/*
+
 namespace StudentPortal.Controllers
 {
     [ApiController]
@@ -72,24 +72,7 @@ namespace StudentPortal.Controllers
             }
         }
 
-        // PUT: api/enrollment/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEnrollment(int id, [FromBody] EnrollmentUpdateDto enrollmentDto)
-        {
-            try
-            {
-                var success = await _enrollmentService.UpdateEnrollmentAsync(id, enrollmentDto);
-                if (!success)
-                {
-                    return NotFound($"Enrollment with ID {id} not found or update failed.");
-                }
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
+  
 
         // DELETE: api/enrollment/{id}
         [HttpDelete("{id}")]
@@ -111,5 +94,3 @@ namespace StudentPortal.Controllers
         }
     }
 }
-
-*/

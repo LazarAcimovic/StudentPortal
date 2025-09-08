@@ -18,7 +18,7 @@ public class Subject
     public DateTime? CreatedAt { get; set; }
 
 
-    public virtual ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
+    public virtual IEnumerable<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
 
     public virtual User Professor { get; set; } //navigation property
 }

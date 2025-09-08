@@ -31,7 +31,7 @@ public class EnrollmentRepository : IEnrollmentRepository
                              .FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    // Dodatna metoda za poslovnu logiku
+    //to check if student is already enrolled
     public async Task<Enrollment> GetEnrollmentByStudentAndSubjectIdAsync(int studentId, int subjectId)
     {
         return await _context.Enrollments
