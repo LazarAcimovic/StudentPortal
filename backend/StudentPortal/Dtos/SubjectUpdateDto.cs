@@ -6,6 +6,6 @@
         public int Etcs { get; set; }
         public int ProfessorId { get; set; }
 
-        public bool isDeleted { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

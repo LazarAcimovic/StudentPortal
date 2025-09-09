@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { RoleEnum } from "../../models/Enums";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -8,7 +9,8 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login); //contains login function
+  //const login = useAuthStore((state) => state.login); //contains login function
+  const { login, user } = useAuthStore();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // console.log(event.target);
@@ -25,8 +27,17 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     const success = await login(email, password);
+
     if (success) {
-      navigate("/dashboard");
+      console.log("Login uspesan, redirekcija...");
+      // Provera uloge i redirekcija na odgovarajući dashboard
+      if (user?.UserRole === RoleEnum.Admin) {
+        navigate("/admin-dashboard");
+      } else if (user?.UserRole === RoleEnum.Professor) {
+        navigate("/professor-dashboard");
+      } else if (user?.UserRole === RoleEnum.Student) {
+        navigate("/student-dashboard");
+      }
     } else {
       setError("Neispravan email ili lozinka");
     }
@@ -54,9 +65,6 @@ const LoginPage: React.FC = () => {
                     value={email} // Povezujemo input sa stanjem
                     onChange={handleInputChange} // Pozivamo hendler na svaku promenu
                   />
-                  <div id="emailHelp" className="form-text">
-                    Vaš email nikad nećemo deliti sa drugima.
-                  </div>
                 </div>
                 <div className="mb-3">
                   <label htmlFor="password" className="form-label">

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { RoleEnum } from "../../models/Enums";
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -9,6 +10,20 @@ const Navbar: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const getDashboardLink = () => {
+    if (!user) return "/";
+    switch (user.UserRole) {
+      case RoleEnum.Admin:
+        return "/admin-dashboard";
+      case RoleEnum.Professor:
+        return "/professor-dashboard";
+      case RoleEnum.Student:
+        return "/student-dashboard";
+      default:
+        return "/";
+    }
   };
 
   return (
@@ -21,12 +36,19 @@ const Navbar: React.FC = () => {
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             {user && (
               <li className="nav-item">
-                <Link className="nav-link" to="/dashboard">
+                <Link className="nav-link" to={getDashboardLink()}>
                   Dashboard
                 </Link>
               </li>
             )}
-            {/* Ovde će ići linkovi za druge stranice */}
+            {(user?.UserRole === RoleEnum.Admin ||
+              user?.UserRole === RoleEnum.Professor) && (
+              <li className="nav-item">
+                <Link className="nav-link" to="/students">
+                  Studenti
+                </Link>
+              </li>
+            )}
           </ul>
           <ul className="navbar-nav">
             {user ? (
