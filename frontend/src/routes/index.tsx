@@ -1,7 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
-import App from "../App"; // Glavna komponenta
+import App from "../App";
 import LoginPage from "../pages/login/LoginPage";
-import DashboardPage from "../pages/dashboard/DashboardPage";
+import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
+import ProfessorDashboardPage from "../pages/dashboard/ProfessorDashboardPage";
+import StudentDashboardPage from "../pages/dashboard/StudentDashboardPage";
 import ProtectedRoute from "../components/common/ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -17,14 +19,22 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           {
-            path: "dashboard",
-            element: <DashboardPage />,
+            path: "admin-dashboard",
+            element: <AdminDashboardPage />,
+          },
+          {
+            path: "professor-dashboard",
+            element: <ProfessorDashboardPage />,
+          },
+          {
+            path: "student-dashboard",
+            element: <StudentDashboardPage />,
           },
         ],
       },
       {
         path: "*",
-        element: <h1>404 - Stranica nije pronađena</h1>,
+        element: <h1>404 - Page not found.</h1>,
       },
     ],
   },

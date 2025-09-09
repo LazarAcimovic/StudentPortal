@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { User } from "../models/Entities";
+import type { User } from "../models/UserModel";
 import { login as authServiceLogin } from "../services/api/authService";
 
 interface AuthState {

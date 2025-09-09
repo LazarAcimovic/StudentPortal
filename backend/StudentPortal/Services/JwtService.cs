@@ -1,33 +1,39 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StudentPortal.Handlers;
+using StudentPortal.Interfaces;
 using StudentPortal.Models.Api;
 using StudentPortal.Models.Entities;
+using StudentPortal.Repositories;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace StudentPortal.Services
 {
     public class JwtService
     {
-        private readonly StudentPortalApiContext _dbContext;
+        private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
 
-        public JwtService(StudentPortalApiContext dbContext, IConfiguration configuration)
+        public JwtService(IUserRepository userRepository, IConfiguration configuration)
         {
-            _dbContext = dbContext;
+            _userRepository = userRepository;
             _configuration = configuration;
         }
 
         public async Task<LoginResponseModel> Authenticate(LoginRequestModel request)
         {
-            if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName) || string.IsNullOrWhiteSpace(request.Password))
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
                 return null;
 
-            var userAccount = await _dbContext.Users.FirstOrDefaultAsync(x => x.FirstName == request.FirstName && x.LastName == request.LastName);
-            if (userAccount is null || !PasswordHashHandler.VerifyPassword(request.Password, userAccount.UserPassword))
+            var userAccount = await _userRepository.FindByEmailAsync(request.Email);
+            if (userAccount is null)
+                return null;
+
+            bool isPasswordValid = PasswordHashHandler.VerifyPassword(request.Password, userAccount.UserPassword);
+            if (!isPasswordValid)
                 return null;
 
             //preparing data for token
@@ -60,8 +66,7 @@ namespace StudentPortal.Services
             return new LoginResponseModel
             {
                 AccessToken = accessToken,
-                UserFirstName = request.FirstName,
-                UserLastName = request.LastName,
+                Email = request.Email,
                 ExpiresIn = (int)tokenExpiryTimeStamp.Subtract(DateTime.UtcNow).TotalSeconds
             };
 
