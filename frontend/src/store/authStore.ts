@@ -5,7 +5,7 @@ import { login as authServiceLogin } from "../services/api/authService";
 interface AuthState {
   user: User | null;
   token: string | null | undefined;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
 }
 
@@ -20,9 +20,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: result.user, token: result.token });
       localStorage.setItem("token", result.token || "");
       localStorage.setItem("user", JSON.stringify(result.user));
-      return true;
+      return result.user!;
     }
-    return false;
+    return result.user ?? null;
   },
 
   logout: () => {

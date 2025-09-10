@@ -1,8 +1,8 @@
-import type { CreateUserDto, User } from "../../models/UserModel";
+import type { CreateUser, User } from "../../models/UserModel";
 import { MOCK_STUDENTS } from "../data/studentMock";
 import { RoleEnum } from "../../models/Enums";
 
-export const createStudent = (newUser: CreateUserDto): User | Error => {
+export const createStudent = (newUser: CreateUser): User | Error => {
   const existingUser = MOCK_STUDENTS.find((u) => u.Email === newUser.Email);
   if (existingUser) {
     return new Error("Korisnik sa tim email-om već postoji.");
@@ -24,6 +24,13 @@ export const createStudent = (newUser: CreateUserDto): User | Error => {
     IsDeleted: false,
     CreatedAt: new Date(),
   };
+
+  // const student1: User ={
+  //   ...newUser,
+  //   Id: newUserId,
+  //   IsDeleted: false,
+  //   CreatedAt: new Date(),
+  // }
 
   MOCK_STUDENTS.push(student); // Dodajemo novog studenta u mock niz
 
