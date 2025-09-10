@@ -10,7 +10,7 @@ const LoginPage: React.FC = () => {
 
   const navigate = useNavigate();
   //const login = useAuthStore((state) => state.login); //contains login function
-  const { login, user } = useAuthStore();
+  const { login } = useAuthStore();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // console.log(event.target);
@@ -25,17 +25,16 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    const userResult = await login(email, password);
 
-    const success = await login(email, password);
-
-    if (success) {
+    if (userResult) {
       console.log("Login uspesan, redirekcija...");
       // Provera uloge i redirekcija na odgovarajući dashboard
-      if (user?.UserRole === RoleEnum.Admin) {
+      if (userResult?.UserRole === RoleEnum.Admin) {
         navigate("/admin-dashboard");
-      } else if (user?.UserRole === RoleEnum.Professor) {
+      } else if (userResult?.UserRole === RoleEnum.Professor) {
         navigate("/professor-dashboard");
-      } else if (user?.UserRole === RoleEnum.Student) {
+      } else if (userResult?.UserRole === RoleEnum.Student) {
         navigate("/student-dashboard");
       }
     } else {

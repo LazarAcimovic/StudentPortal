@@ -1,29 +1,19 @@
 import type { RoleEnum } from "./Enums";
 
+//User = UserDto
 export interface User {
   Id: number;
   FirstName: string;
   LastName: string;
   Email: string;
-  UserPassword: string;
   IndexNumber?: string | null;
+  UserPassword?: string;
   UserRole: RoleEnum;
   IsDeleted: boolean;
   CreatedAt?: Date;
 }
 
-export interface UserDto {
-  Id: number;
-  FirstName: string;
-  LastName: string;
-  Email: string;
-  IndexNumber?: string;
-  UserRole: RoleEnum;
-  IsDeleted: boolean;
-  CreatedAt: Date;
-}
-
-export interface CreateUserDto {
+export interface CreateUser {
   FirstName: string;
   LastName: string;
   Email: string;
@@ -32,7 +22,7 @@ export interface CreateUserDto {
   UserRole: RoleEnum;
 }
 
-export interface UpdateUserDto {
+export interface UpdateUser {
   FirstName: string;
   LastName: string;
   UserRole: RoleEnum;

@@ -3,28 +3,19 @@ export interface Subject {
   SubjectName: string;
   Etcs: number;
   ProfessorId: number;
-  IsDeleted: boolean;
-  CreatedAt?: Date;
-}
-
-export interface SubjectDto {
-  Id: number;
-  SubjectName: string;
-  Etcs: number;
-  ProfessorId: number;
   ProfessorFirstName: string;
   ProfessorLastName: string;
   CreatedAt?: Date;
   IsDeleted?: boolean;
 }
 
-export interface CreateSubjectDto {
+export interface CreateSubject {
   SubjectName: string;
   Etcs: number;
   ProfessorId: number;
 }
 
-export interface UpdateSubjectDto {
+export interface UpdateSubject {
   SubjectName: string;
   Etcs: number;
   ProfessorId: number;
