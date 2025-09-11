@@ -1,4 +1,5 @@
 // Entitetski model
+
 export interface Grade {
   Id: number;
   EnrollmentId: number;
