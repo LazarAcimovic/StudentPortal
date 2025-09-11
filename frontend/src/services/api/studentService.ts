@@ -114,3 +114,33 @@ export const confirmGrade = (gradeId: number): Grade | Error => {
   gradeToConfirm.IsConfirmed = true;
   return gradeToConfirm;
 };
+
+//StudentDashboard functionalities
+
+export const getStudentSubjectsAndGrades = (
+  studentId: number
+): { subject: Subject; grades: Grade[] }[] => {
+  // getting all the students subjects id's
+  const enrollments = MOCK_ENROLLMENTS.filter((e) => e.StudentId === studentId);
+
+  // Za svaki upis, pronađi predmet i ocene
+  const studentData = enrollments.map((enrollment) => {
+    const subject = MOCK_SUBJECTS.find((s) => s.Id === enrollment.SubjectId);
+    if (!subject) return null;
+
+    // Dobij ocene vezane za ovaj upis
+    const grades = MOCK_GRADES.filter(
+      (g) => g.EnrollmentId === enrollment.Id && !g.IsDeleted
+    );
+
+    return {
+      subject: subject,
+      grades: grades,
+    };
+  });
+
+  return studentData.filter((data) => data !== null) as {
+    subject: Subject;
+    grades: Grade[];
+  }[];
+};
