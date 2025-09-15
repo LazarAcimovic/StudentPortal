@@ -8,5 +8,9 @@ namespace StudentPortal.Dtos
         public string AccessToken { get; set; }
         public int ExpiresIn { get; set; }
         public RoleEnum UserRole { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+
+        public bool IsDeleted { get; set; }
     }
 }

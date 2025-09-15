@@ -68,7 +68,10 @@ namespace StudentPortal.Services
                 AccessToken = accessToken,
                 Email = request.Email,
                 UserRole = userAccount.UserRole,
-                ExpiresIn = (int)tokenExpiryTimeStamp.Subtract(DateTime.UtcNow).TotalSeconds
+                ExpiresIn = (int)tokenExpiryTimeStamp.Subtract(DateTime.UtcNow).TotalSeconds,
+                FirstName = userAccount.FirstName,
+                LastName = userAccount.LastName,
+                IsDeleted = userAccount.IsDeleted,
             };
 
         }

@@ -2,7 +2,7 @@ import type { RoleEnum } from "./Enums";
 
 //User = UserDto
 export interface User {
-  Id: number;
+  Id?: number;
   FirstName: string;
   LastName: string;
   Email: string;
