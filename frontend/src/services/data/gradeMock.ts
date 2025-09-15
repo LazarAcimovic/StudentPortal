@@ -7,9 +7,9 @@ export const MOCK_GRADES: Grade[] = [
     StudentGrade: 9,
     StudentFirstName: "Jovan ",
     StudentLastName: "Jovanovic",
-    SubjectName: "Softversko inženjerstvo",
+    SubjectName: "Matematika",
     Comment: "Odličan rad na projektu.",
-    IsConfirmed: true, // Ocena je već potvrđena
+    IsConfirmed: true,
     IsDeleted: false,
   },
   {
@@ -18,9 +18,9 @@ export const MOCK_GRADES: Grade[] = [
     StudentGrade: 10,
     StudentFirstName: "Jovan ",
     StudentLastName: "Jovanovic",
-    SubjectName: "Mata",
+    SubjectName: "Matematika",
     Comment: "Sjajno razumevanje materije.",
-    IsConfirmed: false, // Ova ocena je preliminarna
+    IsConfirmed: false,
     IsDeleted: false,
   },
   {
@@ -30,7 +30,7 @@ export const MOCK_GRADES: Grade[] = [
     StudentFirstName: "Jovan ",
     StudentLastName: "Jovanovic",
     SubjectName: "Baze",
-    Comment: "Potrebno je više vežbe iz softverskih arhitektura.",
+    Comment: "Potrebno je više vežbe iz programiranja.",
     IsConfirmed: false,
     IsDeleted: false,
   },
@@ -38,8 +38,8 @@ export const MOCK_GRADES: Grade[] = [
     Id: 4,
     EnrollmentId: 3,
     StudentGrade: 7,
-    StudentFirstName: "Ivan",
-    StudentLastName: "Ivanović",
+    StudentFirstName: "Jovan",
+    StudentLastName: "Jovanovic",
     SubjectName: "Baze podataka",
     Comment: "Dobra prezentacija, ali sa manjim greškama.",
     IsConfirmed: true,
