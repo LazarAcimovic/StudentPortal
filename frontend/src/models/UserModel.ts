@@ -9,7 +9,7 @@ export interface User {
   IndexNumber?: string | null;
   UserPassword?: string;
   UserRole: RoleEnum;
-  IsDeleted: boolean;
+  IsDeleted: boolean; //izbaciti iz beka
   CreatedAt?: Date;
 }
 
@@ -17,7 +17,7 @@ export interface CreateUser {
   FirstName: string;
   LastName: string;
   Email: string;
-  Password: string;
+  Password: string; //UserPassword na beku
   IndexNumber?: string;
   UserRole: RoleEnum;
 }

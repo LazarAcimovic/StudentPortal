@@ -12,7 +12,9 @@ const LoginPage: React.FC = () => {
   //const login = useAuthStore((state) => state.login); //contains login function
   const { login } = useAuthStore();
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange: React.ChangeEventHandler<HTMLInputElement> = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     // console.log(event.target);
     const { id, value } = event.target;
     if (id === "email") {

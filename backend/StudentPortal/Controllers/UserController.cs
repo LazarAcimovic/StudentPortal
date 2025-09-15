@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Interfaces;
+using StudentPortal.Services;
 
 namespace StudentPortal.Controllers
 {
@@ -11,10 +12,22 @@ namespace StudentPortal.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        
+        private readonly JwtService _jwtService;
+
         public UserController(IUserService userService)
         {
             _userService = userService;
+        }
+
+        [AllowAnonymous]
+        [HttpPost("Login")]
+        public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
+        {
+            var result = await _jwtService.Authenticate(request);
+            if (result is null)
+                return Unauthorized();
+
+            return result;
         }
 
         // GET: api/user

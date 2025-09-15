@@ -1,9 +1,12 @@
-﻿namespace StudentPortal.Models.Api
+﻿using StudentPortal.Models.Enums;
+
+namespace StudentPortal.Dtos
 {
-    public class LoginResponseModel
+    public class LoginResponseDto
     {
         public string Email { get; set; }
         public string AccessToken { get; set; }
         public int ExpiresIn { get; set; }
+        public RoleEnum UserRole { get; set; }
     }
 }

@@ -10,5 +10,7 @@ public interface IEnrollmentRepository
     Task UpdateEnrollmentAsync(Enrollment enrollment);
     Task DeleteEnrollmentAsync(int id);
 
+    Task<Enrollment> GetByIdAsync(int id);
+
     Task<Enrollment> GetEnrollmentByStudentAndSubjectIdAsync(int studentId, int subjectId);
 }

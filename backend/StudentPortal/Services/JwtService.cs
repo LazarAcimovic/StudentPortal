@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using StudentPortal.Dtos;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
-using StudentPortal.Models.Api;
 using StudentPortal.Models.Entities;
 using StudentPortal.Repositories;
 using System;
@@ -23,7 +23,7 @@ namespace StudentPortal.Services
             _configuration = configuration;
         }
 
-        public async Task<LoginResponseModel> Authenticate(LoginRequestModel request)
+        public async Task<LoginResponseDto> Authenticate(LoginRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
                 return null;
@@ -63,10 +63,11 @@ namespace StudentPortal.Services
             var securityToken = tokenHandler.CreateToken(tokenDescriptor);
             var accessToken = tokenHandler.WriteToken(securityToken);
 
-            return new LoginResponseModel
+            return new LoginResponseDto
             {
                 AccessToken = accessToken,
                 Email = request.Email,
+                UserRole = userAccount.UserRole,
                 ExpiresIn = (int)tokenExpiryTimeStamp.Subtract(DateTime.UtcNow).TotalSeconds
             };
 

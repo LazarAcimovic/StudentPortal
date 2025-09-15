@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using StudentPortal.Models.Api;
+using StudentPortal.Dtos;
 using StudentPortal.Services;
 
 
@@ -18,7 +18,7 @@ namespace WebApiDemo.Controllers
 
         [AllowAnonymous]
         [HttpPost("Login")]
-        public async Task<ActionResult<LoginResponseModel>> Login(LoginRequestModel request)
+        public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
         {
             var result = await _jwtService.Authenticate(request);
             if (result is null)

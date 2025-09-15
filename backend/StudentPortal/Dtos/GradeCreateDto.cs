@@ -6,8 +6,8 @@
         public int StudentGrade { get; set; }
         public string Comment { get; set; }
 
-        public int StudentId { get; set; }
+       // public int StudentId { get; set; }
 
-        public int SubjectId { get; set; }
+       // public int SubjectId { get; set; }
     }
 }

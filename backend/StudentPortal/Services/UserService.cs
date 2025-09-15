@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using StudentPortal.Dtos;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 using StudentPortal.Models.Entities;
@@ -42,13 +43,20 @@ public class UserService : IUserService
 
     public async Task<UserDto> AddUserAsync(UserCreateDto userDto)
     {
+
+        var hashedPassword = PasswordHashHandler.HashPassword(userDto.UserPassword);
+        userDto.UserPassword = hashedPassword;
+
+
         var user = _mapper.Map<User>(userDto);
+
 
         await _userRepository.AddUserAsync(user);
 
-        
+
         return _mapper.Map<UserDto>(user);
     }
+
 
     public async Task<bool> UpdateUserAsync(int id, UserUpdateDto userDto)
     {

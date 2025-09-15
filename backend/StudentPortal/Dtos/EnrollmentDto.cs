@@ -9,6 +9,7 @@
         public int SubjectId { get; set; }
         public string SubjectName { get; set; }
 
+        public bool IsDeleted { get; set; }
         public DateTime? EnrolledAt { get; set; }
 
         

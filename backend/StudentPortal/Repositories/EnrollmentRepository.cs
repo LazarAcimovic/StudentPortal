@@ -31,6 +31,13 @@ public class EnrollmentRepository : IEnrollmentRepository
                              .FirstOrDefaultAsync(e => e.Id == id);
     }
 
+    public async Task<Enrollment> GetByIdAsync(int id)
+    {
+        return await _context.Enrollments
+                             .AsNoTracking()
+                             .FirstOrDefaultAsync(e => e.Id == id);
+    }
+
     //to check if student is already enrolled
     public async Task<Enrollment> GetEnrollmentByStudentAndSubjectIdAsync(int studentId, int subjectId)
     {

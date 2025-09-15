@@ -41,8 +41,9 @@ public class GradeService : IGradeService
 
     public async Task<GradeDto> AddGradeAsync(GradeCreateDto gradeDto)
     {
-        // only applied if student is enrolled
-        var enrollment = await _enrollmentRepository.GetEnrollmentByStudentAndSubjectIdAsync(gradeDto.StudentId, gradeDto.SubjectId);
+        // Proverava da li postoji upis na osnovu poslatog EnrollmentId
+        var enrollment = await _enrollmentRepository.GetByIdAsync(gradeDto.EnrollmentId);
+
         if (enrollment != null)
         {
             var grade = _mapper.Map<Grade>(gradeDto);
@@ -54,8 +55,6 @@ public class GradeService : IGradeService
         {
             return null;
         }
-
-      
     }
 
     public async Task<GradeDto> UpdateGradeAsync(int id, GradeUpdateDto gradeDto)

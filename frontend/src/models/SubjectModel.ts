@@ -1,7 +1,7 @@
 export interface Subject {
   Id: number;
   SubjectName: string;
-  Etcs: number;
+  ECTS: number;
   ProfessorId: number;
   ProfessorFirstName: string;
   ProfessorLastName: string;
@@ -11,14 +11,14 @@ export interface Subject {
 
 export interface CreateSubject {
   SubjectName: string;
-  Etcs: number;
+  ECTS: number;
   ProfessorId: number;
 }
 
 export interface UpdateSubject {
   Id: number;
   SubjectName: string;
-  Etcs: number;
+  ECTS: number;
   ProfessorId: number;
   IsDeleted: boolean;
 }

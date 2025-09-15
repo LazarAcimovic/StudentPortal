@@ -12,5 +12,4 @@ export interface Enrollment {
 export interface CreateEnrollment {
   StudentId: number;
   SubjectId: number;
-  IsDeleted: boolean;
 }
