@@ -17,12 +17,13 @@ export interface CreateUser {
   FirstName: string;
   LastName: string;
   Email: string;
-  UserPassword: string;
+  Password: string;
   IndexNumber?: string;
   UserRole: RoleEnum;
 }
 
 export interface UpdateUser {
+  Id: number;
   FirstName: string;
   LastName: string;
   UserRole: RoleEnum;

@@ -6,7 +6,7 @@ export interface Subject {
   ProfessorFirstName: string;
   ProfessorLastName: string;
   CreatedAt?: Date;
-  IsDeleted?: boolean;
+  IsDeleted: boolean;
 }
 
 export interface CreateSubject {
@@ -16,6 +16,7 @@ export interface CreateSubject {
 }
 
 export interface UpdateSubject {
+  Id: number;
   SubjectName: string;
   Etcs: number;
   ProfessorId: number;

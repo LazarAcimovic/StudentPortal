@@ -5,10 +5,12 @@ export interface Enrollment {
   StudentLastName: string;
   SubjectId: number;
   SubjectName: string;
-  EnrolledAt?: Date;
+  EnrolledAt: Date;
+  IsDeleted?: boolean;
 }
 
 export interface CreateEnrollment {
   StudentId: number;
   SubjectId: number;
+  IsDeleted: boolean;
 }

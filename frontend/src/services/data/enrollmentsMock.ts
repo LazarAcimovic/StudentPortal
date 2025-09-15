@@ -16,7 +16,7 @@ export const MOCK_ENROLLMENTS: Enrollment[] = [
     StudentFirstName: "Jovan",
     StudentLastName: "Jovanovic",
     SubjectId: 2,
-    SubjectName: "Web programiranje",
+    SubjectName: "Programiranje 1",
     EnrolledAt: new Date("2025-01-22"),
   },
   {
