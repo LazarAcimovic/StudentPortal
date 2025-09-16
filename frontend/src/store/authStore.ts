@@ -18,7 +18,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     if (result.success) {
       set({ user: result.user, token: result.token });
-      localStorage.setItem("token", result.token || "");
+      localStorage.setItem("accessToken", result.token || "");
       localStorage.setItem("user", JSON.stringify(result.user));
       return result.user!;
     }
@@ -27,14 +27,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     set({ user: null, token: null });
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
   },
 }));
 
 // Funkcija za inicijalizaciju stanja iz localStorage-a
 const initializeAuth = () => {
-  const storedToken = localStorage.getItem("token"); //returns null if not exist
+  const storedToken = localStorage.getItem("accessToken"); //returns null if not exist
   const storedUser = localStorage.getItem("user");
 
   if (storedToken && storedUser) {

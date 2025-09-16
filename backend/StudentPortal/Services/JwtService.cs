@@ -12,7 +12,7 @@ using System.Text;
 
 namespace StudentPortal.Services
 {
-    public class JwtService
+    public class JwtService : IJwtService
     {
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;

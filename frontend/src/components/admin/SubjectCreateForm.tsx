@@ -15,8 +15,8 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
   onCancel,
 }) => {
   const [formData, setFormData] = useState<CreateSubject>({
-    SubjectName: "",
-    Etcs: 0,
+    subjectName: "",
+    ECTS: 0,
     ProfessorId: 0,
   });
 

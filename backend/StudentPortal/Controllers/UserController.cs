@@ -12,11 +12,12 @@ namespace StudentPortal.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly JwtService _jwtService;
+        private readonly IJwtService _jwtService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IJwtService jwtService)
         {
             _userService = userService;
+            _jwtService = jwtService;
         }
 
         [AllowAnonymous]
@@ -74,6 +75,7 @@ namespace StudentPortal.Controllers
         {
             try
             {
+                //var user = userDto;
                 var newUser = await _userService.AddUserAsync(userDto);
                 if (newUser == null)
                 {

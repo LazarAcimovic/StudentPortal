@@ -1,8 +1,8 @@
 export interface LoginResponse {
   accessToken: string;
   email: string;
-  FirstName: string;
-  LastName: string;
+  firstName: string;
+  lastName: string;
   expiresIn: number;
-  UserRole: number;
+  userRole: number;
 }

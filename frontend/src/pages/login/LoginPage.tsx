@@ -31,12 +31,13 @@ const LoginPage: React.FC = () => {
 
     if (userResult) {
       console.log("Login uspesan, redirekcija...");
+      console.log(userResult);
       // Provera uloge i redirekcija na odgovarajući dashboard
-      if (userResult?.UserRole === RoleEnum.Admin) {
+      if (userResult?.userRole === RoleEnum.Admin) {
         navigate("/admin-dashboard");
-      } else if (userResult?.UserRole === RoleEnum.Professor) {
+      } else if (userResult?.userRole === RoleEnum.Professor) {
         navigate("/professor-dashboard");
-      } else if (userResult?.UserRole === RoleEnum.Student) {
+      } else if (userResult?.userRole === RoleEnum.Student) {
         navigate("/student-dashboard");
       }
     } else {

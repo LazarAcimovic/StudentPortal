@@ -1,12 +1,12 @@
 export interface Enrollment {
-  Id: number;
-  StudentId: number;
-  StudentFirstName: string;
-  StudentLastName: string;
-  SubjectId: number;
-  SubjectName: string;
-  EnrolledAt: Date;
-  IsDeleted?: boolean;
+  id: number;
+  studentId: number;
+  studentFirstName: string;
+  studentLastName: string;
+  subjectId: number;
+  subjectName: string;
+  enrolledAt: Date;
+  isDeleted?: boolean;
 }
 
 export interface CreateEnrollment {

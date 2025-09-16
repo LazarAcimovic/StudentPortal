@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
 
   const getDashboardLink = () => {
     if (!user) return "/";
-    switch (user.UserRole) {
+    switch (user.userRole) {
       case RoleEnum.Admin:
         return "/admin-dashboard";
       case RoleEnum.Professor:
@@ -41,8 +41,8 @@ const Navbar: React.FC = () => {
                 </Link>
               </li>
             )}
-            {(user?.UserRole === RoleEnum.Admin ||
-              user?.UserRole === RoleEnum.Professor) && (
+            {(user?.userRole === RoleEnum.Admin ||
+              user?.userRole === RoleEnum.Professor) && (
               <li className="nav-item">
                 <Link className="nav-link" to="/students">
                   Studenti
@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
             {user ? (
               <>
                 <li className="nav-item">
-                  <span className="nav-link">Dobrodošao, {user.FirstName}</span>
+                  <span className="nav-link">Dobrodošao, {user.firstName}</span>
                 </li>
                 <li className="nav-item">
                   <button

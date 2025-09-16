@@ -9,7 +9,7 @@ public class Subject
 
     public string SubjectName { get; set; } 
 
-    public int Etcs { get; set; }
+    public int ECTS { get; set; }
 
     public int ProfessorId { get; set; }
 

@@ -10,7 +10,8 @@ public class MappingProfile : Profile
     {
         // USER mapiranja
         CreateMap<User, UserDto>();
-        CreateMap<UserCreateDto, User>();
+        CreateMap<UserCreateDto, User>()
+            .ForMember(dest => dest.UserPassword, opt => opt.MapFrom(src => src.Password));
         CreateMap<UserUpdateDto, User>();
 
         //Subject mapiranja

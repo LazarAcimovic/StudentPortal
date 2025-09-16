@@ -11,20 +11,24 @@ const mapLoginResponseToUser = (response: LoginResponse): User => {
   // Budući da backend vraća LoginResponseDto, verovatno ima email, ulogu, itd.
   // U zavisnosti od toga šta backend vraća, prilagodi mapiranje
   return {
-    FirstName: response.FirstName, // Ako backend vraća, mapiraj ovde
-    LastName: response.LastName, // Ako backend vraća, mapiraj ovde
-    Email: response.email,
-    UserRole: response.UserRole, // Moras da konvertujes u RoleEnum ako backend vraca broj
-    IsDeleted: false,
+    firstName: response.firstName, // Ako backend vraća, mapiraj ovde
+    lastName: response.lastName, // Ako backend vraća, mapiraj ovde
+    email: response.email,
+    userRole: response.userRole, // Moras da konvertujes u RoleEnum ako backend vraca broj
+    isDeleted: false,
   };
 };
 
 export const login = async (Email: string, Password: string) => {
   try {
     const loginData: LoginRequest = { Email, Password };
-    const response = await apiClient.post<LoginResponse>("/login", loginData, {
-      headers: { Authorization: undefined },
-    });
+    const response = await apiClient.post<LoginResponse>(
+      "/User/Login",
+      loginData,
+      {
+        headers: { Authorization: undefined },
+      }
+    );
 
     if (response.status === 200 && response.data.accessToken) {
       const user = mapLoginResponseToUser(response.data);

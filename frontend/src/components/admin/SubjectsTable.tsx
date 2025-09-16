@@ -24,6 +24,7 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
           <tr>
             <th>ID</th>
             <th>Naziv predmeta</th>
+            <th>ECTS</th>
             <th>Profesor</th>
             <th>Status</th>
             <th>Akcije</th>
@@ -31,14 +32,15 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
         </thead>
         <tbody>
           {subjects.map((subject) => (
-            <tr key={subject.Id}>
-              <td>{subject.Id}</td>
-              <td>{subject.SubjectName}</td>
+            <tr key={subject.id}>
+              <td>{subject.id}</td>
+              <td>{subject.subjectName}</td>
+              <td>{subject.ects}</td>
               <td>
-                {subject.ProfessorFirstName} {subject.ProfessorLastName}
+                {subject.professorFirstName} {subject.professorLastName}
               </td>
               <td>
-                {subject.IsDeleted ? (
+                {subject.isDeleted ? (
                   <span className="badge bg-danger">
                     Obrisan <FontAwesomeIcon icon={faBan} />
                   </span>

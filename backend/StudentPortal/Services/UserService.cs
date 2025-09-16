@@ -44,8 +44,8 @@ public class UserService : IUserService
     public async Task<UserDto> AddUserAsync(UserCreateDto userDto)
     {
 
-        var hashedPassword = PasswordHashHandler.HashPassword(userDto.UserPassword);
-        userDto.UserPassword = hashedPassword;
+        var hashedPassword = PasswordHashHandler.HashPassword(userDto.Password);
+        userDto.Password = hashedPassword;
 
 
         var user = _mapper.Map<User>(userDto);

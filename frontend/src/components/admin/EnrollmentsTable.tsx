@@ -35,14 +35,14 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
         </thead>
         <tbody>
           {enrollments.map((enrollment) => (
-            <tr key={enrollment.Id}>
-              <td>{enrollment.Id}</td>
+            <tr key={enrollment.id}>
+              <td>{enrollment.id}</td>
               <td>
-                {enrollment.StudentFirstName} {enrollment.StudentLastName}
+                {enrollment.studentFirstName} {enrollment.studentLastName}
               </td>
-              <td>{enrollment.SubjectName}</td>
+              <td>{enrollment.subjectName}</td>
               <td>
-                {enrollment.IsDeleted ? (
+                {enrollment.isDeleted ? (
                   <span className="badge bg-danger">
                     Obrisan <FontAwesomeIcon icon={faBan} />
                   </span>
@@ -52,12 +52,12 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
                   </span>
                 )}
               </td>
-              <td>{new Date(enrollment.EnrolledAt).toLocaleDateString()}</td>
+              <td>{new Date(enrollment.enrolledAt).toLocaleDateString()}</td>
               <td>
                 <button
                   className="btn btn-danger btn-sm"
-                  onClick={() => onDeleteEnrollment(enrollment.Id)}
-                  disabled={enrollment.IsDeleted}
+                  onClick={() => onDeleteEnrollment(enrollment.id)}
+                  disabled={enrollment.isDeleted}
                 >
                   <FontAwesomeIcon icon={faTrash} /> Obriši
                 </button>

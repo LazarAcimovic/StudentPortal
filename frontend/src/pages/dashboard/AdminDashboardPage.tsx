@@ -5,6 +5,10 @@ import { MOCK_STUDENTS } from "../../services/data/studentMock";
 import { MOCK_PROFESSORS } from "../../services/data/professorsMock";
 import { MOCK_SUBJECTS } from "../../services/data/subjectsMock";
 import { MOCK_ENROLLMENTS } from "../../services/data/enrollmentsMock";
+import { getAllUsers } from "../../services/api/userService";
+import { getAllSubjects } from "../../services/api/subjectService";
+import { getAllEnrollments } from "../../services/api/enrollmentService";
+import { addUser } from "../../services/api/userService";
 import type { User, CreateUser, UpdateUser } from "../../models/UserModel";
 import type {
   Subject,
@@ -36,11 +40,35 @@ const AdminDashboardPage: React.FC = () => {
   const [isCreatingEnrollment, setIsCreatingEnrollment] =
     useState<boolean>(false);
   useEffect(() => {
-    setUsers([...MOCK_STUDENTS, ...MOCK_PROFESSORS]);
-    setSubjects(MOCK_SUBJECTS);
-    setEnrollments(MOCK_ENROLLMENTS);
+    // setUsers([...MOCK_STUDENTS, ...MOCK_PROFESSORS]);
+    // setSubjects(MOCK_SUBJECTS);
+    // setEnrollments(MOCK_ENROLLMENTS);
+    const fetchUsers = async () => {
+      const usersData = await getAllUsers();
+      if (usersData) {
+        setUsers(usersData);
+      }
+    };
+
+    const fetchSubjects = async () => {
+      const subjectsData = await getAllSubjects();
+      if (subjectsData) {
+        setSubjects(subjectsData);
+      }
+    };
+
+    const fetchEnrollments = async () => {
+      const enrollmentsData = await getAllEnrollments();
+      if (enrollmentsData) {
+        setEnrollments(enrollmentsData);
+      }
+    };
+
+    fetchUsers();
+    fetchSubjects();
+    fetchEnrollments();
   }, []);
-  if (!user || user.UserRole !== RoleEnum.Admin) {
+  if (!user || user.userRole !== RoleEnum.Admin) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
@@ -50,22 +78,25 @@ const AdminDashboardPage: React.FC = () => {
       </div>
     );
   }
-  const handleCreateUser = (newUser: CreateUser) => {
-    const newUserId =
-      users.length > 0 ? Math.max(...users.map((u) => u.Id)) + 1 : 1;
-    const userToAdd: User = {
-      Id: newUserId,
-      ...newUser,
-      IsDeleted: false,
-      CreatedAt: new Date(),
-    };
-    setUsers([...users, userToAdd]);
-    setIsCreatingUser(false);
-    console.log("Kreiran novi korisnik:", userToAdd);
+  const handleCreateUser = async (newUser: CreateUser) => {
+    // Pozivamo backend funkciju umesto mock logike
+    const createdUser = await addUser(newUser);
+
+    if (createdUser) {
+      // Ako je korisnik uspešno kreiran na backendu, dodaj ga u stanje na frontendu
+      setUsers([...users, createdUser]);
+      setIsCreatingUser(false);
+      console.log("Kreiran novi korisnik:", createdUser);
+    } else {
+      // Prikaz greške korisniku
+      alert(
+        "Kreiranje korisnika nije uspelo. Moguće da korisnik sa tim emailom već postoji."
+      );
+    }
   };
   const handleUpdateUser = (updatedUser: UpdateUser) => {
     setUsers(
-      users.map((u) => (u.Id === updatedUser.Id ? { ...u, ...updatedUser } : u))
+      users.map((u) => (u.id === updatedUser.Id ? { ...u, ...updatedUser } : u))
     );
     setEditingUser(null);
     console.log("Ažuriran korisnik:", updatedUser);
@@ -80,14 +111,14 @@ const AdminDashboardPage: React.FC = () => {
     const newSubjectId =
       subjects.length > 0 ? Math.max(...subjects.map((s) => s.Id)) + 1 : 1;
     const subjectToAdd: Subject = {
-      Id: newSubjectId,
+      id: newSubjectId,
       ...newSubject,
-      ProfessorFirstName:
-        users.find((p) => p.Id === newSubject.ProfessorId)?.FirstName || "N/A",
-      ProfessorLastName:
-        users.find((p) => p.Id === newSubject.ProfessorId)?.LastName || "N/A",
-      IsDeleted: false,
-      CreatedAt: new Date(),
+      professorFirstName:
+        users.find((p) => p.Id === newSubject.ProfessorId)?.firstName || "N/A",
+      professorLastName:
+        users.find((p) => p.Id === newSubject.ProfessorId)?.lastName || "N/A",
+      isDeleted: false,
+      createdAt: new Date(),
     };
     setSubjects([...subjects, subjectToAdd]);
     setIsCreatingSubject(false);
@@ -95,15 +126,15 @@ const AdminDashboardPage: React.FC = () => {
   };
   const handleUpdateSubject = (updatedSubject: UpdateSubject) => {
     const updatedSubjects = subjects.map((s) => {
-      if (s.Id === updatedSubject.Id) {
+      if (s.id === updatedSubject.Id) {
         return {
           ...s,
           ...updatedSubject,
           ProfessorFirstName:
-            users.find((p) => p.Id === updatedSubject.ProfessorId)?.FirstName ||
+            users.find((p) => p.id === updatedSubject.ProfessorId)?.firstName ||
             "N/A",
           ProfessorLastName:
-            users.find((p) => p.Id === updatedSubject.ProfessorId)?.LastName ||
+            users.find((p) => p.id === updatedSubject.ProfessorId)?.lastName ||
             "N/A",
         };
       }
@@ -187,7 +218,7 @@ const AdminDashboardPage: React.FC = () => {
             {isCreatingSubject ? (
               <SubjectCreateForm
                 professors={users.filter(
-                  (u) => u.UserRole === RoleEnum.Professor
+                  (u) => u.userRole === RoleEnum.Professor
                 )}
                 onSave={handleCreateSubject}
                 onCancel={() => setIsCreatingSubject(false)}
@@ -196,7 +227,7 @@ const AdminDashboardPage: React.FC = () => {
               <SubjectEditForm
                 subject={editingSubject}
                 professors={users.filter(
-                  (u) => u.UserRole === RoleEnum.Professor
+                  (u) => u.userRole === RoleEnum.Professor
                 )}
                 onSave={handleUpdateSubject}
                 onCancel={() => setEditingSubject(null)}
@@ -227,7 +258,7 @@ const AdminDashboardPage: React.FC = () => {
             <h3>Upis studenata na predmete</h3>
             {isCreatingEnrollment ? (
               <EnrollmentCreateForm
-                students={users.filter((u) => u.UserRole === RoleEnum.Student)}
+                students={users.filter((u) => u.userRole === RoleEnum.Student)}
                 subjects={subjects}
                 onSave={handleCreateEnrollment}
                 onCancel={() => setIsCreatingEnrollment(false)}
@@ -257,7 +288,7 @@ const AdminDashboardPage: React.FC = () => {
   return (
     <div className="container mt-4">
       <h2>Admin Dashboard</h2>
-      <h4 className="mb-4">Dobrodošli,{user.FirstName}!</h4>
+      <h4 className="mb-4">Dobrodošli,{user.firstName}!</h4>
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
           <button

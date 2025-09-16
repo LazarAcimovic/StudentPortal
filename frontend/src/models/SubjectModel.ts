@@ -1,12 +1,12 @@
 export interface Subject {
-  Id: number;
-  SubjectName: string;
-  ECTS: number;
-  ProfessorId: number;
-  ProfessorFirstName: string;
-  ProfessorLastName: string;
-  CreatedAt?: Date;
-  IsDeleted: boolean;
+  id: number;
+  subjectName: string;
+  ects: number;
+  professorId: number;
+  professorFirstName: string;
+  professorLastName: string;
+  createdAt?: Date;
+  isDeleted: boolean;
 }
 
 export interface CreateSubject {

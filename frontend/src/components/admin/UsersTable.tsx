@@ -36,17 +36,18 @@ const UsersTable: React.FC<UsersTableProps> = ({
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.Id}>
-              <td>{user.Id}</td>
-              <td>{user.FirstName}</td>
-              <td>{user.LastName}</td>
-              <td>{user.Email}</td>
+            <tr key={user.id}>
+              <td>{user.id}</td>
+              <td>{user.firstName}</td>
+              <td>{user.lastName}</td>
+              <td>{user.email}</td>
               <td>
-                {user.UserRole === RoleEnum.Student ? "Student" : ""}
-                {user.UserRole === RoleEnum.Professor ? "Profesor" : ""}
+                {user.userRole === RoleEnum.Student ? "Student" : ""}
+                {user.userRole === RoleEnum.Professor ? "Profesor" : ""}
+                {user.userRole === RoleEnum.Admin ? "Admin" : ""}
               </td>
               <td>
-                {user.IsDeleted ? (
+                {user.isDeleted ? (
                   <span className="badge bg-danger">
                     Obrisan <FontAwesomeIcon icon={faBan} />
                   </span>
@@ -65,8 +66,8 @@ const UsersTable: React.FC<UsersTableProps> = ({
                 </button>
                 <button
                   className="btn btn-danger btn-sm"
-                  onClick={() => onDeleteUser(user.Id)}
-                  disabled={user.IsDeleted}
+                  onClick={() => onDeleteUser(user.id)}
+                  disabled={user.isDeleted}
                 >
                   <FontAwesomeIcon icon={faTrash} /> Obriši
                 </button>

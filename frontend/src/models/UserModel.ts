@@ -2,15 +2,14 @@ import type { RoleEnum } from "./Enums";
 
 //User = UserDto
 export interface User {
-  Id?: number;
-  FirstName: string;
-  LastName: string;
-  Email: string;
-  IndexNumber?: string | null;
-  UserPassword?: string;
-  UserRole: RoleEnum;
-  IsDeleted: boolean; //izbaciti iz beka
-  CreatedAt?: Date;
+  id?: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  indexNumber?: string | null;
+  userRole: RoleEnum;
+  isDeleted: boolean; //izbaciti iz beka
+  createdAt?: Date;
 }
 
 export interface CreateUser {
