@@ -23,7 +23,7 @@ public class SubjectRepository : ISubjectRepository
 
     public async Task<Subject> GetSubjectByIdAsync(int id)
     {
-        return await _context.Subjects.AsNoTracking()
+        return await _context.Subjects
                              .Include(s => s.Professor) 
                              .FirstOrDefaultAsync(s => s.Id == id);
     }
@@ -53,5 +53,22 @@ public class SubjectRepository : ISubjectRepository
             _context.Subjects.Remove(subjectToDelete);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<IEnumerable<Subject>> GetSubjectsByProfessorIdAsync(int professorId)
+    {
+        return await _context.Subjects
+            .Where(s => s.ProfessorId == professorId)
+            .Include(s => s.Professor)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<User>> GetStudentsBySubjectIdAsync(int subjectId)
+    {
+        return await _context.Enrollments
+            .Where(e => e.SubjectId == subjectId)
+            .Select(e => e.Student)
+            .Include(s => s.UserRole)
+            .ToListAsync();
     }
 }

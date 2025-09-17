@@ -1,4 +1,4 @@
-import type { CreateUser, User } from "../../models/UserModel";
+import type { CreateUser, User, UpdateUser } from "../../models/UserModel";
 import { MOCK_STUDENTS } from "../data/studentMock";
 import { RoleEnum } from "../../models/Enums";
 import apiClient from "./apiClient";
@@ -22,6 +22,40 @@ export const addUser = async (userData: CreateUser): Promise<User | null> => {
     // Greška pri kreiranju korisnika (npr. 400 Bad Request ako email već postoji)
     console.error("Greška pri kreiranju korisnika:", error);
     return null;
+  }
+};
+
+export const updateUser = async (
+  updatedUser: UpdateUser
+): Promise<User | null> => {
+  try {
+    const dataToSend = {
+      Id: updatedUser.Id,
+      FirstName: updatedUser.FirstName,
+      LastName: updatedUser.LastName,
+      Email: updatedUser.Email,
+      UserRole: updatedUser.UserRole,
+      IsDeleted: updatedUser.IsDeleted,
+    };
+    const response = await apiClient.put<User>(
+      `/user/${updatedUser.Id}`,
+      dataToSend
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Greška pri ažuriranju korisnika:", error);
+    return null;
+  }
+};
+
+
+export const deleteUser = async (userId: number): Promise<boolean> => {
+  try {
+    await apiClient.delete(`/user/${userId}`);
+    return true; 
+  } catch (error) {
+    console.error("Greška pri brisanju korisnika:", error);
+    return false; 
   }
 };
 

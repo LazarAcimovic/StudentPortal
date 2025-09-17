@@ -1,12 +1,16 @@
-import React, { useState } from "react";
-import type { CreateEnrollment } from "../../models/EnrollmentModel";
+// src/components/admin/EnrollmentCreateForm.tsx
+import React, { useState, useEffect } from "react"; // <-- Dodaj useEffect
+import type {
+  CreateEnrollment,
+  Enrollment,
+} from "../../models/EnrollmentModel"; // <-- Dodaj Enrollment tip
 import type { User } from "../../models/UserModel";
 import type { Subject } from "../../models/SubjectModel";
-import { RoleEnum } from "../../models/Enums";
 
 interface EnrollmentCreateFormProps {
   students: User[];
   subjects: Subject[];
+  enrollments: Enrollment[]; // <-- Dodaj novi prop
   onSave: (newEnrollment: CreateEnrollment) => void;
   onCancel: () => void;
 }
@@ -14,14 +18,37 @@ interface EnrollmentCreateFormProps {
 const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
   students,
   subjects,
+  enrollments, // <-- Prihvati prop
   onSave,
   onCancel,
 }) => {
   const [formData, setFormData] = useState<CreateEnrollment>({
     StudentId: 0,
     SubjectId: 0,
-    IsDeleted: false,
   });
+
+  // Dodajemo state za filtrirane predmete
+  const [availableSubjects, setAvailableSubjects] =
+    useState<Subject[]>(subjects);
+
+  useEffect(() => {
+    // Ova funkcija se poziva svaki put kada se promeni odabrani student
+    if (formData.StudentId > 0) {
+      // Filtriraj upise za trenutno odabranog studenta
+      const enrolledSubjectIds = enrollments
+        .filter((e) => e.studentId === formData.StudentId)
+        .map((e) => e.subjectId);
+
+      // Filtriraj sve predmete kako bi se prikazali samo oni na koje student nije upisan
+      const filteredSubjects = subjects.filter(
+        (s) => !enrolledSubjectIds.includes(s.id) && !s.isDeleted
+      );
+      setAvailableSubjects(filteredSubjects);
+    } else {
+      // Ako nije izabran nijedan student, prikaži sve aktivne predmete
+      setAvailableSubjects(subjects.filter((s) => !s.isDeleted));
+    }
+  }, [formData.StudentId, subjects, enrollments]); // <-- Zavisnosti useEffect hook-a
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -56,13 +83,11 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
               required
             >
               <option value="">Izaberi studenta</option>
-              {students
-                .filter((s) => s.UserRole === RoleEnum.Student)
-                .map((student) => (
-                  <option key={student.Id} value={student.Id}>
-                    {student.FirstName} {student.LastName}
-                  </option>
-                ))}
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.firstName} {student.lastName}
+                </option>
+              ))}
             </select>
           </div>
           <div className="mb-3">
@@ -78,13 +103,11 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
               required
             >
               <option value="">Izaberi predmet</option>
-              {subjects
-                .filter((s) => !s.IsDeleted) // Prikazujemo samo aktivne predmete
-                .map((subject) => (
-                  <option key={subject.Id} value={subject.Id}>
-                    {subject.SubjectName}
-                  </option>
-                ))}
+              {availableSubjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.subjectName}
+                </option>
+              ))}
             </select>
           </div>
           <div className="d-flex justify-content-end">

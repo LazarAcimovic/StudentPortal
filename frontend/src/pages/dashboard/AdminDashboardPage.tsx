@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/authStore";
 import { RoleEnum } from "../../models/Enums";
-import { MOCK_STUDENTS } from "../../services/data/studentMock";
-import { MOCK_PROFESSORS } from "../../services/data/professorsMock";
-import { MOCK_SUBJECTS } from "../../services/data/subjectsMock";
-import { MOCK_ENROLLMENTS } from "../../services/data/enrollmentsMock";
+
+import { createEnrollment } from "../../services/api/enrollmentService";
 import { getAllUsers } from "../../services/api/userService";
+import { updateUser } from "../../services/api/userService";
 import { getAllSubjects } from "../../services/api/subjectService";
+import { createSubject } from "../../services/api/subjectService";
+import { updateSubject } from "../../services/api/subjectService";
 import { getAllEnrollments } from "../../services/api/enrollmentService";
 import { addUser } from "../../services/api/userService";
+import { deleteUser } from "../../services/api/userService";
 import type { User, CreateUser, UpdateUser } from "../../models/UserModel";
 import type {
   Subject,
@@ -27,6 +29,7 @@ import SubjectEditForm from "../../components/admin/SubjectEditForm";
 import SubjectCreateForm from "../../components/admin/SubjectCreateForm";
 import EnrollmentsTable from "../../components/admin/EnrollmentsTable";
 import EnrollmentCreateForm from "../../components/admin/EnrollmentCreateForm";
+
 const AdminDashboardPage: React.FC = () => {
   const { user } = useAuthStore();
   const [users, setUsers] = useState<User[]>([]);
@@ -88,83 +91,74 @@ const AdminDashboardPage: React.FC = () => {
       setIsCreatingUser(false);
       console.log("Kreiran novi korisnik:", createdUser);
     } else {
-      // Prikaz greške korisniku
+      // Prikaz greške korisnikFUu
       alert(
         "Kreiranje korisnika nije uspelo. Moguće da korisnik sa tim emailom već postoji."
       );
     }
   };
-  const handleUpdateUser = (updatedUser: UpdateUser) => {
-    setUsers(
-      users.map((u) => (u.id === updatedUser.Id ? { ...u, ...updatedUser } : u))
-    );
-    setEditingUser(null);
-    console.log("Ažuriran korisnik:", updatedUser);
-  };
-  const handleDeleteUser = (userId: number) => {
-    setUsers(
-      users.map((u) => (u.Id === userId ? { ...u, IsDeleted: true } : u))
-    );
-    console.log("Obrisan korisnik sa ID-jem:", userId);
-  };
-  const handleCreateSubject = (newSubject: CreateSubject) => {
-    const newSubjectId =
-      subjects.length > 0 ? Math.max(...subjects.map((s) => s.Id)) + 1 : 1;
-    const subjectToAdd: Subject = {
-      id: newSubjectId,
-      ...newSubject,
-      professorFirstName:
-        users.find((p) => p.Id === newSubject.ProfessorId)?.firstName || "N/A",
-      professorLastName:
-        users.find((p) => p.Id === newSubject.ProfessorId)?.lastName || "N/A",
-      isDeleted: false,
-      createdAt: new Date(),
-    };
-    setSubjects([...subjects, subjectToAdd]);
-    setIsCreatingSubject(false);
-    console.log("Kreiran novi predmet:", subjectToAdd);
-  };
-  const handleUpdateSubject = (updatedSubject: UpdateSubject) => {
-    const updatedSubjects = subjects.map((s) => {
-      if (s.id === updatedSubject.Id) {
-        return {
-          ...s,
-          ...updatedSubject,
-          ProfessorFirstName:
-            users.find((p) => p.id === updatedSubject.ProfessorId)?.firstName ||
-            "N/A",
-          ProfessorLastName:
-            users.find((p) => p.id === updatedSubject.ProfessorId)?.lastName ||
-            "N/A",
-        };
-      }
-      return s;
-    });
-    setSubjects(updatedSubjects);
-    setEditingSubject(null);
-    console.log("Ažuriran predmet:", updatedSubject);
-  };
-  const handleCreateEnrollment = (newEnrollment: CreateEnrollment) => {
-    const newEnrollmentId =
-      enrollments.length > 0
-        ? Math.max(...enrollments.map((e) => e.Id)) + 1
-        : 1;
-    const student = users.find((s) => s.Id === newEnrollment.StudentId);
-    const subject = subjects.find((s) => s.Id === newEnrollment.SubjectId);
-    if (student && subject) {
-      const enrollmentToAdd: Enrollment = {
-        Id: newEnrollmentId,
-        ...newEnrollment,
-        StudentFirstName: student.FirstName,
-        StudentLastName: student.LastName,
-        SubjectName: subject.SubjectName,
-        EnrolledAt: new Date(),
-      };
-      setEnrollments([...enrollments, enrollmentToAdd]);
-      console.log("Kreiran novi upis:", enrollmentToAdd);
-      setIsCreatingEnrollment(false);
+  const handleUpdateUser = async (updatedUser: UpdateUser) => {
+    // updatedUser objekat ovde sadrži ID korisnika
+    const updatedUserData = await updateUser(updatedUser);
+
+    if (updatedUserData) {
+      setUsers(
+        users.map((u) => (u.id === updatedUserData.id ? updatedUserData : u))
+      );
+      setEditingUser(null);
+      console.log("Ažuriran korisnik:", updatedUserData);
     } else {
-      console.error("Greška: Student ili predmet nisu pronađeni.");
+      alert("Ažuriranje korisnika nije uspelo.");
+    }
+  };
+  const handleDeleteUser = async (userId: number) => {
+    const isSuccess = await deleteUser(userId);
+
+    if (isSuccess) {
+      // Filtriramo korisnika iz liste ako je brisanje uspešno
+      setUsers(users.filter((u) => u.id !== userId));
+      console.log("Obrisan korisnik sa ID-jem:", userId);
+      alert("Korisnik je uspešno obrisan."); //zameniš sa toast eventualno
+    } else {
+      alert("Brisanje korisnika nije uspelo.");
+    }
+  };
+  const handleCreateSubject = async (newSubject: CreateSubject) => {
+    const createdSubject = await createSubject(newSubject);
+
+    if (createdSubject) {
+      setSubjects([...subjects, createdSubject]);
+      setIsCreatingSubject(false);
+      console.log("Kreiran novi predmet:", createdSubject);
+    } else {
+      alert("Kreiranje predmeta nije uspelo.");
+    }
+  };
+  const handleUpdateSubject = async (updatedSubject: UpdateSubject) => {
+    const updatedSubjectData = await updateSubject(updatedSubject);
+
+    if (updatedSubjectData) {
+      setSubjects(
+        subjects.map((s) =>
+          s.id === updatedSubjectData.id ? updatedSubjectData : s
+        )
+      );
+      setEditingSubject(null);
+      console.log("Ažuriran predmet:", updatedSubjectData);
+    } else {
+      alert("Ažuriranje predmeta nije uspelo.");
+    }
+  };
+
+  const handleCreateEnrollment = async (newEnrollment: CreateEnrollment) => {
+    const createdEnrollment = await createEnrollment(newEnrollment);
+
+    if (createdEnrollment) {
+      setEnrollments([...enrollments, createdEnrollment]);
+      setIsCreatingEnrollment(false);
+      console.log("Kreiran novi upis:", createdEnrollment);
+    } else {
+      alert("Kreiranje upisa nije uspelo.");
     }
   };
   const handleDeleteEnrollment = (enrollmentId: number) => {
@@ -260,6 +254,7 @@ const AdminDashboardPage: React.FC = () => {
               <EnrollmentCreateForm
                 students={users.filter((u) => u.userRole === RoleEnum.Student)}
                 subjects={subjects}
+                enrollments={enrollments}
                 onSave={handleCreateEnrollment}
                 onCancel={() => setIsCreatingEnrollment(false)}
               />

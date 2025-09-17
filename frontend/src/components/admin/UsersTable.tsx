@@ -31,7 +31,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
             <th>Email</th>
             <th>Uloga</th>
             <th>Status</th>
-            <th>Akcije</th>
+            <th>Akcija</th>
           </tr>
         </thead>
         <tbody>
@@ -64,13 +64,13 @@ const UsersTable: React.FC<UsersTableProps> = ({
                 >
                   <FontAwesomeIcon icon={faEdit} /> Uredi
                 </button>
-                <button
+                {/* <button
                   className="btn btn-danger btn-sm"
                   onClick={() => onDeleteUser(user.id)}
                   disabled={user.isDeleted}
                 >
                   <FontAwesomeIcon icon={faTrash} /> Obriši
-                </button>
+                </button> */}
               </td>
             </tr>
           ))}

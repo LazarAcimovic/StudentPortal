@@ -79,19 +79,15 @@ namespace StudentPortal.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSubject(int id, [FromBody] SubjectUpdateDto subjectDto)
         {
-            try
+            var updatedSubject = await _subjectService.UpdateSubjectAsync(id, subjectDto);
+
+            if (updatedSubject == null)
             {
-                var success = await _subjectService.UpdateSubjectAsync(id, subjectDto);
-                if (!success)
-                {
-                    return NotFound($"Subject with ID {id} not found or update failed.");
-                }
-                return NoContent();
+                return NotFound($"Subject with ID {id} not found or update failed.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+
+            // Nema potrebe za _mapper.Map(), jer servis već vraća ažurirani entitet
+            return Ok(updatedSubject);
         }
 
         // DELETE: api/subject/{id}

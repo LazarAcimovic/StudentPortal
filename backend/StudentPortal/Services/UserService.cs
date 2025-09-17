@@ -58,18 +58,17 @@ public class UserService : IUserService
     }
 
 
-    public async Task<bool> UpdateUserAsync(int id, UserUpdateDto userDto)
+    public async Task<UserDto> UpdateUserAsync(int id, UserUpdateDto userDto)
     {
         var userToUpdate = await _userRepository.GetUserByIdAsync(id);
-        if (userToUpdate == null) return false;
+        if (userToUpdate == null) return null; // Vraćamo null ako korisnik nije pronađen
 
-        // Mapiranje DTO-a na entitet.
-        // AutoMapper će automatski ignorisati null polja
         _mapper.Map(userDto, userToUpdate);
 
-    
         await _userRepository.UpdateUserAsync(userToUpdate);
-        return true;
+
+
+        return _mapper.Map<UserDto>(userToUpdate);
     }
 
     public async Task<bool> DeleteUserAsync(int id)

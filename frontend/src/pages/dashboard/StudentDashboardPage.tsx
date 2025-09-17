@@ -20,8 +20,8 @@ const StudentDashboardPage: React.FC = () => {
   // i kada se 'user' promeni, kako bi se dohvatili podaci za studenta.
   useEffect(() => {
     // Proverava da li je korisnik student i da li ima ID pre poziva API-ja
-    if (user?.UserRole === RoleEnum.Student && user?.Id) {
-      const data = getStudentSubjectsAndGrades(user.Id);
+    if (user?.userRole === RoleEnum.Student && user?.id) {
+      const data = getStudentSubjectsAndGrades(user.id);
       setStudentData(data);
     }
   }, [user]);
@@ -31,12 +31,12 @@ const StudentDashboardPage: React.FC = () => {
   const getSubjectStatus = (
     grades: Grade[]
   ): { grade: number | null; isPassed: boolean } => {
-    const confirmedGrade = grades.find((g) => g.IsConfirmed && !g.IsDeleted);
+    const confirmedGrade = grades.find((g) => g.isConfirmed && !g.isDeleted);
 
     if (confirmedGrade) {
       return {
-        grade: confirmedGrade.StudentGrade,
-        isPassed: confirmedGrade.StudentGrade >= 6,
+        grade: confirmedGrade.studentGrade,
+        isPassed: confirmedGrade.studentGrade >= 6,
       };
     }
 
@@ -59,7 +59,7 @@ const StudentDashboardPage: React.FC = () => {
           passedGrades.push(grade);
         }
         passedExamsCount++;
-        totalEtcsCount += data.subject.Etcs;
+        totalEtcsCount += data.subject.ects;
       }
     });
 
@@ -77,7 +77,7 @@ const StudentDashboardPage: React.FC = () => {
   }, [studentData]);
 
   // Rani povratak ako korisnik nema dozvolu
-  if (!user || user.UserRole !== RoleEnum.Student) {
+  if (!user || user.userRole !== RoleEnum.Student) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
@@ -92,7 +92,7 @@ const StudentDashboardPage: React.FC = () => {
     <div className="container mt-4">
       <h2 className="mb-4">Studentski Dashboard</h2>
       <h4 className="mb-4">
-        Zdravo, {user.FirstName} {user.LastName}!
+        Zdravo, {user.firstName} {user.lastName}!
       </h4>
 
       {/* Sekcija 1: Korisnički profil */}
@@ -102,15 +102,15 @@ const StudentDashboardPage: React.FC = () => {
         </div>
         <div className="card-body">
           <p>
-            <span className="fw-bold">Ime i prezime:</span> {user.FirstName}{" "}
-            {user.LastName}
+            <span className="fw-bold">Ime i prezime:</span> {user.firstName}{" "}
+            {user.lastName}
           </p>
           <p>
-            <span className="fw-bold">Email:</span> {user.Email}
+            <span className="fw-bold">Email:</span> {user.email}
           </p>
           <p>
             <span className="fw-bold">Broj indeksa:</span>{" "}
-            {user.IndexNumber || "Nije unet"}
+            {user.indexNumber || "Nije unet"}
           </p>
         </div>
       </div>
@@ -158,18 +158,18 @@ const StudentDashboardPage: React.FC = () => {
               finalGrade !== null ? finalGrade : "Nema unete potvrđene ocene";
 
             return (
-              <div key={data.subject.Id} className="col-md-6 mb-4">
+              <div key={data.subject.id} className="col-md-6 mb-4">
                 <div className="card h-100">
                   <div className="card-header bg-primary text-white">
                     <h5 className="card-title mb-0">
-                      {data.subject.SubjectName}
+                      {data.subject.subjectName}
                     </h5>
                   </div>
                   <div className="card-body">
                     <p className="card-text">
                       <span className="fw-bold">Profesor:</span>{" "}
-                      {data.subject.ProfessorFirstName}{" "}
-                      {data.subject.ProfessorLastName}
+                      {data.subject.professorFirstName}{" "}
+                      {data.subject.professorLastName}
                     </p>
                     <p className="card-text">
                       <span className="fw-bold">Status:</span>{" "}
@@ -189,25 +189,25 @@ const StudentDashboardPage: React.FC = () => {
                       className="btn btn-sm btn-info"
                       type="button"
                       data-bs-toggle="collapse"
-                      data-bs-target={`#grades-${data.subject.Id}`}
+                      data-bs-target={`#grades-${data.subject.id}`}
                       aria-expanded="false"
-                      aria-controls={`grades-${data.subject.Id}`}
+                      aria-controls={`grades-${data.subject.id}`}
                     >
                       Prikaži sve ocene
                     </button>
                     <div
                       className="collapse mt-2"
-                      id={`grades-${data.subject.Id}`}
+                      id={`grades-${data.subject.id}`}
                     >
                       <ul className="list-group list-group-flush">
                         {data.grades.map((grade) => (
                           <li
-                            key={grade.Id}
+                            key={grade.id}
                             className="list-group-item d-flex justify-content-between align-items-center"
                           >
                             <div>
-                              Ocena: {grade.StudentGrade}
-                              {grade.IsConfirmed ? (
+                              Ocena: {grade.studentGrade}
+                              {grade.isConfirmed ? (
                                 <span className="badge bg-primary ms-2">
                                   Potvrđena
                                 </span>
@@ -216,9 +216,9 @@ const StudentDashboardPage: React.FC = () => {
                                   Preliminarna
                                 </span>
                               )}
-                              {grade.Comment && (
+                              {grade.comment && (
                                 <span className="d-block text-muted fst-italic mt-1">
-                                  Komentar: "{grade.Comment}"
+                                  Komentar: "{grade.comment}"
                                 </span>
                               )}
                             </div>

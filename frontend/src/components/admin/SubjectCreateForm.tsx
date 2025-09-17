@@ -15,7 +15,7 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
   onCancel,
 }) => {
   const [formData, setFormData] = useState<CreateSubject>({
-    subjectName: "",
+    SubjectName: "",
     ECTS: 0,
     ProfessorId: 0,
   });
@@ -64,8 +64,8 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
               type="number"
               className="form-control"
               id="etcs"
-              name="Etcs"
-              value={formData.Etcs}
+              name="ECTS"
+              value={formData.ECTS}
               onChange={handleChange}
               required
             />
@@ -84,10 +84,10 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
             >
               <option value="">Izaberi profesora</option>
               {professors
-                .filter((p) => p.UserRole === RoleEnum.Professor)
+                .filter((p) => p.userRole === RoleEnum.Professor)
                 .map((prof) => (
-                  <option key={prof.Id} value={prof.Id}>
-                    {prof.FirstName} {prof.LastName}
+                  <option key={prof.id} value={prof.id}>
+                    {prof.firstName} {prof.lastName}
                   </option>
                 ))}
             </select>

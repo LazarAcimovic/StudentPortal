@@ -92,16 +92,18 @@ namespace StudentPortal.Controllers
 
         // PUT: api/user/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDto userDto)
+        public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UserUpdateDto userDto)
         {
             try
             {
-                var success = await _userService.UpdateUserAsync(id, userDto);
-                if (!success)
+                var updatedUser = await _userService.UpdateUserAsync(id, userDto);
+
+                if (updatedUser == null)
                 {
                     return NotFound($"User with ID {id} not found or update failed.");
                 }
-                return NoContent();
+
+                return Ok(updatedUser);
             }
             catch (Exception ex)
             {

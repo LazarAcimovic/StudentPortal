@@ -47,15 +47,21 @@ public class SubjectService : ISubjectService
         return _mapper.Map<SubjectDto>(createdSubject);
     }
 
-    public async Task<bool> UpdateSubjectAsync(int id, SubjectUpdateDto subjectDto)
+    public async Task<SubjectDto> UpdateSubjectAsync(int id, SubjectUpdateDto subjectDto)
     {
         var subjectToUpdate = await _subjectRepository.GetSubjectByIdAsync(id);
-        if (subjectToUpdate == null) return false;
+        if (subjectToUpdate == null)
+        {
+            return null;
+        }
 
         _mapper.Map(subjectDto, subjectToUpdate);
 
         await _subjectRepository.UpdateSubjectAsync(subjectToUpdate);
-        return true;
+        var updatedSubject = await _subjectRepository.GetSubjectByIdAsync(id);
+
+        // Mapiramo ažurirani entitet u DTO pre nego što ga vratimo
+        return _mapper.Map<SubjectDto>(updatedSubject);
     }
 
     public async Task<bool> DeleteSubjectAsync(int id)

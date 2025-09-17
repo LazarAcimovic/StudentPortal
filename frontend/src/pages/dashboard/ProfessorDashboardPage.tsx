@@ -28,8 +28,8 @@ const ProfessorDashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.UserRole === RoleEnum.Professor) {
-      const professorSubjects = getProfessorSubjects(user.Id);
+    if (user?.userRole === RoleEnum.Professor) {
+      const professorSubjects = getProfessorSubjects(user.id);
       setSubjects(professorSubjects);
     }
   }, [user]);
@@ -37,8 +37,8 @@ const ProfessorDashboardPage: React.FC = () => {
   useEffect(() => {
     if (selectedSubject && selectedStudent) {
       const studentGrades = getGradesByStudentAndSubject(
-        selectedStudent.Id,
-        selectedSubject.Id
+        selectedStudent.id,
+        selectedSubject.id
       );
       setGrades(studentGrades);
     }
@@ -53,7 +53,7 @@ const ProfessorDashboardPage: React.FC = () => {
     setEditingGrade(null);
     setError(null);
     if (user) {
-      const studentsList = getStudents(user.UserRole, subject.Id);
+      const studentsList = getStudents(user.userRole, subject.id);
       setStudents(studentsList);
     }
   };
@@ -79,7 +79,7 @@ const ProfessorDashboardPage: React.FC = () => {
 
     const enrollment = MOCK_ENROLLMENTS.find(
       (e) =>
-        e.StudentId === selectedStudent.Id && e.SubjectId === selectedSubject.Id
+        e.studentId === selectedStudent.id && e.subjectId === selectedSubject.id
     );
     if (!enrollment) {
       setError("Student nije upisan na ovaj predmet.");
@@ -87,7 +87,7 @@ const ProfessorDashboardPage: React.FC = () => {
     }
 
     const newGrade: CreateGrade = {
-      EnrollmentId: enrollment.Id,
+      EnrollmentId: enrollment.id,
       Grade: gradeValue,
       Comment: newComment,
     };
@@ -107,7 +107,7 @@ const ProfessorDashboardPage: React.FC = () => {
   const handleUpdateGrade = () => {
     if (!editingGrade || !selectedStudent || !selectedSubject) return;
 
-    if (editingGrade.IsConfirmed) {
+    if (editingGrade.isConfirmed) {
       setError("Ne možete izmeniti potvrđenu ocenu.");
       return;
     }
@@ -120,7 +120,7 @@ const ProfessorDashboardPage: React.FC = () => {
 
     const enrollment = MOCK_ENROLLMENTS.find(
       (e) =>
-        e.StudentId === selectedStudent.Id && e.SubjectId === selectedSubject.Id
+        e.studentId === selectedStudent.id && e.subjectId === selectedSubject.id
     );
     if (!enrollment) {
       setError("Student nije upisan na ovaj predmet.");
@@ -128,18 +128,18 @@ const ProfessorDashboardPage: React.FC = () => {
     }
 
     const updatedData: UpdateGrade = {
-      EnrollmentId: enrollment.Id,
+      EnrollmentId: enrollment.id,
       StudentGrade: gradeValue,
       Comment: newComment,
     };
 
-    const result = updateGrade(editingGrade.Id, updatedData);
+    const result = updateGrade(editingGrade.id, updatedData);
 
     if (result instanceof Error) {
       setError(result.message);
     } else {
       setGrades((prevGrades) =>
-        prevGrades.map((g) => (g.Id === editingGrade.Id ? result : g))
+        prevGrades.map((g) => (g.id === editingGrade.id ? result : g))
       );
       setEditingGrade(null);
       setNewGradeValue("");
@@ -151,7 +151,7 @@ const ProfessorDashboardPage: React.FC = () => {
   const handleDeleteGrade = (gradeId: number) => {
     const success = deleteGrade(gradeId);
     if (success) {
-      setGrades((prevGrades) => prevGrades.filter((g) => g.Id !== gradeId));
+      setGrades((prevGrades) => prevGrades.filter((g) => g.id !== gradeId));
     } else {
       setError("Nije moguće obrisati potvrđenu ocenu.");
     }
@@ -163,12 +163,12 @@ const ProfessorDashboardPage: React.FC = () => {
       setError(result.message);
     } else {
       setGrades((prevGrades) =>
-        prevGrades.map((g) => (g.Id === gradeId ? result : g))
+        prevGrades.map((g) => (g.id === gradeId ? result : g))
       );
     }
   };
 
-  if (!user || user.UserRole !== RoleEnum.Professor) {
+  if (!user || user.userRole !== RoleEnum.Professor) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
@@ -189,14 +189,14 @@ const ProfessorDashboardPage: React.FC = () => {
           <ul className="list-group">
             {subjects.map((subject) => (
               <li
-                key={subject.Id}
+                key={subject.id}
                 className={`list-group-item list-group-item-action ${
-                  selectedSubject?.Id === subject.Id ? "active" : ""
+                  selectedSubject?.id === subject.id ? "active" : ""
                 }`}
                 onClick={() => handleSubjectClick(subject)}
                 style={{ cursor: "pointer" }}
               >
-                {subject.SubjectName}
+                {subject.subjectName}
               </li>
             ))}
           </ul>
@@ -206,20 +206,20 @@ const ProfessorDashboardPage: React.FC = () => {
           {selectedSubject && (
             <>
               <h4 className="mb-3">
-                Studenti na {selectedSubject.SubjectName}
+                Studenti na {selectedSubject.subjectName}
               </h4>
               <ul className="list-group">
                 {students.length > 0 ? (
                   students.map((student) => (
                     <li
-                      key={student.Id}
+                      key={student.id}
                       className={`list-group-item list-group-item-action ${
-                        selectedStudent?.Id === student.Id ? "active" : ""
+                        selectedStudent?.id === student.id ? "active" : ""
                       }`}
                       onClick={() => handleStudentClick(student)}
                       style={{ cursor: "pointer" }}
                     >
-                      {student.FirstName} {student.LastName}
+                      {student.firstName} {student.lastName}
                     </li>
                   ))
                 ) : (
@@ -236,7 +236,7 @@ const ProfessorDashboardPage: React.FC = () => {
           {selectedStudent && selectedSubject && (
             <>
               <h4 className="mb-3">
-                Ocene za {selectedStudent.FirstName} {selectedStudent.LastName}
+                Ocene za {selectedStudent.firstName} {selectedStudent.lastName}
               </h4>
               {error && <div className="alert alert-danger">{error}</div>}
               {/* Forma za dodavanje/izmenu ocene */}
@@ -306,30 +306,30 @@ const ProfessorDashboardPage: React.FC = () => {
                 <tbody>
                   {grades.length > 0 ? (
                     grades.map((grade) => (
-                      <tr key={grade.Id}>
+                      <tr key={grade.id}>
                         <td>
-                          {grade.IsConfirmed ? "-" : grade.StudentGrade}
-                          {!grade.IsConfirmed && grade.StudentGrade === 5 && (
+                          {grade.isConfirmed ? "-" : grade.studentGrade}
+                          {!grade.isConfirmed && grade.studentGrade === 5 && (
                             <span className="badge bg-danger ms-2">
                               Nepoloženo
                             </span>
                           )}
                         </td>
                         <td>
-                          {grade.IsConfirmed ? grade.StudentGrade : "-"}
-                          {grade.IsConfirmed && grade.StudentGrade === 5 && (
+                          {grade.isConfirmed ? grade.studentGrade : "-"}
+                          {grade.isConfirmed && grade.studentGrade === 5 && (
                             <span className="badge bg-danger ms-2">
                               Nepoloženo
                             </span>
                           )}
                         </td>
-                        <td>{grade.Comment}</td>
+                        <td>{grade.comment}</td>
                         <td>
-                          {!grade.IsConfirmed ? (
+                          {!grade.isConfirmed ? (
                             <>
                               <button
                                 className="btn btn-sm btn-success me-2"
-                                onClick={() => handleConfirmGrade(grade.Id)}
+                                onClick={() => handleConfirmGrade(grade.id)}
                               >
                                 Potvrdi
                               </button>
@@ -338,16 +338,16 @@ const ProfessorDashboardPage: React.FC = () => {
                                 onClick={() => {
                                   setEditingGrade(grade);
                                   setNewGradeValue(
-                                    grade.StudentGrade.toString()
+                                    grade.studentGrade.toString()
                                   );
-                                  setNewComment(grade.Comment || "");
+                                  setNewComment(grade.comment || "");
                                 }}
                               >
                                 Izmeni
                               </button>
                               <button
                                 className="btn btn-sm btn-danger"
-                                onClick={() => handleDeleteGrade(grade.Id)}
+                                onClick={() => handleDeleteGrade(grade.id)}
                               >
                                 Obriši
                               </button>

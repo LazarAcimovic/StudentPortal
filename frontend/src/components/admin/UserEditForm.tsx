@@ -14,12 +14,12 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
   onCancel,
 }) => {
   const [formData, setFormData] = useState<UpdateUser>({
-    Id: user.Id,
-    FirstName: user.FirstName,
-    LastName: user.LastName,
-    Email: user.Email,
-    UserRole: user.UserRole,
-    IsDeleted: user.IsDeleted,
+    Id: user.id,
+    FirstName: user.firstName,
+    LastName: user.lastName,
+    Email: user.email,
+    UserRole: user.userRole,
+    IsDeleted: user.isDeleted,
   });
 
   const handleChange = (
@@ -52,7 +52,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
     <div className="card my-4">
       <div className="card-header">
         <h5>
-          Uredi Korisnika: {user.FirstName} {user.LastName}
+          Uredi Korisnika: {user.firstName} {user.lastName}
         </h5>
       </div>
       <div className="card-body">

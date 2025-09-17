@@ -8,7 +8,6 @@ namespace StudentPortal.Dtos
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public RoleEnum UserRole { get; set; } //only if admin
-
         public string Email { get; set; } // only allowed if admin
         public bool IsDeleted { get; set; } //only if admin
     }

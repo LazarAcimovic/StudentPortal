@@ -8,8 +8,6 @@ import {
   faBan,
 } from "@fortawesome/free-solid-svg-icons";
 
-// **OVDE JE BILA GREŠKA!**
-// Morate eksplicitno definisati interfejs za propsove.
 interface EnrollmentsTableProps {
   enrollments: Enrollment[];
   onDeleteEnrollment: (enrollmentId: number) => void;
@@ -30,7 +28,6 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
             <th>Predmet</th>
             <th>Status</th>
             <th>Datum upisa</th>
-            <th>Akcije</th>
           </tr>
         </thead>
         <tbody>
@@ -53,15 +50,6 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
                 )}
               </td>
               <td>{new Date(enrollment.enrolledAt).toLocaleDateString()}</td>
-              <td>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => onDeleteEnrollment(enrollment.id)}
-                  disabled={enrollment.isDeleted}
-                >
-                  <FontAwesomeIcon icon={faTrash} /> Obriši
-                </button>
-              </td>
             </tr>
           ))}
         </tbody>

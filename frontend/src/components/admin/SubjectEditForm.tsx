@@ -17,11 +17,11 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
   onCancel,
 }) => {
   const [formData, setFormData] = useState<UpdateSubject>({
-    Id: subject.Id,
-    SubjectName: subject.SubjectName,
-    Etcs: subject.Etcs,
-    ProfessorId: subject.ProfessorId,
-    IsDeleted: subject.IsDeleted,
+    Id: subject.id,
+    SubjectName: subject.subjectName,
+    ECTS: subject.ects,
+    ProfessorId: subject.professorId,
+    IsDeleted: subject.isDeleted,
   });
 
   const handleChange = (
@@ -82,8 +82,8 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               type="number"
               className="form-control"
               id="etcs"
-              name="Etcs"
-              value={formData.Etcs}
+              name="ECTS"
+              value={formData.ECTS}
               onChange={handleChange}
               required
             />
@@ -103,10 +103,10 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
             >
               <option value="">Izaberi profesora</option>
               {professors
-                .filter((p) => p.UserRole === RoleEnum.Professor)
+                .filter((p) => p.userRole === RoleEnum.Professor)
                 .map((prof) => (
-                  <option key={prof.Id} value={prof.Id}>
-                    {prof.FirstName} {prof.LastName}
+                  <option key={prof.id} value={prof.id}>
+                    {prof.firstName} {prof.lastName}
                   </option>
                 ))}
             </select>

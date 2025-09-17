@@ -1,15 +1,15 @@
 // Entitetski model
 
 export interface Grade {
-  Id: number;
-  EnrollmentId: number;
-  StudentGrade: number;
-  StudentFirstName: string;
-  StudentLastName: string;
-  SubjectName: string;
-  Comment: string;
-  IsConfirmed: boolean;
-  IsDeleted: boolean;
+  id: number;
+  enrollmentId: number;
+  studentGrade: number;
+  studentFirstName: string;
+  studentLastName: string;
+  subjectName: string;
+  comment: string;
+  isConfirmed: boolean;
+  isDeleted: boolean;
 }
 
 export interface CreateGrade {
