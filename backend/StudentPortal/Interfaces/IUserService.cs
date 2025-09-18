@@ -11,4 +11,6 @@ public interface IUserService
     Task<UserDto> AddUserAsync(UserCreateDto userDto);
     Task<UserDto> UpdateUserAsync(int id, UserUpdateDto userDto); 
     Task<bool> DeleteUserAsync(int id);
+
+    Task<IEnumerable<StudentSubjectGradesDto>> GetStudentSubjectsAndGradesAsync(int studentId);
 }

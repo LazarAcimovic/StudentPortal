@@ -55,6 +55,46 @@ namespace StudentPortal.Controllers
             }
         }
 
+                // GET: api/subject/professor/{professorId}
+        [HttpGet("professor/{professorId}")]
+        public async Task<ActionResult<IEnumerable<SubjectDto>>> GetSubjectsByProfessorId(int professorId)
+        {
+            try
+            {
+                var subjects = await _subjectService.GetSubjectsByProfessorIdAsync(professorId);
+                if (subjects == null || !subjects.Any())
+                {
+                    return NotFound("No subjects found for this professor.");
+                }
+                return Ok(subjects);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+        
+        // GET: api/subject/{subjectId}/students
+        [HttpGet("{subjectId}/students")]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetStudentsBySubjectId(int subjectId)
+        {
+            try
+            {
+                var students = await _subjectService.GetStudentsBySubjectIdAsync(subjectId);
+                if (students == null || !students.Any())
+                {
+                    return NotFound("No students enrolled in this subject.");
+                }
+                return Ok(students);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+
         // POST: api/subject
         [HttpPost]
         public async Task<ActionResult<SubjectDto>> AddSubject([FromBody] SubjectCreateDto subjectDto)

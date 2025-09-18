@@ -79,5 +79,32 @@ public class UserService : IUserService
         await _userRepository.DeleteUserAsync(id);
         return true;
     }
+
+    public async Task<IEnumerable<StudentSubjectGradesDto>> GetStudentSubjectsAndGradesAsync(int studentId)
+    {
+        // Koristimo novu metodu iz UserRepository-a
+        var enrollments = await _userRepository.GetStudentEnrollmentsWithDetailsAsync(studentId);
+
+        if (enrollments == null || !enrollments.Any())
+        {
+            return Enumerable.Empty<StudentSubjectGradesDto>();
+        }
+
+        var studentSubjectData = new List<StudentSubjectGradesDto>();
+
+        foreach (var enrollment in enrollments)
+        {
+            studentSubjectData.Add(new StudentSubjectGradesDto
+            {
+                EnrollmentId = enrollment.Id,
+                // Mapiramo Subject entitet u SubjectDto
+                Subject = _mapper.Map<SubjectDto>(enrollment.Subject),
+                // Mapiramo ocene, isključujući izbrisane
+                Grades = _mapper.Map<ICollection<GradeDto>>(enrollment.Grades.Where(g => !g.IsDeleted))
+            });
+        }
+
+        return studentSubjectData;
+    }
 }
 

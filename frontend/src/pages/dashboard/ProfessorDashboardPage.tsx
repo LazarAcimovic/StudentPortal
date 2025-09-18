@@ -4,16 +4,18 @@ import { RoleEnum } from "../../models/Enums";
 import type { User } from "../../models/UserModel";
 import type { Subject } from "../../models/SubjectModel";
 import type { Grade, CreateGrade, UpdateGrade } from "../../models/GradeModel";
-import { MOCK_ENROLLMENTS } from "../../services/data/enrollmentsMock";
+//import { MOCK_ENROLLMENTS } from "../../services/data/enrollmentsMock";
 import {
   getProfessorSubjects,
-  getStudents,
-  getGradesByStudentAndSubject,
-  createGrade,
-  updateGrade,
-  deleteGrade,
-  confirmGrade, // Dodata nova funkcija
+  getStudentsBySubject, // Dodata nova funkcija
 } from "../../services/api/studentService";
+import {
+  confirmGrade,
+  createGrade,
+  deleteGrade,
+  getGradesByStudentAndSubject,
+  updateGrade,
+} from "../../services/api/gradeService";
 
 const ProfessorDashboardPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -28,23 +30,43 @@ const ProfessorDashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.userRole === RoleEnum.Professor) {
-      const professorSubjects = getProfessorSubjects(user.id);
-      setSubjects(professorSubjects);
-    }
+    const fetchProfessorData = async () => {
+      if (user?.userRole === RoleEnum.Professor) {
+        try {
+          console.log(user.id);
+          const professorSubjects = await getProfessorSubjects(user.id);
+          setSubjects(professorSubjects);
+        } catch (error) {
+          console.error("Failed to fetch professor's subjects:", error);
+          setError("Greška pri dohvatanju predmeta.");
+        }
+      }
+    };
+    fetchProfessorData();
   }, [user]);
 
-  useEffect(() => {
+  const fetchGrades = async () => {
     if (selectedSubject && selectedStudent) {
-      const studentGrades = getGradesByStudentAndSubject(
-        selectedStudent.id,
-        selectedSubject.id
-      );
-      setGrades(studentGrades);
+      try {
+        const studentGrades = await getGradesByStudentAndSubject(
+          selectedStudent.id,
+          selectedSubject.id
+        );
+        console.log(studentGrades);
+        setGrades(studentGrades);
+      } catch (err) {
+        setError("Greška pri dohvatanju ocena.");
+        console.log(err);
+        setGrades([]);
+      }
     }
+  };
+
+  useEffect(() => {
+    fetchGrades();
   }, [selectedSubject, selectedStudent]);
 
-  const handleSubjectClick = (subject: Subject) => {
+  const handleSubjectClick = async (subject: Subject) => {
     setSelectedSubject(subject);
     setSelectedStudent(null);
     setGrades([]);
@@ -53,8 +75,13 @@ const ProfessorDashboardPage: React.FC = () => {
     setEditingGrade(null);
     setError(null);
     if (user) {
-      const studentsList = getStudents(user.userRole, subject.id);
-      setStudents(studentsList);
+      try {
+        const studentsList = await getStudentsBySubject(subject.id);
+        setStudents(studentsList);
+      } catch (error) {
+        console.error("Failed to fetch students for subject:", error);
+        setError("Greška pri dohvatanju studenata za ovaj predmet.");
+      }
     }
   };
 
@@ -66,7 +93,7 @@ const ProfessorDashboardPage: React.FC = () => {
     setError(null);
   };
 
-  const handleAddGrade = () => {
+  const handleAddGrade = async () => {
     if (!selectedStudent || !selectedSubject) {
       setError("Morate odabrati studenta i predmet.");
       return;
@@ -77,34 +104,34 @@ const ProfessorDashboardPage: React.FC = () => {
       return;
     }
 
-    const enrollment = MOCK_ENROLLMENTS.find(
-      (e) =>
-        e.studentId === selectedStudent.id && e.subjectId === selectedSubject.id
-    );
-    if (!enrollment) {
-      setError("Student nije upisan na ovaj predmet.");
+    const enrollmentId = grades.length > 0 ? grades[0].enrollmentId : null;
+
+    if (!enrollmentId) {
+      setError(
+        "Nije pronađen ID upisa (EnrollmentId) za ovog studenta i predmet."
+      );
       return;
     }
 
     const newGrade: CreateGrade = {
-      EnrollmentId: enrollment.id,
-      Grade: gradeValue,
+      EnrollmentId: enrollmentId,
+      StudentGrade: gradeValue,
       Comment: newComment,
     };
 
-    const result = createGrade(newGrade);
+    const result = await createGrade(newGrade);
 
     if (result instanceof Error) {
       setError(result.message);
     } else {
-      setGrades((prevGrades) => [...prevGrades, result]);
+      await fetchGrades();
       setNewGradeValue("");
       setNewComment("");
       setError(null);
     }
   };
 
-  const handleUpdateGrade = () => {
+  const handleUpdateGrade = async () => {
     if (!editingGrade || !selectedStudent || !selectedSubject) return;
 
     if (editingGrade.isConfirmed) {
@@ -118,29 +145,18 @@ const ProfessorDashboardPage: React.FC = () => {
       return;
     }
 
-    const enrollment = MOCK_ENROLLMENTS.find(
-      (e) =>
-        e.studentId === selectedStudent.id && e.subjectId === selectedSubject.id
-    );
-    if (!enrollment) {
-      setError("Student nije upisan na ovaj predmet.");
-      return;
-    }
-
     const updatedData: UpdateGrade = {
-      EnrollmentId: enrollment.id,
+      EnrollmentId: editingGrade.enrollmentId,
       StudentGrade: gradeValue,
       Comment: newComment,
     };
 
-    const result = updateGrade(editingGrade.id, updatedData);
+    const result = await updateGrade(editingGrade.id, updatedData);
 
     if (result instanceof Error) {
       setError(result.message);
     } else {
-      setGrades((prevGrades) =>
-        prevGrades.map((g) => (g.id === editingGrade.id ? result : g))
-      );
+      await fetchGrades(); //ovo obavezno
       setEditingGrade(null);
       setNewGradeValue("");
       setNewComment("");
@@ -148,17 +164,19 @@ const ProfessorDashboardPage: React.FC = () => {
     }
   };
 
-  const handleDeleteGrade = (gradeId: number) => {
-    const success = deleteGrade(gradeId);
-    if (success) {
+  const handleDeleteGrade = async (gradeId: number) => {
+    const result = await deleteGrade(gradeId);
+    if (result instanceof Error) {
+      setError(result.message);
+    } else if (result) {
       setGrades((prevGrades) => prevGrades.filter((g) => g.id !== gradeId));
     } else {
       setError("Nije moguće obrisati potvrđenu ocenu.");
     }
   };
 
-  const handleConfirmGrade = (gradeId: number) => {
-    const result = confirmGrade(gradeId);
+  const handleConfirmGrade = async (gradeId: number) => {
+    const result = await confirmGrade(gradeId);
     if (result instanceof Error) {
       setError(result.message);
     } else {
@@ -204,7 +222,7 @@ const ProfessorDashboardPage: React.FC = () => {
         {/* Lista studenata */}
         <div className="col-md-4">
           {selectedSubject && (
-            <>
+            <React.Fragment key={selectedSubject.id}>
               <h4 className="mb-3">
                 Studenti na {selectedSubject.subjectName}
               </h4>
@@ -228,13 +246,13 @@ const ProfessorDashboardPage: React.FC = () => {
                   </li>
                 )}
               </ul>
-            </>
+            </React.Fragment>
           )}
         </div>
         {/* Detalji studenta, ocene i unos ocena */}
         <div className="col-md-5">
           {selectedStudent && selectedSubject && (
-            <>
+            <React.Fragment key={selectedStudent.id}>
               <h4 className="mb-3">
                 Ocene za {selectedStudent.firstName} {selectedStudent.lastName}
               </h4>
@@ -365,7 +383,7 @@ const ProfessorDashboardPage: React.FC = () => {
                   )}
                 </tbody>
               </table>
-            </>
+            </React.Fragment>
           )}
         </div>
       </div>

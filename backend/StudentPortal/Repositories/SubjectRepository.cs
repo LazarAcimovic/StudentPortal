@@ -68,7 +68,6 @@ public class SubjectRepository : ISubjectRepository
         return await _context.Enrollments
             .Where(e => e.SubjectId == subjectId)
             .Select(e => e.Student)
-            .Include(s => s.UserRole)
             .ToListAsync();
     }
 }

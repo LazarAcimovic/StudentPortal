@@ -5,29 +5,39 @@ import type { Subject } from "../../models/SubjectModel";
 import type { Grade } from "../../models/GradeModel";
 import { getStudentSubjectsAndGrades } from "../../services/api/studentService";
 
-// Tip za podatke o predmetu i ocenama, koji se dobijaju sa backend-a
 type StudentSubjectData = {
+  enrollmentId: number;
   subject: Subject;
   grades: Grade[];
 };
 
 const StudentDashboardPage: React.FC = () => {
-  // Stanja i store za čuvanje podataka
   const { user } = useAuthStore();
   const [studentData, setStudentData] = useState<StudentSubjectData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // useEffect se poziva samo jednom kada se komponenta montira
-  // i kada se 'user' promeni, kako bi se dohvatili podaci za studenta.
   useEffect(() => {
-    // Proverava da li je korisnik student i da li ima ID pre poziva API-ja
-    if (user?.userRole === RoleEnum.Student && user?.id) {
-      const data = getStudentSubjectsAndGrades(user.id);
-      setStudentData(data);
-    }
+    const fetchStudentData = async () => {
+      if (user?.userRole === RoleEnum.Student && user?.id) {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const data = await getStudentSubjectsAndGrades(user.id);
+          setStudentData(data);
+        } catch (err) {
+          console.error("Greška pri dohvatanju podataka:", err);
+          setError("Došlo je do greške prilikom dohvatanja podataka.");
+          setStudentData([]);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchStudentData();
   }, [user]);
 
-  // Funkcija za dobijanje finalne ocene predmeta i statusa.
-  // Proverava da li postoji potvrđena ocena, a ako ne, vraća null.
   const getSubjectStatus = (
     grades: Grade[]
   ): { grade: number | null; isPassed: boolean } => {
@@ -43,8 +53,6 @@ const StudentDashboardPage: React.FC = () => {
     return { grade: null, isPassed: false };
   };
 
-  // useMemo se koristi za keširanje izračunatih vrednosti (statistika)
-  // Vrednosti se ponovo izračunavaju samo kada se promeni 'studentData'.
   const { totalAverageGrade, passedExams, totalEtcs } = useMemo(() => {
     const passedGrades: number[] = [];
     let passedExamsCount = 0;
@@ -54,7 +62,6 @@ const StudentDashboardPage: React.FC = () => {
       const { grade, isPassed } = getSubjectStatus(data.grades);
 
       if (isPassed) {
-        // Dodajemo ocenu u niz samo ako je ispit položen
         if (grade !== null) {
           passedGrades.push(grade);
         }
@@ -63,7 +70,6 @@ const StudentDashboardPage: React.FC = () => {
       }
     });
 
-    // Računamo globalni prosek isključivo na osnovu položenih ispita
     const totalGradeSum = passedGrades.reduce((sum, g) => sum + g, 0);
     const average =
       passedGrades.length > 0 ? totalGradeSum / passedGrades.length : 0;
@@ -76,13 +82,34 @@ const StudentDashboardPage: React.FC = () => {
     };
   }, [studentData]);
 
-  // Rani povratak ako korisnik nema dozvolu
   if (!user || user.userRole !== RoleEnum.Student) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
           <h3>Pristup zabranjen</h3>
           <p>Nemate dozvolu za pristup ovoj stranici.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mt-4 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <h4 className="mt-2">Učitavanje podataka...</h4>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mt-4">
+        <div className="alert alert-danger text-center">
+          <h3>Greška</h3>
+          <p>{error}</p>
         </div>
       </div>
     );
@@ -95,7 +122,6 @@ const StudentDashboardPage: React.FC = () => {
         Zdravo, {user.firstName} {user.lastName}!
       </h4>
 
-      {/* Sekcija 1: Korisnički profil */}
       <div className="card mb-4">
         <div className="card-header bg-primary text-white">
           <h5 className="mb-0">Moji podaci</h5>
@@ -115,7 +141,6 @@ const StudentDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Sekcija 2: Ključne statistike */}
       <div className="card mb-4">
         <div className="card-header bg-success text-white">
           <h5 className="mb-0">Statistike studija</h5>
@@ -146,7 +171,6 @@ const StudentDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Sekcija 3: Pregled predmeta i ocena */}
       <h4 className="mb-4">Moji predmeti</h4>
       <div className="row">
         {studentData.length > 0 ? (
@@ -158,7 +182,7 @@ const StudentDashboardPage: React.FC = () => {
               finalGrade !== null ? finalGrade : "Nema unete potvrđene ocene";
 
             return (
-              <div key={data.subject.id} className="col-md-6 mb-4">
+              <div key={data.enrollmentId} className="col-md-6 mb-4">
                 <div className="card h-100">
                   <div className="card-header bg-primary text-white">
                     <h5 className="card-title mb-0">
@@ -189,15 +213,15 @@ const StudentDashboardPage: React.FC = () => {
                       className="btn btn-sm btn-info"
                       type="button"
                       data-bs-toggle="collapse"
-                      data-bs-target={`#grades-${data.subject.id}`}
+                      data-bs-target={`#grades-${data.enrollmentId}`}
                       aria-expanded="false"
-                      aria-controls={`grades-${data.subject.id}`}
+                      aria-controls={`grades-${data.enrollmentId}`}
                     >
                       Prikaži sve ocene
                     </button>
                     <div
                       className="collapse mt-2"
-                      id={`grades-${data.subject.id}`}
+                      id={`grades-${data.enrollmentId}`}
                     >
                       <ul className="list-group list-group-flush">
                         {data.grades.map((grade) => (
@@ -223,7 +247,6 @@ const StudentDashboardPage: React.FC = () => {
                               )}
                             </div>
                             <span className="text-muted fst-italic">
-                              {/* Za sada koristimo fiksni datum */}
                               {new Date().toLocaleDateString()}
                             </span>
                           </li>

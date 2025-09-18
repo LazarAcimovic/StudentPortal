@@ -31,6 +31,12 @@ public class GradeService : IGradeService
         return _mapper.Map<IEnumerable<GradeDto>>(grades);
     }
 
+    public async Task<IEnumerable<GradeDto>> GetGradesByStudentAndSubjectAsync(int studentId, int subjectId)
+    {
+        var grades = await _gradeRepository.GetGradesByStudentAndSubjectAsync(studentId, subjectId);
+        return _mapper.Map<IEnumerable<GradeDto>>(grades);
+    }
+
     public async Task<GradeDto> GetGradeByIdAsync(int id)
     {
         var grade = await _gradeRepository.GetGradeByIdAsync(id);
@@ -72,10 +78,16 @@ public class GradeService : IGradeService
 
     public async Task<bool> DeleteGradeAsync(int id)
     {
-        var gradeToDelete = await _gradeRepository.GetGradeByIdAsync(id);
-        if (gradeToDelete == null) return false;
+        return await _gradeRepository.DeleteGradeAsync(id);
+    }
 
-        await _gradeRepository.DeleteGradeAsync(id);
-        return true;
+    public async Task<GradeDto> ConfirmGradeAsync(int id)
+    {
+        var confirmedGrade = await _gradeRepository.ConfirmGradeAsync(id);
+        if (confirmedGrade == null)
+        {
+            return null;
+        }
+        return _mapper.Map<GradeDto>(confirmedGrade);
     }
 }

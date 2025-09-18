@@ -49,5 +49,15 @@ public class UserRepository : IUserRepository
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(int studentId)
+    {
+        return await _context.Enrollments
+            .Where(e => e.StudentId == studentId)
+            .Include(e => e.Subject)
+            .Include(e => e.Grades)
+            .AsNoTracking()
+            .ToListAsync();
+    }
 }
 

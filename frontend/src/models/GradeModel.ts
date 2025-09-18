@@ -14,7 +14,7 @@ export interface Grade {
 
 export interface CreateGrade {
   EnrollmentId: number;
-  Grade: number;
+  StudentGrade: number;
   Comment?: string;
 }
 

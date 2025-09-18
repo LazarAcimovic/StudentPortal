@@ -8,7 +8,7 @@ namespace StudentPortal.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+ 
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -128,6 +128,19 @@ namespace StudentPortal.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        [HttpGet("{studentId}/subjects-and-grades")]
+        public async Task<ActionResult<IEnumerable<StudentSubjectGradesDto>>> GetStudentSubjectsAndGrades(int studentId)
+        {
+            var studentData = await _userService.GetStudentSubjectsAndGradesAsync(studentId);
+
+            if (studentData == null || !studentData.Any())
+            {
+                return NotFound("Student nije upisan na nijedan predmet ili nema ocena.");
+            }
+
+            return Ok(studentData);
         }
     }
 }

@@ -65,6 +65,8 @@ namespace StudentPortal.Services
 
             return new LoginResponseDto
             {
+                IndexNumber = userAccount.IndexNumber,
+                Id = userAccount.Id,
                 AccessToken = accessToken,
                 Email = request.Email,
                 UserRole = userAccount.UserRole,

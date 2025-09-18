@@ -15,6 +15,9 @@ public  class Grade
 
     public DateTime? CreatedAt { get; set; }
 
+    public bool IsConfirmed { get; set; }
+    public bool IsDeleted { get; set; }
+
     public virtual Enrollment Enrollment { get; set; }
 
 

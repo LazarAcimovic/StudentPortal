@@ -94,7 +94,45 @@ namespace StudentPortal.Controllers
             }
         }
 
-        // DELETE: api/grade/{id}
+        // GET: api/grade/student/{studentId}/subject/{subjectId}
+        [HttpGet("student/{studentId}/subject/{subjectId}")]
+        public async Task<ActionResult<IEnumerable<GradeDto>>> GetGradesByStudentAndSubject(int studentId, int subjectId)
+        {
+            try
+            {
+                var grades = await _gradeService.GetGradesByStudentAndSubjectAsync(studentId, subjectId);
+                if (grades == null || !grades.Any())
+                {
+                    return NotFound("Nema ocena za ovog studenta na ovom predmetu.");
+                }
+                return Ok(grades);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // PUT: api/grade/{id}/confirm
+        [HttpPut("{id}/confirm")]
+        public async Task<ActionResult<GradeDto>> ConfirmGrade(int id)
+        {
+            try
+            {
+                var confirmedGrade = await _gradeService.ConfirmGradeAsync(id);
+                if (confirmedGrade == null)
+                {
+                    return NotFound($"Ocena sa ID-om {id} nije pronađena ili ne može biti potvrđena.");
+                }
+                return Ok(confirmedGrade);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // Ažuriran DELETE: api/grade/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGrade(int id)
         {
@@ -103,7 +141,7 @@ namespace StudentPortal.Controllers
                 var success = await _gradeService.DeleteGradeAsync(id);
                 if (!success)
                 {
-                    return NotFound($"Grade with ID {id} not found or deletion failed.");
+                    return BadRequest("Ocena sa ID-om nije pronađena ili je već potvrđena.");
                 }
                 return NoContent();
             }

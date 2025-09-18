@@ -10,5 +10,7 @@ namespace StudentPortal.Interfaces
         Task AddUserAsync(User user);
         Task UpdateUserAsync(User user);
         Task DeleteUserAsync(int id);
+
+        Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(int studentId);
     }
 }

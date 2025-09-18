@@ -72,4 +72,16 @@ public class SubjectService : ISubjectService
         await _subjectRepository.DeleteSubjectAsync(id); 
         return true;
     }
+
+    public async Task<IEnumerable<SubjectDto>> GetSubjectsByProfessorIdAsync(int professorId)
+    {
+        var subjects = await _subjectRepository.GetSubjectsByProfessorIdAsync(professorId);
+        return _mapper.Map<IEnumerable<SubjectDto>>(subjects);
+    }
+
+    public async Task<IEnumerable<UserDto>> GetStudentsBySubjectIdAsync(int subjectId)
+    {
+        var students = await _subjectRepository.GetStudentsBySubjectIdAsync(subjectId);
+        return _mapper.Map<IEnumerable<UserDto>>(students);
+    }
 }

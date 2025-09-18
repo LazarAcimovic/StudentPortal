@@ -9,5 +9,7 @@ public interface IGradeRepository
     Task<Grade> AddGradeAsync(Grade grade);
     Task<IEnumerable<Grade>> GetGradeByStudentIdAsync(int studentId);
     Task UpdateGradeAsync(Grade grade);
-    Task DeleteGradeAsync(int id);
+    Task<bool> DeleteGradeAsync(int id);
+    Task<Grade> ConfirmGradeAsync(int id);
+    Task<IEnumerable<Grade>> GetGradesByStudentAndSubjectAsync(int studentId, int subjectId);
 }

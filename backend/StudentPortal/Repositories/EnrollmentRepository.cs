@@ -80,4 +80,14 @@ public class EnrollmentRepository : IEnrollmentRepository
    
         
     }
+
+    public async Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(int studentId)
+    {
+        return await _context.Enrollments
+            .Where(e => e.StudentId == studentId)
+            .Include(e => e.Subject) // Eager loading predmeta
+            .Include(e => e.Grades)   // Eager loading ocena
+            .AsNoTracking() // Dodajte .AsNoTracking() radi performansi, jer ne planirate menjati ove podatke
+            .ToListAsync();
+    }
 }

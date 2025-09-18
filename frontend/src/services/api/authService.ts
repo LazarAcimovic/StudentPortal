@@ -7,12 +7,14 @@ import type { User } from "../../models/UserModel";
 
 // Funkcija za mapiranje DTO-a sa backenda na frontend model
 const mapLoginResponseToUser = (response: LoginResponse): User => {
-  // Ovde treba da se mapiraju podaci sa backenda u User model
+  console.log(response);
   // Budući da backend vraća LoginResponseDto, verovatno ima email, ulogu, itd.
   // U zavisnosti od toga šta backend vraća, prilagodi mapiranje
   return {
+    id: response.id,
     firstName: response.firstName, // Ako backend vraća, mapiraj ovde
     lastName: response.lastName, // Ako backend vraća, mapiraj ovde
+    indexNumber: response.indexNumber,
     email: response.email,
     userRole: response.userRole, // Moras da konvertujes u RoleEnum ako backend vraca broj
     isDeleted: false,
@@ -29,6 +31,7 @@ export const login = async (Email: string, Password: string) => {
         headers: { Authorization: undefined },
       }
     );
+    // console.log(response.data);
 
     if (response.status === 200 && response.data.accessToken) {
       const user = mapLoginResponseToUser(response.data);

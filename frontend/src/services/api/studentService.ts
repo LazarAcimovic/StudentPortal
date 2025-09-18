@@ -1,41 +1,53 @@
+// studentService.ts
+
 import type { User } from "../../models/UserModel";
 import type { Subject } from "../../models/SubjectModel";
-import type { Grade, CreateGrade, UpdateGrade } from "../../models/GradeModel";
-import { MOCK_STUDENTS } from "../data/studentMock";
-import { MOCK_ENROLLMENTS } from "../data/enrollmentsMock";
-import { MOCK_SUBJECTS } from "../data/subjectsMock";
-import { MOCK_GRADES } from "../data/gradeMock";
-import { RoleEnum } from "../../models/Enums";
+import apiClient from "./apiClient";
+import type { StudentSubjectData } from "../../models/StudentSubjectData";
 
-export const getStudents = (userRole: RoleEnum, subjectId?: number): User[] => {
-  let students: User[] = [];
-
-  if (userRole === RoleEnum.Admin) {
-    students = MOCK_STUDENTS;
-  } else if (userRole === RoleEnum.Professor) {
-    if (subjectId) {
-      // console.log(subjectId);
-      const enrolledStudentIds = MOCK_ENROLLMENTS.filter(
-        (e) => e.SubjectId === subjectId
-      ).map((e) => e.StudentId);
-      students = MOCK_STUDENTS.filter((student) =>
-        enrolledStudentIds.includes(student.Id)
-      );
-    } else {
-      // Prazna lista studenata ako profesor nije odabrao predmet
-      students = [];
-    }
+export const getStudentsBySubject = async (
+  subjectId: number
+): Promise<User[]> => {
+  try {
+    const response = await apiClient.get<User[]>(
+      `/subject/${subjectId}/students`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Greška pri dohvatanju studenata za predmet:", error);
+    return [];
   }
-  console.log(students);
-
-  return students;
 };
 
-export const getProfessorSubjects = (professorId: number): Subject[] => {
-  return MOCK_SUBJECTS.filter((s) => s.ProfessorId === professorId);
+export const getProfessorSubjects = async (
+  professorId: number
+): Promise<Subject[]> => {
+  try {
+    const response = await apiClient.get<Subject[]>(
+      `/subject/professor/${professorId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Greška pri dohvatanju predmeta za profesora:", error);
+    return [];
+  }
 };
 
-export const getGradesByStudentAndSubject = (
+export const getStudentSubjectsAndGrades = async (
+  studentId: number
+): Promise<StudentSubjectData[]> => {
+  try {
+    const response = await apiClient.get<StudentSubjectData[]>(
+      `/user/${studentId}/subjects-and-grades`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Greška pri dohvatanju podataka za studenta:", error);
+    throw error;
+  }
+};
+
+/*export const getGradesByStudentAndSubject = (
   studentId: number,
   subjectId: number
 ): Grade[] => {
@@ -144,3 +156,4 @@ export const getStudentSubjectsAndGrades = (
     grades: Grade[];
   }[];
 };
+*/
