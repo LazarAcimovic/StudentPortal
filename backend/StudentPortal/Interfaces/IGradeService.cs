@@ -6,11 +6,11 @@ namespace StudentPortal.Interfaces;
 public interface IGradeService
 {
     Task<IEnumerable<GradeDto>> GetAllGradesAsync();
-    Task<IEnumerable<GradeDto>> GetGradesByStudentIdAsync(int studentId);
-    Task<GradeDto> GetGradeByIdAsync(int id);
-    Task<IEnumerable<GradeDto>> GetGradesByStudentAndSubjectAsync(int studentId, int subjectId);
+    Task<IEnumerable<GradeDto>> GetGradesByStudentIdAsync(Guid studentId);
+    Task<GradeDto> GetGradeByIdAsync(Guid id);
+    Task<IEnumerable<GradeDto>> GetGradesByStudentAndSubjectAsync(Guid studentId, Guid subjectId);
     Task<GradeDto> AddGradeAsync(GradeCreateDto gradeDto);
-    Task<GradeDto> UpdateGradeAsync(int id, GradeUpdateDto gradeDto);
-    Task<bool> DeleteGradeAsync(int id);
-    Task<GradeDto> ConfirmGradeAsync(int id);
+    Task<GradeDto> UpdateGradeAsync(Guid id, GradeUpdateDto gradeDto);
+    Task<bool> DeleteGradeAsync(Guid id);
+    Task<GradeDto> ConfirmGradeAsync(Guid id);
 }

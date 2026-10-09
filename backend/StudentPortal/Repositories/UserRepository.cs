@@ -18,7 +18,7 @@ public class UserRepository : IUserRepository
         return await _context.Users.AsNoTracking().ToListAsync();
     }
 
-    public async Task<User> GetUserByIdAsync(int id)
+    public async Task<User> GetUserByIdAsync(Guid id)
     {
         return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
     }
@@ -34,7 +34,7 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteUserAsync(int id)
+    public async Task DeleteUserAsync(Guid id)
     {
         var userToDelete = await _context.Users.FindAsync(id);
         if(userToDelete != null)
@@ -50,7 +50,7 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(int studentId)
+    public async Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(Guid studentId)
     {
         return await _context.Enrollments
             .Where(e => e.StudentId == studentId)

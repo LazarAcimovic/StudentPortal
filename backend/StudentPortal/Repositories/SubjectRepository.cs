@@ -21,7 +21,7 @@ public class SubjectRepository : ISubjectRepository
             .ToListAsync();
     }
 
-    public async Task<Subject> GetSubjectByIdAsync(int id)
+    public async Task<Subject> GetSubjectByIdAsync(Guid id)
     {
         return await _context.Subjects
                              .Include(s => s.Professor) 
@@ -45,7 +45,7 @@ public class SubjectRepository : ISubjectRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteSubjectAsync(int id)
+    public async Task DeleteSubjectAsync(Guid id)
     {
         var subjectToDelete = await _context.Subjects.FindAsync(id);
         if (subjectToDelete != null)
@@ -55,7 +55,7 @@ public class SubjectRepository : ISubjectRepository
         }
     }
 
-    public async Task<IEnumerable<Subject>> GetSubjectsByProfessorIdAsync(int professorId)
+    public async Task<IEnumerable<Subject>> GetSubjectsByProfessorIdAsync(Guid professorId)
     {
         return await _context.Subjects
             .Where(s => s.ProfessorId == professorId)
@@ -63,7 +63,7 @@ public class SubjectRepository : ISubjectRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<User>> GetStudentsBySubjectIdAsync(int subjectId)
+    public async Task<IEnumerable<User>> GetStudentsBySubjectIdAsync(Guid subjectId)
     {
         return await _context.Enrollments
             .Where(e => e.SubjectId == subjectId)

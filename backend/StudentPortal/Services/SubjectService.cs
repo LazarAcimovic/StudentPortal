@@ -24,7 +24,7 @@ public class SubjectService : ISubjectService
         return _mapper.Map<IEnumerable<SubjectDto>>(subjects);
     }
 
-    public async Task<SubjectDto> GetSubjectByIdAsync(int id)
+    public async Task<SubjectDto> GetSubjectByIdAsync(Guid id)
     {
         var subject = await _subjectRepository.GetSubjectByIdAsync(id);
         if (subject == null) return null;
@@ -47,7 +47,7 @@ public class SubjectService : ISubjectService
         return _mapper.Map<SubjectDto>(createdSubject);
     }
 
-    public async Task<SubjectDto> UpdateSubjectAsync(int id, SubjectUpdateDto subjectDto)
+    public async Task<SubjectDto> UpdateSubjectAsync(Guid id, SubjectUpdateDto subjectDto)
     {
         var subjectToUpdate = await _subjectRepository.GetSubjectByIdAsync(id);
         if (subjectToUpdate == null)
@@ -64,7 +64,7 @@ public class SubjectService : ISubjectService
         return _mapper.Map<SubjectDto>(updatedSubject);
     }
 
-    public async Task<bool> DeleteSubjectAsync(int id)
+    public async Task<bool> DeleteSubjectAsync(Guid id)
     {
         var subjectToDelete = await _subjectRepository.GetSubjectByIdAsync(id);
         if (subjectToDelete == null) return false;
@@ -73,13 +73,13 @@ public class SubjectService : ISubjectService
         return true;
     }
 
-    public async Task<IEnumerable<SubjectDto>> GetSubjectsByProfessorIdAsync(int professorId)
+    public async Task<IEnumerable<SubjectDto>> GetSubjectsByProfessorIdAsync(Guid professorId)
     {
         var subjects = await _subjectRepository.GetSubjectsByProfessorIdAsync(professorId);
         return _mapper.Map<IEnumerable<SubjectDto>>(subjects);
     }
 
-    public async Task<IEnumerable<UserDto>> GetStudentsBySubjectIdAsync(int subjectId)
+    public async Task<IEnumerable<UserDto>> GetStudentsBySubjectIdAsync(Guid subjectId)
     {
         var students = await _subjectRepository.GetStudentsBySubjectIdAsync(subjectId);
         return _mapper.Map<IEnumerable<UserDto>>(students);

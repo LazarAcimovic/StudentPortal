@@ -35,7 +35,6 @@ artifacts/
 *.backup
 *.log
 *.ndb
-*.sql
 *.pdb
 *.cache
 
@@ -45,9 +44,9 @@ artifacts/
 publish/
 
 # ===============================
-# Entity Framework Migrations (opciono)
+# Entity Framework Migrations
+# (tracked in version control)
 # ===============================
-Migrations/
 
 # ===============================
 # Test results

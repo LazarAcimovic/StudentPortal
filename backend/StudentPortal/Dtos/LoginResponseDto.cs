@@ -4,7 +4,7 @@ namespace StudentPortal.Dtos
 {
     public class LoginResponseDto
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Email { get; set; }
         public string IndexNumber { get; set; }
         public string AccessToken { get; set; }

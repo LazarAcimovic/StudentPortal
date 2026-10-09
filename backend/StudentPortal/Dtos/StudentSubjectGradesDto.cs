@@ -3,7 +3,7 @@
     public class StudentSubjectGradesDto
     {
         // Odgovara "enrollmentId" na frontendu
-        public int EnrollmentId { get; set; }
+        public Guid EnrollmentId { get; set; }
 
         // Odgovara "subject" na frontendu, koristi se SubjectDto za detalje predmeta
         public SubjectDto Subject { get; set; }

@@ -24,7 +24,7 @@ public class GradeRepository : IGradeRepository
                                .ToListAsync();
     }
 
-    public async Task<Grade> GetGradeByIdAsync(int id)
+    public async Task<Grade> GetGradeByIdAsync(Guid id)
     {
         return await _context.Grades.AsNoTracking()
                              .Include(g => g.Enrollment)
@@ -34,7 +34,7 @@ public class GradeRepository : IGradeRepository
                              .FirstOrDefaultAsync(g => g.Id == id);
     }
 
-    public async Task<IEnumerable<Grade>> GetGradeByStudentIdAsync(int studentId)
+    public async Task<IEnumerable<Grade>> GetGradeByStudentIdAsync(Guid studentId)
     {
         return await _context.Grades
                              .Include(g => g.Enrollment)
@@ -43,7 +43,7 @@ public class GradeRepository : IGradeRepository
                              .ToListAsync();
     }
 
-    public async Task<IEnumerable<Grade>> GetGradesByStudentAndSubjectAsync(int studentId, int subjectId)
+    public async Task<IEnumerable<Grade>> GetGradesByStudentAndSubjectAsync(Guid studentId, Guid subjectId)
     {
         return await _context.Grades
                              .Include(g => g.Enrollment)
@@ -75,7 +75,7 @@ public class GradeRepository : IGradeRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<Grade> ConfirmGradeAsync(int id)
+    public async Task<Grade> ConfirmGradeAsync(Guid id)
     {
         var gradeToConfirm = await _context.Grades.FindAsync(id);
         if (gradeToConfirm != null)
@@ -88,7 +88,7 @@ public class GradeRepository : IGradeRepository
         return null;
     }
 
-    public async Task<bool> DeleteGradeAsync(int id)
+    public async Task<bool> DeleteGradeAsync(Guid id)
     {
         var gradeToDelete = await _context.Grades.FindAsync(id);
         if (gradeToDelete != null && !gradeToDelete.IsConfirmed)

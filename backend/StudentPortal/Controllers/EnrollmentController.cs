@@ -38,7 +38,7 @@ namespace StudentPortal.Controllers
 
         // GET: api/enrollment/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<EnrollmentDto>> GetEnrollmentById(int id)
+        public async Task<ActionResult<EnrollmentDto>> GetEnrollmentById(Guid id)
         {
             try
             {
@@ -78,7 +78,7 @@ namespace StudentPortal.Controllers
 
         // DELETE: api/enrollment/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEnrollment(int id)
+        public async Task<IActionResult> DeleteEnrollment(Guid id)
         {
             try
             {

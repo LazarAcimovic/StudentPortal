@@ -2,8 +2,8 @@
 {
     public class GradeDto
     {
-        public int Id { get; set; }
-        public int EnrollmentId { get; set; }
+        public Guid Id { get; set; }
+        public Guid EnrollmentId { get; set; }
         public int StudentGrade { get; set; }
         public string Comment { get; set; }
         public string StudentFirstName { get; set; }

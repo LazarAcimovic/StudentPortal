@@ -25,7 +25,7 @@ public class UserService : IUserService
         return _mapper.Map<IEnumerable<UserDto>>(users);
     }
 
-    public async Task<UserDto> GetUserByIdAsync(int id)
+    public async Task<UserDto> GetUserByIdAsync(Guid id)
     {
         var user = await _userRepository.GetUserByIdAsync(id);
         if (user == null)
@@ -58,7 +58,7 @@ public class UserService : IUserService
     }
 
 
-    public async Task<UserDto> UpdateUserAsync(int id, UserUpdateDto userDto)
+    public async Task<UserDto> UpdateUserAsync(Guid id, UserUpdateDto userDto)
     {
         var userToUpdate = await _userRepository.GetUserByIdAsync(id);
         if (userToUpdate == null) return null; // Vraćamo null ako korisnik nije pronađen
@@ -71,7 +71,7 @@ public class UserService : IUserService
         return _mapper.Map<UserDto>(userToUpdate);
     }
 
-    public async Task<bool> DeleteUserAsync(int id)
+    public async Task<bool> DeleteUserAsync(Guid id)
     {
         var userToDelete = await _userRepository.GetUserByIdAsync(id);
         if (userToDelete == null) return false;
@@ -80,7 +80,7 @@ public class UserService : IUserService
         return true;
     }
 
-    public async Task<IEnumerable<StudentSubjectGradesDto>> GetStudentSubjectsAndGradesAsync(int studentId)
+    public async Task<IEnumerable<StudentSubjectGradesDto>> GetStudentSubjectsAndGradesAsync(Guid studentId)
     {
         // Koristimo novu metodu iz UserRepository-a
         var enrollments = await _userRepository.GetStudentEnrollmentsWithDetailsAsync(studentId);

@@ -38,7 +38,7 @@ namespace StudentPortal.Controllers
 
         // GET: api/grade/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<GradeDto>> GetGradeById(int id)
+        public async Task<ActionResult<GradeDto>> GetGradeById(Guid id)
         {
             try
             {
@@ -77,7 +77,7 @@ namespace StudentPortal.Controllers
 
         // PUT: api/grade/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateGrade(int id, [FromBody] GradeUpdateDto gradeDto)
+        public async Task<IActionResult> UpdateGrade(Guid id, [FromBody] GradeUpdateDto gradeDto)
         {
             try
             {
@@ -96,7 +96,7 @@ namespace StudentPortal.Controllers
 
         // GET: api/grade/student/{studentId}/subject/{subjectId}
         [HttpGet("student/{studentId}/subject/{subjectId}")]
-        public async Task<ActionResult<IEnumerable<GradeDto>>> GetGradesByStudentAndSubject(int studentId, int subjectId)
+        public async Task<ActionResult<IEnumerable<GradeDto>>> GetGradesByStudentAndSubject(Guid studentId, Guid subjectId)
         {
             try
             {
@@ -115,7 +115,7 @@ namespace StudentPortal.Controllers
 
         // PUT: api/grade/{id}/confirm
         [HttpPut("{id}/confirm")]
-        public async Task<ActionResult<GradeDto>> ConfirmGrade(int id)
+        public async Task<ActionResult<GradeDto>> ConfirmGrade(Guid id)
         {
             try
             {
@@ -134,7 +134,7 @@ namespace StudentPortal.Controllers
 
         // Ažuriran DELETE: api/grade/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteGrade(int id)
+        public async Task<IActionResult> DeleteGrade(Guid id)
         {
             try
             {

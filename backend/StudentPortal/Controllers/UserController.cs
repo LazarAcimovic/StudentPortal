@@ -52,7 +52,7 @@ namespace StudentPortal.Controllers
 
         // GET: api/user/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserDto>> GetUserById(int id)
+        public async Task<ActionResult<UserDto>> GetUserById(Guid id)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace StudentPortal.Controllers
 
         // PUT: api/user/{id}
         [HttpPut("{id}")]
-        public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UserUpdateDto userDto)
+        public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] UserUpdateDto userDto)
         {
             try
             {
@@ -113,7 +113,7 @@ namespace StudentPortal.Controllers
 
         // DELETE: api/user/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(Guid id)
         {
             try
             {
@@ -131,7 +131,7 @@ namespace StudentPortal.Controllers
         }
 
         [HttpGet("{studentId}/subjects-and-grades")]
-        public async Task<ActionResult<IEnumerable<StudentSubjectGradesDto>>> GetStudentSubjectsAndGrades(int studentId)
+        public async Task<ActionResult<IEnumerable<StudentSubjectGradesDto>>> GetStudentSubjectsAndGrades(Guid studentId)
         {
             var studentData = await _userService.GetStudentSubjectsAndGradesAsync(studentId);
 

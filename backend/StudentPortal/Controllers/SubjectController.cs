@@ -38,7 +38,7 @@ namespace StudentPortal.Controllers
 
         // GET: api/subject/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<SubjectDto>> GetSubjectById(int id)
+        public async Task<ActionResult<SubjectDto>> GetSubjectById(Guid id)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace StudentPortal.Controllers
 
                 // GET: api/subject/professor/{professorId}
         [HttpGet("professor/{professorId}")]
-        public async Task<ActionResult<IEnumerable<SubjectDto>>> GetSubjectsByProfessorId(int professorId)
+        public async Task<ActionResult<IEnumerable<SubjectDto>>> GetSubjectsByProfessorId(Guid professorId)
         {
             try
             {
@@ -76,7 +76,7 @@ namespace StudentPortal.Controllers
         
         // GET: api/subject/{subjectId}/students
         [HttpGet("{subjectId}/students")]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetStudentsBySubjectId(int subjectId)
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetStudentsBySubjectId(Guid subjectId)
         {
             try
             {
@@ -117,7 +117,7 @@ namespace StudentPortal.Controllers
 
         // PUT: api/subject/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSubject(int id, [FromBody] SubjectUpdateDto subjectDto)
+        public async Task<IActionResult> UpdateSubject(Guid id, [FromBody] SubjectUpdateDto subjectDto)
         {
             var updatedSubject = await _subjectService.UpdateSubjectAsync(id, subjectDto);
 
@@ -132,7 +132,7 @@ namespace StudentPortal.Controllers
 
         // DELETE: api/subject/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSubject(int id)
+        public async Task<IActionResult> DeleteSubject(Guid id)
         {
             try
             {

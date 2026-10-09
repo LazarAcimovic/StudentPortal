@@ -26,7 +26,7 @@ public class EnrollmentService : IEnrollmentService
         return _mapper.Map<IEnumerable<EnrollmentDto>>(enrollments);
     }
 
-    public async Task<EnrollmentDto> GetEnrollmentByIdAsync(int studentId)
+    public async Task<EnrollmentDto> GetEnrollmentByIdAsync(Guid studentId)
     {
         var enrollments = await _enrollmentRepository.GetEnrollmentByIdAsync(studentId);
         return _mapper.Map<EnrollmentDto>(enrollments);
@@ -62,7 +62,7 @@ public class EnrollmentService : IEnrollmentService
         return _mapper.Map<EnrollmentDto>(createdEnrollment);
     }
 
-    public async Task<bool> DeleteEnrollmentAsync(int enrollmentId)
+    public async Task<bool> DeleteEnrollmentAsync(Guid enrollmentId)
     {
         var enrollmentToDelete = await _enrollmentRepository.GetEnrollmentByIdAsync(enrollmentId);
         if (enrollmentToDelete == null) return false;

@@ -31,7 +31,7 @@ builder.Services.AddCors(options =>
 
 // Registracija DbContext-a
 builder.Services.AddDbContext<StudentPortalApiContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Registracija AutoMappera
 

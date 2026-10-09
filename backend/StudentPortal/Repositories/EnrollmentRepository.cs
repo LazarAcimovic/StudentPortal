@@ -22,7 +22,7 @@ public class EnrollmentRepository : IEnrollmentRepository
                              .ToListAsync();
     }
 
-    public async Task<Enrollment> GetEnrollmentByIdAsync(int id)
+    public async Task<Enrollment> GetEnrollmentByIdAsync(Guid id)
     {
         return await _context.Enrollments
                              .AsNoTracking()
@@ -31,7 +31,7 @@ public class EnrollmentRepository : IEnrollmentRepository
                              .FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public async Task<Enrollment> GetByIdAsync(int id)
+    public async Task<Enrollment> GetByIdAsync(Guid id)
     {
         return await _context.Enrollments
                              .AsNoTracking()
@@ -39,7 +39,7 @@ public class EnrollmentRepository : IEnrollmentRepository
     }
 
     //to check if student is already enrolled
-    public async Task<Enrollment> GetEnrollmentByStudentAndSubjectIdAsync(int studentId, int subjectId)
+    public async Task<Enrollment> GetEnrollmentByStudentAndSubjectIdAsync(Guid studentId, Guid subjectId)
     {
         return await _context.Enrollments
                              .AsNoTracking()
@@ -68,7 +68,7 @@ public class EnrollmentRepository : IEnrollmentRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteEnrollmentAsync(int id)
+    public async Task DeleteEnrollmentAsync(Guid id)
     {
         var enrollmentToDelete = await _context.Enrollments.FindAsync(id);
 
@@ -81,7 +81,7 @@ public class EnrollmentRepository : IEnrollmentRepository
         
     }
 
-    public async Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(int studentId)
+    public async Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(Guid studentId)
     {
         return await _context.Enrollments
             .Where(e => e.StudentId == studentId)

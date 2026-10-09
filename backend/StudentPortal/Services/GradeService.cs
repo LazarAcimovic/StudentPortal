@@ -25,19 +25,19 @@ public class GradeService : IGradeService
         return _mapper.Map<IEnumerable<GradeDto>>(grades);
     }
 
-    public async Task<IEnumerable<GradeDto>> GetGradesByStudentIdAsync(int studentId)
+    public async Task<IEnumerable<GradeDto>> GetGradesByStudentIdAsync(Guid studentId)
     {
         var grades = await _gradeRepository.GetGradeByStudentIdAsync(studentId);
         return _mapper.Map<IEnumerable<GradeDto>>(grades);
     }
 
-    public async Task<IEnumerable<GradeDto>> GetGradesByStudentAndSubjectAsync(int studentId, int subjectId)
+    public async Task<IEnumerable<GradeDto>> GetGradesByStudentAndSubjectAsync(Guid studentId, Guid subjectId)
     {
         var grades = await _gradeRepository.GetGradesByStudentAndSubjectAsync(studentId, subjectId);
         return _mapper.Map<IEnumerable<GradeDto>>(grades);
     }
 
-    public async Task<GradeDto> GetGradeByIdAsync(int id)
+    public async Task<GradeDto> GetGradeByIdAsync(Guid id)
     {
         var grade = await _gradeRepository.GetGradeByIdAsync(id);
         if (grade== null) return null;
@@ -63,7 +63,7 @@ public class GradeService : IGradeService
         }
     }
 
-    public async Task<GradeDto> UpdateGradeAsync(int id, GradeUpdateDto gradeDto)
+    public async Task<GradeDto> UpdateGradeAsync(Guid id, GradeUpdateDto gradeDto)
     {
         var gradeToUpdate = await _gradeRepository.GetGradeByIdAsync(id);
         if (gradeToUpdate == null) return null;
@@ -76,12 +76,12 @@ public class GradeService : IGradeService
         return _mapper.Map<GradeDto>(updatedGrade);
     }
 
-    public async Task<bool> DeleteGradeAsync(int id)
+    public async Task<bool> DeleteGradeAsync(Guid id)
     {
         return await _gradeRepository.DeleteGradeAsync(id);
     }
 
-    public async Task<GradeDto> ConfirmGradeAsync(int id)
+    public async Task<GradeDto> ConfirmGradeAsync(Guid id)
     {
         var confirmedGrade = await _gradeRepository.ConfirmGradeAsync(id);
         if (confirmedGrade == null)
