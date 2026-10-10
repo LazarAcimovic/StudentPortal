@@ -59,3 +59,12 @@ TestResults/
 # ===============================
 .DS_Store
 Thumbs.db
+
+# ===============================
+# Secrets and local environment
+# ===============================
+.env
+.env.local
+.env.*.local
+appsettings.Local.json
+appsettings.*.Local.json
