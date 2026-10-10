@@ -38,13 +38,13 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
   return (
     <div className="card my-4">
       <div className="card-header">
-        <h5>Kreiraj Novi Predmet</h5>
+        <h5>Create New Subject</h5>
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="subjectName" className="form-label">
-              Naziv predmeta
+              Subject Name
             </label>
             <input
               type="text"
@@ -72,7 +72,7 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
           </div>
           <div className="mb-3">
             <label htmlFor="professor" className="form-label">
-              Profesor
+              Professor
             </label>
             <select
               className="form-select"
@@ -82,7 +82,7 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
               onChange={handleChange}
               required
             >
-              <option value="">Izaberi profesora</option>
+              <option value="">Select professor</option>
               {professors
                 .filter((p) => p.userRole === RoleEnum.Professor)
                 .map((prof) => (
@@ -98,10 +98,10 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
               className="btn btn-secondary me-2"
               onClick={onCancel}
             >
-              Otkaži
+              Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Kreiraj
+              Create
             </button>
           </div>
         </form>

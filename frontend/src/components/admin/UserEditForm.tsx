@@ -52,14 +52,14 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
     <div className="card my-4">
       <div className="card-header">
         <h5>
-          Uredi Korisnika: {user.firstName} {user.lastName}
+          Edit User: {user.firstName} {user.lastName}
         </h5>
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="firstName" className="form-label">
-              Ime
+              First Name
             </label>
             <input
               type="text"
@@ -73,7 +73,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
           </div>
           <div className="mb-3">
             <label htmlFor="lastName" className="form-label">
-              Prezime
+              Last Name
             </label>
             <input
               type="text"
@@ -101,7 +101,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
           </div>
           <div className="mb-3">
             <label htmlFor="userRole" className="form-label">
-              Uloga
+              Role
             </label>
             <select
               className="form-select"
@@ -112,7 +112,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
               required
             >
               <option value={RoleEnum.Student}>Student</option>
-              <option value={RoleEnum.Professor}>Profesor</option>
+              <option value={RoleEnum.Professor}>Professor</option>
             </select>
           </div>
           <div className="mb-3 form-check">
@@ -125,7 +125,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
               onChange={handleChange}
             />
             <label className="form-check-label" htmlFor="isDeleted">
-              Obrisan (neaktivan)
+              Deleted (inactive)
             </label>
           </div>
           <div className="d-flex justify-content-end">
@@ -134,10 +134,10 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
               className="btn btn-secondary me-2"
               onClick={onCancel}
             >
-              Otkaži
+              Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Sačuvaj izmene
+              Save Changes
             </button>
           </div>
         </form>

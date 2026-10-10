@@ -8,7 +8,7 @@ export const getAllUsers = async (): Promise<User[] | null> => {
     const response = await apiClient.get<User[]>("/user");
     return response.data;
   } catch (error) {
-    console.error("Greška pri dohvatanju korisnika:", error);
+    console.error("Error fetching users:", error);
     return null;
   }
 };
@@ -19,8 +19,7 @@ export const addUser = async (userData: CreateUser): Promise<User | null> => {
     const response = await apiClient.post<User>("/user", userData);
     return response.data;
   } catch (error) {
-    // Greška pri kreiranju korisnika (npr. 400 Bad Request ako email već postoji)
-    console.error("Greška pri kreiranju korisnika:", error);
+    console.error("Error creating user:", error);
     return null;
   }
 };
@@ -43,7 +42,7 @@ export const updateUser = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Greška pri ažuriranju korisnika:", error);
+    console.error("Error updating user:", error);
     return null;
   }
 };
@@ -54,7 +53,7 @@ export const deleteUser = async (userId: number): Promise<boolean> => {
     await apiClient.delete(`/user/${userId}`);
     return true; 
   } catch (error) {
-    console.error("Greška pri brisanju korisnika:", error);
+    console.error("Error deleting user:", error);
     return false; 
   }
 };
@@ -62,7 +61,7 @@ export const deleteUser = async (userId: number): Promise<boolean> => {
 export const createStudent = (newUser: CreateUser): User | Error => {
   const existingUser = MOCK_STUDENTS.find((u) => u.Email === newUser.Email);
   if (existingUser) {
-    return new Error("Korisnik sa tim email-om već postoji.");
+    return new Error("A user with that email already exists.");
   }
 
   const newUserId =

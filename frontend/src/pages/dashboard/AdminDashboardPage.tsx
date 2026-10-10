@@ -75,8 +75,8 @@ const AdminDashboardPage: React.FC = () => {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
-          <h3>Pristup zabranjen</h3>
-          <p>Nemate administratorske dozvole za pristup ovoj stranici.</p>
+          <h3>Access denied</h3>
+          <p>You do not have admin permissions to access this page.</p>
         </div>
       </div>
     );
@@ -86,19 +86,16 @@ const AdminDashboardPage: React.FC = () => {
     const createdUser = await addUser(newUser);
 
     if (createdUser) {
-      // Ako je korisnik uspešno kreiran na backendu, dodaj ga u stanje na frontendu
       setUsers([...users, createdUser]);
       setIsCreatingUser(false);
-      console.log("Kreiran novi korisnik:", createdUser);
+      console.log("Created new user:", createdUser);
     } else {
-      // Prikaz greške korisnikFUu
       alert(
-        "Kreiranje korisnika nije uspelo. Moguće da korisnik sa tim emailom već postoji."
+        "Failed to create user. A user with that email may already exist."
       );
     }
   };
   const handleUpdateUser = async (updatedUser: UpdateUser) => {
-    // updatedUser objekat ovde sadrži ID korisnika
     const updatedUserData = await updateUser(updatedUser);
 
     if (updatedUserData) {
@@ -106,21 +103,20 @@ const AdminDashboardPage: React.FC = () => {
         users.map((u) => (u.id === updatedUserData.id ? updatedUserData : u))
       );
       setEditingUser(null);
-      console.log("Ažuriran korisnik:", updatedUserData);
+      console.log("Updated user:", updatedUserData);
     } else {
-      alert("Ažuriranje korisnika nije uspelo.");
+      alert("Failed to update user.");
     }
   };
   const handleDeleteUser = async (userId: number) => {
     const isSuccess = await deleteUser(userId);
 
     if (isSuccess) {
-      // Filtriramo korisnika iz liste ako je brisanje uspešno
       setUsers(users.filter((u) => u.id !== userId));
-      console.log("Obrisan korisnik sa ID-jem:", userId);
-      alert("Korisnik je uspešno obrisan."); //zameniš sa toast eventualno
+      console.log("Deleted user with ID:", userId);
+      alert("User deleted successfully.");
     } else {
-      alert("Brisanje korisnika nije uspelo.");
+      alert("Failed to delete user.");
     }
   };
   const handleCreateSubject = async (newSubject: CreateSubject) => {
@@ -129,9 +125,9 @@ const AdminDashboardPage: React.FC = () => {
     if (createdSubject) {
       setSubjects([...subjects, createdSubject]);
       setIsCreatingSubject(false);
-      console.log("Kreiran novi predmet:", createdSubject);
+      console.log("Created new subject:", createdSubject);
     } else {
-      alert("Kreiranje predmeta nije uspelo.");
+      alert("Failed to create subject.");
     }
   };
   const handleUpdateSubject = async (updatedSubject: UpdateSubject) => {
@@ -144,9 +140,9 @@ const AdminDashboardPage: React.FC = () => {
         )
       );
       setEditingSubject(null);
-      console.log("Ažuriran predmet:", updatedSubjectData);
+      console.log("Updated subject:", updatedSubjectData);
     } else {
-      alert("Ažuriranje predmeta nije uspelo.");
+      alert("Failed to update subject.");
     }
   };
 
@@ -156,9 +152,9 @@ const AdminDashboardPage: React.FC = () => {
     if (createdEnrollment) {
       setEnrollments([...enrollments, createdEnrollment]);
       setIsCreatingEnrollment(false);
-      console.log("Kreiran novi upis:", createdEnrollment);
+      console.log("Created new enrollment:", createdEnrollment);
     } else {
-      alert("Kreiranje upisa nije uspelo.");
+      alert("Failed to create enrollment.");
     }
   };
   const handleDeleteEnrollment = (enrollmentId: number) => {
@@ -167,14 +163,14 @@ const AdminDashboardPage: React.FC = () => {
         e.Id === enrollmentId ? { ...e, IsDeleted: true } : e
       )
     );
-    console.log("Obrisan upis sa ID-jem:", enrollmentId);
+    console.log("Deleted enrollment with ID:", enrollmentId);
   };
   const renderContent = () => {
     switch (activeTab) {
       case "users":
         return (
           <>
-            <h3>Upravljanje Korisnicima</h3>
+            <h3>Manage Users</h3>
             {isCreatingUser ? (
               <UserCreateForm
                 onSave={handleCreateUser}
@@ -193,7 +189,7 @@ const AdminDashboardPage: React.FC = () => {
                     className="btn btn-success"
                     onClick={() => setIsCreatingUser(true)}
                   >
-                    Kreiraj novog korisnika
+                    Create New User
                   </button>
                 </div>
                 <UsersTable
@@ -208,7 +204,7 @@ const AdminDashboardPage: React.FC = () => {
       case "subjects":
         return (
           <>
-            <h3>Upravljanje Predmetima</h3>
+            <h3>Manage Subjects</h3>
             {isCreatingSubject ? (
               <SubjectCreateForm
                 professors={users.filter(
@@ -233,7 +229,7 @@ const AdminDashboardPage: React.FC = () => {
                     className="btn btn-success"
                     onClick={() => setIsCreatingSubject(true)}
                   >
-                    Kreiraj novi predmet
+                    Create New Subject
                   </button>
                 </div>
                 <SubjectsTable
@@ -249,7 +245,7 @@ const AdminDashboardPage: React.FC = () => {
       case "enrollments":
         return (
           <>
-            <h3>Upis studenata na predmete</h3>
+            <h3>Student Enrollments</h3>
             {isCreatingEnrollment ? (
               <EnrollmentCreateForm
                 students={users.filter((u) => u.userRole === RoleEnum.Student)}
@@ -265,7 +261,7 @@ const AdminDashboardPage: React.FC = () => {
                     className="btn btn-success"
                     onClick={() => setIsCreatingEnrollment(true)}
                   >
-                    Kreiraj novi upis
+                    Create New Enrollment
                   </button>
                 </div>
                 <EnrollmentsTable
@@ -283,14 +279,14 @@ const AdminDashboardPage: React.FC = () => {
   return (
     <div className="container mt-4">
       <h2>Admin Dashboard</h2>
-      <h4 className="mb-4">Dobrodošli,{user.firstName}!</h4>
+      <h4 className="mb-4">Welcome, {user.firstName}!</h4>
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
           <button
             className={`nav-link ${activeTab === "users" ? "active" : ""}`}
             onClick={() => setActiveTab("users")}
           >
-            Korisnici
+            Users
           </button>
         </li>
         <li className="nav-item">
@@ -298,7 +294,7 @@ const AdminDashboardPage: React.FC = () => {
             className={`nav-link ${activeTab === "subjects" ? "active" : ""}`}
             onClick={() => setActiveTab("subjects")}
           >
-            Predmeti
+            Subjects
           </button>
         </li>
         <li className="nav-item">
@@ -308,7 +304,7 @@ const AdminDashboardPage: React.FC = () => {
             }`}
             onClick={() => setActiveTab("enrollments")}
           >
-            Upisi
+            Enrollments
           </button>
         </li>
       </ul>

@@ -26,12 +26,12 @@ const UsersTable: React.FC<UsersTableProps> = ({
         <thead>
           <tr>
             <th>ID</th>
-            <th>Ime</th>
-            <th>Prezime</th>
+            <th>First Name</th>
+            <th>Last Name</th>
             <th>Email</th>
-            <th>Uloga</th>
+            <th>Role</th>
             <th>Status</th>
-            <th>Akcija</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -43,17 +43,17 @@ const UsersTable: React.FC<UsersTableProps> = ({
               <td>{user.email}</td>
               <td>
                 {user.userRole === RoleEnum.Student ? "Student" : ""}
-                {user.userRole === RoleEnum.Professor ? "Profesor" : ""}
+                {user.userRole === RoleEnum.Professor ? "Professor" : ""}
                 {user.userRole === RoleEnum.Admin ? "Admin" : ""}
               </td>
               <td>
                 {user.isDeleted ? (
                   <span className="badge bg-danger">
-                    Obrisan <FontAwesomeIcon icon={faBan} />
+                    Inactive <FontAwesomeIcon icon={faBan} />
                   </span>
                 ) : (
                   <span className="badge bg-success">
-                    Aktivan <FontAwesomeIcon icon={faCheckCircle} />
+                    Active <FontAwesomeIcon icon={faCheckCircle} />
                   </span>
                 )}
               </td>
@@ -62,7 +62,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
                   className="btn btn-warning btn-sm me-2"
                   onClick={() => onStartEdit(user)}
                 >
-                  <FontAwesomeIcon icon={faEdit} /> Uredi
+                  <FontAwesomeIcon icon={faEdit} /> Edit
                 </button>
                 {/* <button
                   className="btn btn-danger btn-sm"

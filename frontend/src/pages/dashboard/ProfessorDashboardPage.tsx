@@ -38,7 +38,7 @@ const ProfessorDashboardPage: React.FC = () => {
           setSubjects(professorSubjects);
         } catch (error) {
           console.error("Failed to fetch professor's subjects:", error);
-          setError("Greška pri dohvatanju predmeta.");
+          setError("Failed to fetch subjects.");
         }
       }
     };
@@ -55,7 +55,7 @@ const ProfessorDashboardPage: React.FC = () => {
         console.log(studentGrades);
         setGrades(studentGrades);
       } catch (err) {
-        setError("Greška pri dohvatanju ocena.");
+        setError("Failed to fetch grades.");
         console.log(err);
         setGrades([]);
       }
@@ -80,7 +80,7 @@ const ProfessorDashboardPage: React.FC = () => {
         setStudents(studentsList);
       } catch (error) {
         console.error("Failed to fetch students for subject:", error);
-        setError("Greška pri dohvatanju studenata za ovaj predmet.");
+        setError("Failed to fetch students for this subject.");
       }
     }
   };
@@ -95,12 +95,12 @@ const ProfessorDashboardPage: React.FC = () => {
 
   const handleAddGrade = async () => {
     if (!selectedStudent || !selectedSubject) {
-      setError("Morate odabrati studenta i predmet.");
+      setError("Please select a student and a subject.");
       return;
     }
     const gradeValue = parseInt(newGradeValue);
     if (isNaN(gradeValue) || gradeValue < 5 || gradeValue > 10) {
-      setError("Ocena mora biti broj između 5 i 10.");
+      setError("Grade must be a number between 5 and 10.");
       return;
     }
 
@@ -108,7 +108,7 @@ const ProfessorDashboardPage: React.FC = () => {
 
     if (!enrollmentId) {
       setError(
-        "Nije pronađen ID upisa (EnrollmentId) za ovog studenta i predmet."
+        "Enrollment ID not found for this student and subject."
       );
       return;
     }
@@ -135,13 +135,13 @@ const ProfessorDashboardPage: React.FC = () => {
     if (!editingGrade || !selectedStudent || !selectedSubject) return;
 
     if (editingGrade.isConfirmed) {
-      setError("Ne možete izmeniti potvrđenu ocenu.");
+      setError("You cannot edit a confirmed grade.");
       return;
     }
 
     const gradeValue = parseInt(newGradeValue);
     if (isNaN(gradeValue) || gradeValue < 5 || gradeValue > 10) {
-      setError("Ocena mora biti broj između 5 i 10.");
+      setError("Grade must be a number between 5 and 10.");
       return;
     }
 
@@ -171,7 +171,7 @@ const ProfessorDashboardPage: React.FC = () => {
     } else if (result) {
       setGrades((prevGrades) => prevGrades.filter((g) => g.id !== gradeId));
     } else {
-      setError("Nije moguće obrisati potvrđenu ocenu.");
+      setError("Cannot delete a confirmed grade.");
     }
   };
 
@@ -190,8 +190,8 @@ const ProfessorDashboardPage: React.FC = () => {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
-          <h3>Pristup zabranjen</h3>
-          <p>Nemate dozvolu za pristup ovoj stranici.</p>
+          <h3>Access denied</h3>
+          <p>You do not have permission to access this page.</p>
         </div>
       </div>
     );
@@ -199,11 +199,11 @@ const ProfessorDashboardPage: React.FC = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Profesorov Dashboard</h2>
+      <h2 className="mb-4">Professor Dashboard</h2>
       <div className="row">
         {/* Lista predmeta */}
         <div className="col-md-3">
-          <h4 className="mb-3">Moji predmeti</h4>
+          <h4 className="mb-3">My Subjects</h4>
           <ul className="list-group">
             {subjects.map((subject) => (
               <li
@@ -224,7 +224,7 @@ const ProfessorDashboardPage: React.FC = () => {
           {selectedSubject && (
             <React.Fragment key={selectedSubject.id}>
               <h4 className="mb-3">
-                Studenti na {selectedSubject.subjectName}
+                Students in {selectedSubject.subjectName}
               </h4>
               <ul className="list-group">
                 {students.length > 0 ? (
@@ -242,7 +242,7 @@ const ProfessorDashboardPage: React.FC = () => {
                   ))
                 ) : (
                   <li className="list-group-item">
-                    Nema upisanih studenata na ovom predmetu.
+                    No students enrolled in this subject.
                   </li>
                 )}
               </ul>
@@ -254,17 +254,17 @@ const ProfessorDashboardPage: React.FC = () => {
           {selectedStudent && selectedSubject && (
             <React.Fragment key={selectedStudent.id}>
               <h4 className="mb-3">
-                Ocene za {selectedStudent.firstName} {selectedStudent.lastName}
+                Grades for {selectedStudent.firstName} {selectedStudent.lastName}
               </h4>
               {error && <div className="alert alert-danger">{error}</div>}
               {/* Forma za dodavanje/izmenu ocene */}
               <div className="card mb-3">
                 <div className="card-body">
                   <h5 className="card-title">
-                    {editingGrade ? "Izmeni ocenu" : "Dodaj novu ocenu"}
+                    {editingGrade ? "Edit Grade" : "Add New Grade"}
                   </h5>
                   <div className="mb-3">
-                    <label className="form-label">Ocena</label>
+                    <label className="form-label">Grade</label>
                     <input
                       type="number"
                       className="form-control"
@@ -273,7 +273,7 @@ const ProfessorDashboardPage: React.FC = () => {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Komentar</label>
+                    <label className="form-label">Comment</label>
                     <textarea
                       className="form-control"
                       rows={2}
@@ -286,14 +286,14 @@ const ProfessorDashboardPage: React.FC = () => {
                       className="btn btn-warning me-2"
                       onClick={handleUpdateGrade}
                     >
-                      Izmeni
+                      Update
                     </button>
                   ) : (
                     <button
                       className="btn btn-primary me-2"
                       onClick={handleAddGrade}
                     >
-                      Dodaj
+                      Add
                     </button>
                   )}
                   {editingGrade && (
@@ -306,7 +306,7 @@ const ProfessorDashboardPage: React.FC = () => {
                         setError(null);
                       }}
                     >
-                      Poništi
+                      Cancel
                     </button>
                   )}
                 </div>
@@ -315,10 +315,10 @@ const ProfessorDashboardPage: React.FC = () => {
               <table className="table table-striped table-bordered">
                 <thead>
                   <tr>
-                    <th>Preliminarna ocena</th>
-                    <th>Konačna ocena</th>
-                    <th>Komentar</th>
-                    <th>Akcije</th>
+                    <th>Preliminary Grade</th>
+                    <th>Final Grade</th>
+                    <th>Comment</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -329,7 +329,7 @@ const ProfessorDashboardPage: React.FC = () => {
                           {grade.isConfirmed ? "-" : grade.studentGrade}
                           {!grade.isConfirmed && grade.studentGrade === 5 && (
                             <span className="badge bg-danger ms-2">
-                              Nepoloženo
+                              Failed
                             </span>
                           )}
                         </td>
@@ -337,7 +337,7 @@ const ProfessorDashboardPage: React.FC = () => {
                           {grade.isConfirmed ? grade.studentGrade : "-"}
                           {grade.isConfirmed && grade.studentGrade === 5 && (
                             <span className="badge bg-danger ms-2">
-                              Nepoloženo
+                              Failed
                             </span>
                           )}
                         </td>
@@ -349,7 +349,7 @@ const ProfessorDashboardPage: React.FC = () => {
                                 className="btn btn-sm btn-success me-2"
                                 onClick={() => handleConfirmGrade(grade.id)}
                               >
-                                Potvrdi
+                                Confirm
                               </button>
                               <button
                                 className="btn btn-sm btn-warning me-2"
@@ -361,24 +361,24 @@ const ProfessorDashboardPage: React.FC = () => {
                                   setNewComment(grade.comment || "");
                                 }}
                               >
-                                Izmeni
+                                Edit
                               </button>
                               <button
                                 className="btn btn-sm btn-danger"
                                 onClick={() => handleDeleteGrade(grade.id)}
                               >
-                                Obriši
+                                Delete
                               </button>
                             </>
                           ) : (
-                            <span className="text-muted">Potvrđeno</span>
+                            <span className="text-muted">Confirmed</span>
                           )}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4}>Nema ocena za ovog studenta.</td>
+                      <td colSpan={4}>No grades for this student.</td>
                     </tr>
                   )}
                 </tbody>

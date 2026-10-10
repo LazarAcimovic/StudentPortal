@@ -30,9 +30,9 @@ const LoginPage: React.FC = () => {
     const userResult = await login(email, password);
 
     if (userResult) {
-      console.log("Login uspesan, redirekcija...");
+      console.log("Login successful, redirecting...");
       console.log(userResult);
-      // Provera uloge i redirekcija na odgovarajući dashboard
+      // Check role and redirect to the appropriate dashboard
       if (userResult?.userRole === RoleEnum.Admin) {
         navigate("/admin-dashboard");
       } else if (userResult?.userRole === RoleEnum.Professor) {
@@ -41,7 +41,7 @@ const LoginPage: React.FC = () => {
         navigate("/student-dashboard");
       }
     } else {
-      setError("Neispravan email ili lozinka");
+      setError("Invalid email or password");
     }
   };
 
@@ -51,38 +51,38 @@ const LoginPage: React.FC = () => {
         <div className="col-md-6">
           <div className="card">
             <div className="card-header text-center">
-              <h3>Prijava</h3>
+              <h3>Login</h3>
             </div>
             <div className="card-body">
               <form onSubmit={handleSubmit}>
                 {error && <div className="alert alert-danger">{error}</div>}
                 <div className="mb-3">
                   <label htmlFor="email" className="form-label">
-                    Email adresa
+                    Email address
                   </label>
                   <input
                     type="email"
                     className="form-control"
                     id="email"
-                    value={email} // Povezujemo input sa stanjem
-                    onChange={handleInputChange} // Pozivamo hendler na svaku promenu
+                    value={email}
+                    onChange={handleInputChange}
                   />
                 </div>
                 <div className="mb-3">
                   <label htmlFor="password" className="form-label">
-                    Lozinka
+                    Password
                   </label>
                   <input
                     type="password"
                     className="form-control"
                     id="password"
-                    value={password} // Povezujemo input sa stanjem
-                    onChange={handleInputChange} // Pozivamo hendler na svaku promenu
+                    value={password}
+                    onChange={handleInputChange}
                   />
                 </div>
                 <div className="d-grid gap-2">
                   <button type="submit" className="btn btn-primary">
-                    Prijavi se
+                    Log in
                   </button>
                 </div>
               </form>

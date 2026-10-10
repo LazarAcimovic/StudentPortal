@@ -23,11 +23,11 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
         <thead>
           <tr>
             <th>ID</th>
-            <th>Naziv predmeta</th>
+            <th>Subject Name</th>
             <th>ECTS</th>
-            <th>Profesor</th>
+            <th>Professor</th>
             <th>Status</th>
-            <th>Akcije</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -42,11 +42,11 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
               <td>
                 {subject.isDeleted ? (
                   <span className="badge bg-danger">
-                    Obrisan <FontAwesomeIcon icon={faBan} />
+                    Inactive <FontAwesomeIcon icon={faBan} />
                   </span>
                 ) : (
                   <span className="badge bg-success">
-                    Aktivan <FontAwesomeIcon icon={faCheckCircle} />
+                    Active <FontAwesomeIcon icon={faCheckCircle} />
                   </span>
                 )}
               </td>
@@ -55,7 +55,7 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
                   className="btn btn-warning btn-sm me-2"
                   onClick={() => onStartEdit(subject)}
                 >
-                  <FontAwesomeIcon icon={faEdit} /> Uredi
+                  <FontAwesomeIcon icon={faEdit} /> Edit
                 </button>
               </td>
             </tr>

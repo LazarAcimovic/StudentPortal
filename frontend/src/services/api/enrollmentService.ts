@@ -10,7 +10,7 @@ export const getAllEnrollments = async (): Promise<Enrollment[] | null> => {
     console.log(response.data);
     return response.data;
   } catch (error) {
-    console.error("Greška pri dohvatanju upisa:", error);
+    console.error("Error fetching enrollments:", error);
     return null;
   }
 };
@@ -30,7 +30,7 @@ export const createEnrollment = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Greška pri kreiranju upisa:", error);
+    console.error("Error creating enrollment:", error);
     return null;
   }
 };
@@ -42,7 +42,7 @@ export const createEnrollment = async (
 //     await apiClient.delete(`/enrollment/${enrollmentId}`);
 //     return true;
 //   } catch (error) {
-//     console.error(`Greška pri brisanju upisa sa ID ${enrollmentId}:`, error);
+//     console.error(`Error deleting enrollment with ID ${enrollmentId}:`, error);
 //     return false;
 //   }
 // };

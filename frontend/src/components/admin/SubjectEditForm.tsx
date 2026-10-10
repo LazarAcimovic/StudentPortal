@@ -55,13 +55,13 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
   return (
     <div className="card my-4">
       <div className="card-header">
-        <h5>Uredi Predmet</h5>
+        <h5>Edit Subject</h5>
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="subjectName" className="form-label">
-              Naziv predmeta
+              Subject Name
             </label>
             <input
               type="text"
@@ -91,7 +91,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
 
           <div className="mb-3">
             <label htmlFor="professor" className="form-label">
-              Profesor
+              Professor
             </label>
             <select
               className="form-select"
@@ -101,7 +101,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               onChange={handleChange}
               required
             >
-              <option value="">Izaberi profesora</option>
+              <option value="">Select professor</option>
               {professors
                 .filter((p) => p.userRole === RoleEnum.Professor)
                 .map((prof) => (
@@ -122,7 +122,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               onChange={handleChange}
             />
             <label className="form-check-label" htmlFor="isDeleted">
-              Obrisan
+              Deleted
             </label>
           </div>
 
@@ -132,10 +132,10 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               className="btn btn-secondary me-2"
               onClick={onCancel}
             >
-              Otkaži
+              Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Sačuvaj izmene
+              Save Changes
             </button>
           </div>
         </form>

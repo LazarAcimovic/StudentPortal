@@ -1,5 +1,3 @@
-// studentService.ts
-
 import type { User } from "../../models/UserModel";
 import type { Subject } from "../../models/SubjectModel";
 import apiClient from "./apiClient";
@@ -14,7 +12,7 @@ export const getStudentsBySubject = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Greška pri dohvatanju studenata za predmet:", error);
+    console.error("Error fetching students for subject:", error);
     return [];
   }
 };
@@ -28,7 +26,7 @@ export const getProfessorSubjects = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Greška pri dohvatanju predmeta za profesora:", error);
+    console.error("Error fetching subjects for professor:", error);
     return [];
   }
 };
@@ -42,7 +40,7 @@ export const getStudentSubjectsAndGrades = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Greška pri dohvatanju podataka za studenta:", error);
+    console.error("Error fetching student data:", error);
     throw error;
   }
 };

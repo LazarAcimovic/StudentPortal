@@ -26,8 +26,8 @@ const StudentDashboardPage: React.FC = () => {
           const data = await getStudentSubjectsAndGrades(user.id);
           setStudentData(data);
         } catch (err) {
-          console.error("Greška pri dohvatanju podataka:", err);
-          setError("Došlo je do greške prilikom dohvatanja podataka.");
+          console.error("Error fetching data:", err);
+          setError("An error occurred while fetching data.");
           setStudentData([]);
         } finally {
           setIsLoading(false);
@@ -86,8 +86,8 @@ const StudentDashboardPage: React.FC = () => {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
-          <h3>Pristup zabranjen</h3>
-          <p>Nemate dozvolu za pristup ovoj stranici.</p>
+          <h3>Access denied</h3>
+          <p>You do not have permission to access this page.</p>
         </div>
       </div>
     );
@@ -99,7 +99,7 @@ const StudentDashboardPage: React.FC = () => {
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-        <h4 className="mt-2">Učitavanje podataka...</h4>
+        <h4 className="mt-2">Loading data...</h4>
       </div>
     );
   }
@@ -108,7 +108,7 @@ const StudentDashboardPage: React.FC = () => {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
-          <h3>Greška</h3>
+          <h3>Error</h3>
           <p>{error}</p>
         </div>
       </div>
@@ -117,39 +117,39 @@ const StudentDashboardPage: React.FC = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Studentski Dashboard</h2>
+      <h2 className="mb-4">Student Dashboard</h2>
       <h4 className="mb-4">
-        Zdravo, {user.firstName} {user.lastName}!
+        Hello, {user.firstName} {user.lastName}!
       </h4>
 
       <div className="card mb-4">
         <div className="card-header bg-primary text-white">
-          <h5 className="mb-0">Moji podaci</h5>
+          <h5 className="mb-0">My Information</h5>
         </div>
         <div className="card-body">
           <p>
-            <span className="fw-bold">Ime i prezime:</span> {user.firstName}{" "}
+            <span className="fw-bold">Full name:</span> {user.firstName}{" "}
             {user.lastName}
           </p>
           <p>
             <span className="fw-bold">Email:</span> {user.email}
           </p>
           <p>
-            <span className="fw-bold">Broj indeksa:</span>{" "}
-            {user.indexNumber || "Nije unet"}
+            <span className="fw-bold">Index number:</span>{" "}
+            {user.indexNumber || "Not provided"}
           </p>
         </div>
       </div>
 
       <div className="card mb-4">
         <div className="card-header bg-success text-white">
-          <h5 className="mb-0">Statistike studija</h5>
+          <h5 className="mb-0">Study Statistics</h5>
         </div>
         <div className="card-body">
           <div className="row text-center">
             <div className="col-md-4">
               <div className="p-3 border rounded">
-                <h5>Prosečna ocena</h5>
+                <h5>Average Grade</h5>
                 <h3 className="fw-bold text-success">
                   {totalAverageGrade || "N/A"}
                 </h3>
@@ -157,13 +157,13 @@ const StudentDashboardPage: React.FC = () => {
             </div>
             <div className="col-md-4">
               <div className="p-3 border rounded">
-                <h5>Položenih ispita</h5>
+                <h5>Passed Exams</h5>
                 <h3 className="fw-bold text-primary">{passedExams}</h3>
               </div>
             </div>
             <div className="col-md-4">
               <div className="p-3 border rounded">
-                <h5>Osvojenih ESPB</h5>
+                <h5>Earned ECTS</h5>
                 <h3 className="fw-bold text-info">{totalEtcs}</h3>
               </div>
             </div>
@@ -171,7 +171,7 @@ const StudentDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      <h4 className="mb-4">Moji predmeti</h4>
+      <h4 className="mb-4">My Subjects</h4>
       <div className="row">
         {studentData.length > 0 ? (
           studentData.map((data) => {
@@ -179,7 +179,7 @@ const StudentDashboardPage: React.FC = () => {
               data.grades
             );
             const finalGradeMessage =
-              finalGrade !== null ? finalGrade : "Nema unete potvrđene ocene";
+              finalGrade !== null ? finalGrade : "No confirmed grade";
 
             return (
               <div key={data.enrollmentId} className="col-md-6 mb-4">
@@ -191,20 +191,20 @@ const StudentDashboardPage: React.FC = () => {
                   </div>
                   <div className="card-body">
                     <p className="card-text">
-                      <span className="fw-bold">Profesor:</span>{" "}
+                      <span className="fw-bold">Professor:</span>{" "}
                       {data.subject.professorFirstName}{" "}
                       {data.subject.professorLastName}
                     </p>
                     <p className="card-text">
                       <span className="fw-bold">Status:</span>{" "}
                       {isPassed ? (
-                        <span className="badge bg-success">Položeno</span>
+                        <span className="badge bg-success">Passed</span>
                       ) : (
-                        <span className="badge bg-danger">Nepoloženo</span>
+                        <span className="badge bg-danger">Failed</span>
                       )}
                     </p>
                     <p className="card-text">
-                      <span className="fw-bold">Konačna ocena:</span>{" "}
+                      <span className="fw-bold">Final Grade:</span>{" "}
                       {finalGradeMessage}
                     </p>
                   </div>
@@ -217,7 +217,7 @@ const StudentDashboardPage: React.FC = () => {
                       aria-expanded="false"
                       aria-controls={`grades-${data.enrollmentId}`}
                     >
-                      Prikaži sve ocene
+                      Show all grades
                     </button>
                     <div
                       className="collapse mt-2"
@@ -230,19 +230,19 @@ const StudentDashboardPage: React.FC = () => {
                             className="list-group-item d-flex justify-content-between align-items-center"
                           >
                             <div>
-                              Ocena: {grade.studentGrade}
+                              Grade: {grade.studentGrade}
                               {grade.isConfirmed ? (
                                 <span className="badge bg-primary ms-2">
-                                  Potvrđena
+                                  Confirmed
                                 </span>
                               ) : (
                                 <span className="badge bg-secondary ms-2">
-                                  Preliminarna
+                                  Preliminary
                                 </span>
                               )}
                               {grade.comment && (
                                 <span className="d-block text-muted fst-italic mt-1">
-                                  Komentar: "{grade.comment}"
+                                  Comment: "{grade.comment}"
                                 </span>
                               )}
                             </div>
@@ -261,7 +261,7 @@ const StudentDashboardPage: React.FC = () => {
         ) : (
           <div className="col-12">
             <div className="alert alert-info">
-              Još uvek niste upisani na nijedan predmet.
+              You are not enrolled in any subjects yet.
             </div>
           </div>
         )}

@@ -1,16 +1,15 @@
-// src/components/admin/EnrollmentCreateForm.tsx
-import React, { useState, useEffect } from "react"; // <-- Dodaj useEffect
+import React, { useState, useEffect } from "react";
 import type {
   CreateEnrollment,
   Enrollment,
-} from "../../models/EnrollmentModel"; // <-- Dodaj Enrollment tip
+} from "../../models/EnrollmentModel";
 import type { User } from "../../models/UserModel";
 import type { Subject } from "../../models/SubjectModel";
 
 interface EnrollmentCreateFormProps {
   students: User[];
   subjects: Subject[];
-  enrollments: Enrollment[]; // <-- Dodaj novi prop
+  enrollments: Enrollment[];
   onSave: (newEnrollment: CreateEnrollment) => void;
   onCancel: () => void;
 }
@@ -18,7 +17,7 @@ interface EnrollmentCreateFormProps {
 const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
   students,
   subjects,
-  enrollments, // <-- Prihvati prop
+  enrollments,
   onSave,
   onCancel,
 }) => {
@@ -32,23 +31,19 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
     useState<Subject[]>(subjects);
 
   useEffect(() => {
-    // Ova funkcija se poziva svaki put kada se promeni odabrani student
     if (formData.StudentId > 0) {
-      // Filtriraj upise za trenutno odabranog studenta
       const enrolledSubjectIds = enrollments
         .filter((e) => e.studentId === formData.StudentId)
         .map((e) => e.subjectId);
 
-      // Filtriraj sve predmete kako bi se prikazali samo oni na koje student nije upisan
       const filteredSubjects = subjects.filter(
         (s) => !enrolledSubjectIds.includes(s.id) && !s.isDeleted
       );
       setAvailableSubjects(filteredSubjects);
     } else {
-      // Ako nije izabran nijedan student, prikaži sve aktivne predmete
       setAvailableSubjects(subjects.filter((s) => !s.isDeleted));
     }
-  }, [formData.StudentId, subjects, enrollments]); // <-- Zavisnosti useEffect hook-a
+  }, [formData.StudentId, subjects, enrollments]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -66,7 +61,7 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
   return (
     <div className="card my-4">
       <div className="card-header">
-        <h5>Kreiraj Novi Upis</h5>
+        <h5>Create New Enrollment</h5>
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit}>
@@ -82,7 +77,7 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
               onChange={handleChange}
               required
             >
-              <option value="">Izaberi studenta</option>
+              <option value="">Select student</option>
               {students.map((student) => (
                 <option key={student.id} value={student.id}>
                   {student.firstName} {student.lastName}
@@ -92,7 +87,7 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
           </div>
           <div className="mb-3">
             <label htmlFor="subject" className="form-label">
-              Predmet
+              Subject
             </label>
             <select
               className="form-select"
@@ -102,7 +97,7 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
               onChange={handleChange}
               required
             >
-              <option value="">Izaberi predmet</option>
+              <option value="">Select subject</option>
               {availableSubjects.map((subject) => (
                 <option key={subject.id} value={subject.id}>
                   {subject.subjectName}
@@ -116,10 +111,10 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
               className="btn btn-secondary me-2"
               onClick={onCancel}
             >
-              Otkaži
+              Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Kreiraj
+              Create
             </button>
           </div>
         </form>

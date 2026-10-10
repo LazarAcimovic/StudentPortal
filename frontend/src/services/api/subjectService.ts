@@ -11,7 +11,7 @@ export const getAllSubjects = async (): Promise<Subject[] | null> => {
     console.log(response.data);
     return response.data;
   } catch (error) {
-    console.error("Greška pri dohvatanju predmeta:", error);
+    console.error("Error fetching subjects:", error);
     return null;
   }
 };
@@ -29,7 +29,7 @@ export const createSubject = async (
     const response = await apiClient.post<Subject>("/subject", dataToSend);
     return response.data;
   } catch (error) {
-    console.error("Greška pri kreiranju predmeta:", error);
+    console.error("Error creating subject:", error);
     return null;
   }
 };
@@ -46,14 +46,13 @@ export const updateSubject = async (
       isDeleted: updatedSubject.IsDeleted,
     };
 
-    // Šaljemo PUT zahtev sa ID-jem u URL-u i ažuriranim podacima
     const response = await apiClient.put<Subject>(
       `/subject/${updatedSubject.Id}`,
       dataToSend
     );
     return response.data;
   } catch (error) {
-    console.error("Greška pri ažuriranju predmeta:", error);
+    console.error("Error updating subject:", error);
     return null;
   }
 };

@@ -43,13 +43,13 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
   return (
     <div className="card my-4">
       <div className="card-header">
-        <h5>Kreiraj Novog Korisnika</h5>
+        <h5>Create New User</h5>
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="firstName" className="form-label">
-              Ime
+              First Name
             </label>
             <input
               type="text"
@@ -63,7 +63,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
           </div>
           <div className="mb-3">
             <label htmlFor="lastName" className="form-label">
-              Prezime
+              Last Name
             </label>
             <input
               type="text"
@@ -91,7 +91,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
           </div>
           <div className="mb-3">
             <label htmlFor="password" className="form-label">
-              Lozinka
+              Password
             </label>
             <input
               type="password"
@@ -105,7 +105,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
           </div>
           <div className="mb-3">
             <label htmlFor="userRole" className="form-label">
-              Uloga
+              Role
             </label>
             <select
               className="form-select"
@@ -116,14 +116,14 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               required
             >
               <option value={RoleEnum.Student}>Student</option>
-              <option value={RoleEnum.Professor}>Profesor</option>
+              <option value={RoleEnum.Professor}>Professor</option>
             </select>
           </div>
 
           {formData.UserRole === RoleEnum.Student && (
             <div className="mb-3">
               <label htmlFor="indexNumber" className="form-label">
-                Broj indeksa
+                Index Number
               </label>
               <input
                 type="text"
@@ -142,10 +142,10 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               className="btn btn-secondary me-2"
               onClick={onCancel}
             >
-              Otkaži
+              Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Kreiraj
+              Create
             </button>
           </div>
         </form>

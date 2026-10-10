@@ -31,7 +31,7 @@ const Navbar: React.FC = () => {
       <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-            Studentski Portal
+            Student Portal
           </Link>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
@@ -45,7 +45,7 @@ const Navbar: React.FC = () => {
               {user?.userRole === RoleEnum.Student && (
                 <li className="nav-item">
                   <Link className="nav-link" to="/students">
-                    Studenti
+                    Students
                   </Link>
                 </li>
               )}
@@ -55,7 +55,7 @@ const Navbar: React.FC = () => {
                 <>
                   <li className="nav-item">
                     <span className="nav-link">
-                      Dobrodošao, {user.firstName}
+                      Welcome, {user.firstName}
                     </span>
                   </li>
                   <li className="nav-item">
@@ -63,14 +63,14 @@ const Navbar: React.FC = () => {
                       className="btn btn-outline-light"
                       onClick={handleLogout}
                     >
-                      Odjava
+                      Logout
                     </button>
                   </li>
                 </>
               ) : (
                 <li className="nav-item">
                   <Link className="btn btn-outline-light" to="/login">
-                    Prijava
+                    Login
                   </Link>
                 </li>
               )}

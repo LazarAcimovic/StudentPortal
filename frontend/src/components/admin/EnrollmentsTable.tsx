@@ -1,5 +1,4 @@
 import React from "react";
-// Proverite da li je ova putanja ispravna, po vašem fajlu
 import type { Enrollment } from "../../models/EnrollmentModel";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,7 +12,6 @@ interface EnrollmentsTableProps {
   onDeleteEnrollment: (enrollmentId: number) => void;
 }
 
-// Komponenta prima props kao argument sa definisanim tipom
 const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
   enrollments,
   onDeleteEnrollment,
@@ -25,9 +23,9 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
           <tr>
             <th>ID</th>
             <th>Student</th>
-            <th>Predmet</th>
+            <th>Subject</th>
             <th>Status</th>
-            <th>Datum upisa</th>
+            <th>Enrollment Date</th>
           </tr>
         </thead>
         <tbody>
@@ -41,11 +39,11 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
               <td>
                 {enrollment.isDeleted ? (
                   <span className="badge bg-danger">
-                    Obrisan <FontAwesomeIcon icon={faBan} />
+                    Inactive <FontAwesomeIcon icon={faBan} />
                   </span>
                 ) : (
                   <span className="badge bg-success">
-                    Aktivan <FontAwesomeIcon icon={faCheckCircle} />
+                    Active <FontAwesomeIcon icon={faCheckCircle} />
                   </span>
                 )}
               </td>
