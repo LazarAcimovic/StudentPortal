@@ -14,6 +14,19 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Fail fast on missing or weak configuration
+var jwtKey = builder.Configuration["JwtConfig:Key"]
+    ?? throw new InvalidOperationException("JwtConfig:Key is missing from configuration.");
+var jwtIssuer = builder.Configuration["JwtConfig:Issuer"]
+    ?? throw new InvalidOperationException("JwtConfig:Issuer is missing from configuration.");
+var jwtAudience = builder.Configuration["JwtConfig:Audience"]
+    ?? throw new InvalidOperationException("JwtConfig:Audience is missing from configuration.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing from configuration.");
+if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
+    throw new InvalidOperationException("JwtConfig:Key must be at least 32 bytes.");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins",
@@ -31,7 +44,7 @@ builder.Services.AddCors(options =>
 
 // Registracija DbContext-a
 builder.Services.AddDbContext<StudentPortalApiContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // Registracija AutoMappera
 
@@ -95,9 +108,9 @@ builder.Services.AddAuthentication(options =>
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidIssuer = builder.Configuration["JwtConfig:Issuer"],
-        ValidAudience = builder.Configuration["JwtConfig:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtConfig:Key"])),
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
