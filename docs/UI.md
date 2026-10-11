@@ -309,7 +309,7 @@ Below `md`: cards per user.
 
 ### 8.3 Create / Edit user modals
 
-Create form fields:
+**Create user form** (`<UserCreateForm>`):
 - First name — required, 1–50 chars.
 - Last name — required, 1–50 chars.
 - Email — required, email format, 1–100 chars.
@@ -317,8 +317,7 @@ Create form fields:
 - Index number — required if role=Student, hidden otherwise.
 - Password — required, 12–128 chars. **With show/hide toggle:** `<input type={show ? 'text' : 'password'}>` paired with a `[btn btn-outline-secondary]` showing an inline SVG eye icon that toggles state.
 
-Edit form fields:
-- Same as create minus the Password field.
+**Edit user flow** uses the reusable `<UserEditForm scope='admin' user={row} callerRole={ADMIN}>` (see §11.6) opened inside the shared `<Modal>` (§11.1). Field visibility follows the matrix in §11.6 — `IndexNumber` shows only when the target is a Student; `UserRole` and `IsDeleted` are **hidden** when the target is another Admin. **Admin's own row in the Users table renders no Edit button** (no self-edit from admin dashboard — he uses `/profile`, see §9).
 
 ### 8.4 Subjects tab
 
@@ -341,9 +340,81 @@ No edit (delete / recreate instead).
 
 ---
 
-## 9. Reusable primitives
+## 9. My Profile page
 
-### 9.1 `<Modal>`
+Accessible to **any authenticated user** at `/profile` (behind `<AuthGuard>`).
+
+### 9.1 Layout
+
+- `<h1>My Profile</h1>` with the owner's full name underneath (`<p className="text-muted">`).
+- A read-only **"Your Info"** card (`bg-primary` header), content inside `<dl className="row">` — label (`<dt className="col-sm-3">`) + value (`<dd className="col-sm-9">`) rows. Fields shown (role-dependent):
+  - Student: First Name, Last Name, Email, Index Number, Role, Member since.
+  - Professor: First Name, Last Name, Email, Role, Member since.
+  - Admin: First Name, Last Name, Email, Role, Member since.
+- Two buttons below the card inside `<div className="d-flex gap-2">`:
+  - `<button className="btn btn-primary">Edit profile</button>` — opens `<Modal title="Edit profile">` containing `<UserEditForm scope='self' user={currentUser} callerRole={currentUser.userRole}/>` (see §11.6).
+  - `<Link className="btn btn-outline-primary" to="/profile/change-password">Change password</Link>`.
+
+### 9.2 Save Changes behaviour
+
+- Clicking **Save Changes** inside the modal validates the form, calls `profileService.updateProfile(dto)` which POSTs the only-rendered-fields payload to `PUT /api/Account/profile`.
+- Missing fields in the payload are preserved by the backend; empty-string fields fail validation client- and server-side.
+- Non-admin callers cannot change their own Email — the field isn't rendered for them (and backend returns 403 if bypassed).
+- On success: close the modal, refetch `getMe()` to repopulate the Your Info card, fire `toast.success('Profile updated')`.
+
+### 9.3 Responsiveness
+
+Card and buttons use Bootstrap `col-md-8 offset-md-2` on desktop, full width below `md`.
+
+---
+
+## 10. Change password page
+
+Accessible to **any authenticated user** at `/profile/change-password` (behind `<AuthGuard>`). Separate URL (not a modal) because success logs the user out of all sessions.
+
+### 10.1 Layout
+
+- `<h1>Change Password</h1>`.
+- Hint paragraph `<p className="text-muted">You will be signed out of all sessions after a successful change.</p>`.
+- Form card at `col-md-6 offset-md-3` containing three `<PasswordInput>` instances (§11.2 — show/hide eye icon on each):
+  - **Current password** — required, `autoComplete="current-password"`.
+  - **New password** — required, 12–128 chars, `autoComplete="new-password"`.
+  - **Confirm new password** — required, must equal New password, `autoComplete="new-password"`.
+- Footer buttons: `<button className="btn btn-primary">Change password</button>` + `<Link className="btn btn-outline-secondary" to="/profile">Cancel</Link>`.
+
+### 10.2 Client-side validation
+
+- Zod schema `changePasswordSchema` in `features/user/utils/profileSchemas.ts`:
+  ```ts
+  z.object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(12).max(128),
+    confirmPassword: z.string(),
+  }).refine(d => d.newPassword === d.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Passwords do not match',
+  });
+  ```
+- Submit button disabled while `isSubmitting`.
+
+### 10.3 Submit flow
+
+1. SPA calls `profileService.changePassword({ currentPassword, newPassword })` → `POST /api/Account/change-password`.
+2. On `400` (wrong current password): render field error "Current password is incorrect".
+3. On `204`:
+   - Call `clearAuthSession({ redirectToLogin: true })` (clears `useUserStore.currentUser`; backend already revoked all refresh tokens and cleared cookies).
+   - Navigate to `/login`.
+   - After navigation, fire `toast.success("Password changed — please sign in with your new password")`.
+
+### 10.4 Responsiveness
+
+Form card width is `col-md-6 offset-md-3` on desktop, `col-12` below `sm`.
+
+---
+
+## 11. Reusable primitives
+
+### 11.1 `<Modal>`
 
 Signature:
 
@@ -365,7 +436,7 @@ Behaviour:
 - `.modal-backdrop.show` sibling for the backdrop. If `blurBackdrop`, add inline `style={{ backdropFilter: 'blur(4px)' }}`.
 - Esc key and backdrop click call `onClose`. Prevent body scroll (`document.body.style.overflow = 'hidden'`) while open.
 
-### 9.2 `<PasswordInput>`
+### 11.2 `<PasswordInput>`
 
 Signature:
 
@@ -384,7 +455,7 @@ type PasswordInputProps = {
 
 Renders a `.input-group` with an `<input>` + a `[btn btn-outline-secondary]` holding the eye SVG. Internal `useState` toggles `type` between `password` and `text`.
 
-### 9.3 `<RoleGate>`
+### 11.3 `<RoleGate>`
 
 ```ts
 <RoleGate roles={[USER_ROLES.ADMIN]}>
@@ -394,21 +465,66 @@ Renders a `.input-group` with an `<input>` + a `[btn btn-outline-secondary]` hol
 
 Reads `currentUser` via slice-selector; if role not in list → `<Navigate to="/" replace/>`.
 
-### 9.4 `<AuthGuard>`
+### 11.4 `<AuthGuard>`
 
 Reads `currentUser` + `isHydrating`. While `isHydrating`: spinner. If `currentUser` is null after hydration: `<Navigate to={APP_ROUTES.AUTH_LOGIN} state={withAuthRedirect(location)} replace/>`. Otherwise `<Outlet/>`.
 
-### 9.5 Toasts
+### 11.5 Toasts
 
 - Mounted once in `App.tsx` via `<ToastContainer position="top-right" autoClose={3500}/>`.
 - Fired via `toast.success(...)`, `toast.error(...)`, `toast.info(...)` from any service / page.
 - `appealService.submit` fires `toast.success('Appeal submitted')` on 201.
+- `profileService.updateProfile` fires `toast.success('Profile updated')` on 204.
+- `LoginPage` fires `toast.success('Password changed — please sign in with your new password')` on mount when the previous route was `/profile/change-password` (passed via `navigate(..., { state: { fromChangePassword: true } })`).
+
+### 11.6 `<UserEditForm>`
+
+Signature:
+
+```ts
+type UserEditFormProps = {
+  scope: 'self' | 'admin';
+  user: User;                 // the user being edited
+  callerRole: UserRole;       // the role of the current signed-in user
+  onSaved: () => void;        // parent re-fetches and closes the modal (if applicable)
+};
+```
+
+**Behaviour:** renders only the fields allowed for the (scope, callerRole, user.userRole) triple per the matrix below. Validates with Zod (`updateProfileSchema` for self, `adminUpdateUserSchema` for admin). Submit dispatches to the appropriate endpoint; on success calls `onSaved()`.
+
+**Field visibility matrix:**
+
+| Field | Self + Student/Professor | Self + Admin | Admin → Student | Admin → Professor | Admin → Admin |
+|---|---|---|---|---|---|
+| FirstName | ✓ editable | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
+| LastName | ✓ editable | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
+| Email | *hidden* | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
+| IndexNumber | *hidden* | *hidden* | ✓ editable | *hidden* | *hidden* |
+| UserRole | *hidden* | *hidden* | ✓ dropdown | ✓ dropdown | *hidden* |
+| IsDeleted | *hidden* | *hidden* | ✓ checkbox | ✓ checkbox | *hidden* |
+
+Three internal rules compute visibility — no deep nesting:
+
+```ts
+const showEmail       = scope === 'admin' || callerRole === USER_ROLES.ADMIN;
+const showIndexNumber = scope === 'admin' && user.userRole === USER_ROLES.STUDENT;
+const showAdminFields = scope === 'admin' && user.userRole !== USER_ROLES.ADMIN;
+// UserRole + IsDeleted both bound to showAdminFields
+```
+
+**Endpoints dispatched:**
+- `scope === 'self'` → `PUT /api/Account/profile`, body `{ firstName?, lastName?, email? }` (only the rendered fields are sent; omitted fields are preserved by the backend).
+- `scope === 'admin'` → `PUT /api/User/{user.id}`, body `{ firstName, lastName, email, indexNumber?, userRole, isDeleted }` (all admin-rendered fields).
+
+**Submit button label:** always "Save Changes" regardless of scope.
+
+**Does not host the Change password button** — that lives on the `/profile` page itself (§9), not inside this form.
 
 ---
 
-## 10. Responsiveness
+## 12. Responsiveness
 
-### 10.1 Breakpoints (Bootstrap defaults)
+### 12.1 Breakpoints (Bootstrap defaults)
 
 | Prefix | Min width |
 |---|---|
@@ -418,7 +534,7 @@ Reads `currentUser` + `isHydrating`. While `isHydrating`: spinner. If `currentUs
 | `lg` | 992 px |
 | `xl` | 1200 px |
 
-### 10.2 Collapse rules (per PRD §5)
+### 12.2 Collapse rules (per PRD §5)
 
 | Context | Table cutoff | Below cutoff |
 |---|---|---|
@@ -427,7 +543,7 @@ Reads `currentUser` + `isHydrating`. While `isHydrating`: spinner. If `currentUs
 | Professor students list | `sm` (576 px) | Already a list-group — stays vertical |
 | Professor appeals table | `sm` (576 px) | Stacked cards |
 
-### 10.3 QA checklist (per Task 20.3)
+### 12.3 QA checklist (per Task 20.3)
 
 Test the following widths in Chrome devtools:
 
@@ -439,14 +555,14 @@ Test the following widths in Chrome devtools:
 - **992 px** — exactly at the `lg` boundary; verify the professor 3-column layout appears.
 - Spot-check in **landscape** on 414 / 576 — some phones become wider than `sm` sideways.
 
-### 10.4 Spacing
+### 12.4 Spacing
 
 - Minimum tap target 44×44 px: all buttons use `btn-sm` on compact rows but with `py-2 px-3` so they stay ≥ 44 px tall.
 - Minimum gutter 16 px: use `container` (which has 12 px gutter at `sm`, 16 px above `sm`) and avoid flush-left content on `xs` by applying `px-3` on the outermost container.
 
 ---
 
-## 11. Copy conventions
+## 13. Copy conventions
 
 - All UI copy is **English**. No remaining Serbian strings.
 - Buttons use imperative verbs: "Save draft", "Confirm grade", "Write appeal", "Submit", "Cancel", "Delete".
@@ -457,7 +573,7 @@ Test the following widths in Chrome devtools:
 
 ---
 
-## 12. Accessibility baseline
+## 14. Accessibility baseline
 
 - Every `<input>` has an associated `<label htmlFor>`.
 - Every button that's icon-only has an `aria-label`.

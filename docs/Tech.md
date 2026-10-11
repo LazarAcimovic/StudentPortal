@@ -103,12 +103,15 @@ Everything is `Scoped` (per-request). Order of registration in `Program.cs`:
 - `UserController` class → `[Authorize]`. Create/edit/delete actions → `[Authorize(Roles = "Admin")]`.
 - `GradeController` → `[Authorize]`. Confirm / reconfirm-exam actions → `[Authorize(Roles = "Professor")]`. Student-confirm action → `[Authorize(Roles = "Student")]`.
 - `AppealController` → `[Authorize]`. Submit → `[Authorize(Roles = "Student")]`. Accept / Deny / Undo-deny → `[Authorize(Roles = "Professor")]`.
-- `AccountController`'s `Login` and `Refresh` → `[AllowAnonymous]`. `Me` and `Logout` require auth.
+- `AccountController`'s `Login` and `Refresh` → `[AllowAnonymous]`. `Me`, `Logout`, `PUT /profile`, and `POST /change-password` are `[Authorize]` (role-agnostic — any authenticated user).
 
 **Layer 2 — Service ownership check** reads `currentUserId` from `HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)` (passed into services via `IHttpContextAccessor` or as an explicit parameter from the controller). Examples:
 - `GradeService.ConfirmAsync(enrollmentId, callerProfId)` loads the subject via the enrollment and verifies `subject.ProfessorId == callerProfId` → `ForbiddenAccessException` if not.
 - `AppealService.SubmitAsync(gradeId, callerStudentId)` loads the grade's enrollment and verifies `enrollment.StudentId == callerStudentId`.
 - `AppealService.AcceptAsync(appealId, callerProfId)` verifies the appeal's grade's subject's professor is the caller.
+- `UserService.UpdateProfileAsync(callerId, UpdateProfileDto)` enforces: if `callerRole != Admin` and the submitted `Email` differs from the stored row → `ForbiddenAccessException`.
+- `UserService.AdminUpdateUserAsync(targetId, callerId, AdminUpdateUserDto)` enforces: `targetId != callerId` for soft-delete; `targetId != callerId` for role change; `target.UserRole != Admin` for both `UserRole` and `IsDeleted` changes (admins cannot demote or soft-delete each other).
+- `UserService.ChangePasswordAsync(callerId, ChangePasswordDto)` verifies the current password; on success calls `IRefreshTokenRepository.RevokeAllForUserAsync(callerId)` so **every** refresh row for the caller is revoked (sign-out-everywhere, including the current browser).
 
 ### 2.5 Cookie / token model
 
@@ -117,6 +120,7 @@ Everything is `Scoped` (per-request). Order of registration in `Program.cs`:
 - The browser sends both cookies automatically on every request to the API. The SPA never reads either (`HttpOnly` prevents JS access).
 - On `/Refresh`: server reads the cookie, hashes it with SHA-256, looks up the row in `RefreshTokens`, rejects if missing / expired / revoked / `ReplacedByTokenId` set. On success, it inserts a new row, revokes the old row (sets `RevokedUtc` + `ReplacedByTokenId`), and re-issues both cookies. **Reuse detection:** if a client presents a refresh token whose row's `RevokedUtc` is already set (someone else already rotated it), revoke every active refresh row for that user → 401.
 - On `/Logout`: revoke the current refresh row and overwrite both cookies with `Max-Age=0`.
+- On `POST /change-password`: `UserService.ChangePasswordAsync` verifies the current password, re-hashes the new one, then revokes **every** refresh row for the user (`RevokeAllForUserAsync`). The controller then clears both cookies with `Max-Age=0` and returns `204`. The SPA treats this as a hard logout and redirects to `/login` with a success toast.
 - The JWT itself carries claims: `sub` = user GUID, `nameidentifier` = user GUID, `role` = role name, `email` = email, `jti` = random GUID, `exp` = 15 min from now.
 
 ### 2.6 Validation
@@ -151,7 +155,7 @@ frontend/src/
     authGuard.tsx               <AuthGuard>{children}</AuthGuard>
   components/
     ui/                         reusable primitives (Modal, PasswordInput, Spinner)
-    shared/                     cross-feature pieces (RoleGate, ResponsiveTable)
+    shared/                     cross-feature pieces (RoleGate, ResponsiveTable, UserEditForm)
     layout/                     Navbar, PageLayout
   features/
     auth/
@@ -163,10 +167,13 @@ frontend/src/
       index.ts
     user/
       api/userService.ts
+      api/profileService.ts         getMe, updateProfile, changePassword
       hooks/useStudentDashboard.ts   data-fetching custom hook (allowed exception per user)
       models/User.ts
       pages/StudentDashboardPage.tsx
-      utils/
+      pages/MyProfilePage.tsx        /profile (any authenticated user)
+      pages/ChangePasswordPage.tsx   /profile/change-password (any authenticated user)
+      utils/profileSchemas.ts        Zod schemas for UpdateProfile and ChangePassword
       index.ts
     grades/
       api/gradeService.ts

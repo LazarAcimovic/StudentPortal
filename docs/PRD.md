@@ -12,11 +12,17 @@ StudentPortal is an internal web app for a university faculty where **Admins** m
 
 ## 2. Actors and what each one can do
 
+**No public self-registration.** An Admin creates every user account (students, professors, and other admins). Any authenticated user can edit their own name and change their own password on `/profile` (see §5.9 and §5.10); Admin additionally can edit own `Email` on `/profile`.
+
 ### 2.1 Admin
 - Log in / log out.
-- Manage users: create (student, professor, or admin), edit (first name, last name, email, role, soft-delete flag), delete.
+- Manage users: create (student, professor, or admin), edit any user **except himself** (first name, last name, email, index number when target is a student, role, soft-delete flag), soft-delete via the `IsDeleted` checkbox.
+- Admin's own row in the Users table has **no** Edit button — he uses `/profile` for his own fields and `/profile/change-password` for his own password.
+- When editing a target that is another Admin, the `UserRole` dropdown and `IsDeleted` checkbox are **hidden** (admins cannot demote or soft-delete each other).
+- When editing a target that is a Professor, the `IndexNumber` field is hidden (professors do not have an index number).
 - Manage subjects: create (name, ECTS defaults to 6, assigned professor), edit, delete.
 - Manage enrollments: create (student + subject pair), delete.
+- Edit **own** `FirstName`, `LastName`, `Email`, and password (via `/profile` and `/profile/change-password`). Cannot change own `UserRole` or `IsDeleted`.
 - No access to the grading flow.
 
 ### 2.2 Professor
@@ -30,6 +36,7 @@ StudentPortal is an internal web app for a university faculty where **Admins** m
 - Undo a deny within 24 hours of denying.
 - Cannot act on another professor's subjects or students.
 - Cannot accept or deny an **overdue** appeal (see §4.4).
+- Edit **own** `FirstName`, `LastName`, and password (via `/profile` and `/profile/change-password`). Cannot change own `Email`, `UserRole`, or `IsDeleted` — those are admin-only.
 
 ### 2.3 Student
 - Log in / log out.
@@ -37,6 +44,7 @@ StudentPortal is an internal web app for a university faculty where **Admins** m
 - During the 7-day appeal window after a professor confirms: either click **Write appeal** or click **Confirm grade** (meaning "I agree, lock it in now").
 - Submit **one** appeal per grade confirmation cycle. If a prof misses the 7-day review deadline on that appeal, the student can submit **one more** appeal (see §4.4).
 - Cannot see any other student's data.
+- Edit **own** `FirstName`, `LastName`, and password (via `/profile` and `/profile/change-password`). Cannot change own `Email`, `IndexNumber`, `UserRole`, or `IsDeleted` — those are admin-only.
 
 ---
 
@@ -168,7 +176,7 @@ A grade contributes its subject's ECTS to **Earned ECTS** only when the grade is
 - Feature cards below (as they are today, translated to English).
 
 ### 5.2 Login screen (`/login`)
-- Email + password form, both required, email format validated, password shown as masked by default.
+- Email + password form, both required, email format validated, password shown as masked by default, with an show/hide eye icon. Click on that eye icon shows/hide the currently entered password
 - Submit → on success, the server sets auth cookies and the SPA redirects to the role's dashboard.
 - Serbian localized strings are replaced with English.
 
@@ -176,7 +184,9 @@ A grade contributes its subject's ECTS to **Earned ECTS** only when the grade is
 Three tabs: **Users**, **Subjects**, **Enrollments**.
 
 - Users tab: table with ID, First Name, Last Name, Email, Role, Status (Active/Inactive from `IsDeleted`), Edit button. Above: **Create New User** button.
-- Create / Edit user modal: first name, last name, email, role, index number (students only), **password with show/hide toggle** (create only — Edit has no password field).
+- **Admin's own row has no Edit button rendered.** He uses `/profile` for self-service edits.
+- **Create User modal** uses `<UserCreateForm>`: first name, last name, email, role (dropdown), index number (shown only when role=Student), password with show/hide toggle.
+- **Edit User modal** uses the reusable `<UserEditForm>` with `scope='admin'`. Rendered fields depend on the target's role (see field matrix in §5.9 and the component spec in `UI.md` §9.6): Email is always editable; IndexNumber shows only if target is Student; UserRole dropdown and IsDeleted checkbox are hidden when target is another Admin.
 - Subjects tab: table with name, ECTS, professor, Edit button + Create button.
 - Enrollments tab: table with student, subject, Delete button + Create button.
 - Responsiveness: at <768 px (`md` breakpoint) each table becomes a vertical stack of scrollable cards.
@@ -193,7 +203,7 @@ Responsiveness: at <576 px (`sm` breakpoint) the three columns stack vertically 
 
 ### 5.5 Student dashboard (`/student-dashboard`)
 - **My Information**: name, email, index number.
-- **Study Statistics**: four stat tiles — Average Grade (one decimal place, mean of all confirmed-passed grades, failures excluded), Passed Exams (count), Non-passed Exams (count of failures AND un-graded enrollments), Earned ECTS (sum from truly-final passed grades per §4.7).
+- **Study Statistics**: four stat tiles — Average Grade (two decimal place, mean of all confirmed-passed grades, failures excluded), Passed Exams (count), Non-passed Exams (count of failures AND un-graded enrollments), Earned ECTS (sum from truly-final passed grades per §4.7).
 - **My Subjects**: table — Subject name, Professor name, Final grade (or `—` if not graded yet), Status (`Passed` / `Failed` / `Not graded` / `Awaiting confirmation` / `Appeal pending`, plus a secondary `Appeal denied` badge if applicable), Action column (either **Write appeal** button, **Confirm grade** button, both, or nothing — see §4.1).
 - Responsiveness: at <576 px (`sm`) the subjects table becomes stacked cards.
 - The old **Students** link and page are removed. The dashboard is the only student view.
@@ -215,16 +225,61 @@ When the professor selects a student:
 - No "Students" link.
 
 ### 5.8 Reusable Modal
-A single generic Modal component is used for: appeal submission, view appeal, admin confirmations (delete user etc.), and the deny-confirmation step. Appeal and view-appeal modals have a blurred backdrop (`backdrop-filter: blur`).
+A single generic Modal component is used for: appeal submission, view appeal, admin confirmations (delete user etc.), the deny-confirmation step, and the self-service Edit profile modal (see §5.9). Appeal and view-appeal modals have a blurred backdrop (`backdrop-filter: blur`).
+
+### 5.9 My Profile page (`/profile`)
+Accessible to **any authenticated user** (Student, Professor, Admin) — role-agnostic route behind `<AuthGuard>`. The page shows:
+
+- Page heading `<h1>My Profile</h1>` and the owner's full name.
+- A read-only **"Your Info"** card listing: First Name, Last Name, Email, IndexNumber (Student only), Role, Member since (CreatedAt).
+- Two buttons below the card:
+  - **[Edit profile]** — primary. Opens the reusable `<Modal>` (§5.8) containing `<UserEditForm scope='self'>`. On save, the modal closes and the Your Info card refreshes.
+  - **[Change password]** — outline-primary. Navigates to `/profile/change-password` (§5.10).
+
+**Edit profile modal field visibility — reusable `<UserEditForm>` matrix:**
+
+| Field | Self + Student/Professor | Self + Admin | Admin → Student | Admin → Professor | Admin → Admin |
+|---|---|---|---|---|---|
+| FirstName | ✓ editable | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
+| LastName | ✓ editable | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
+| Email | *hidden* | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
+| IndexNumber | *hidden* | *hidden* | ✓ editable | *hidden* | *hidden* |
+| UserRole | *hidden* | *hidden* | ✓ dropdown | ✓ dropdown | *hidden* |
+| IsDeleted | *hidden* | *hidden* | ✓ checkbox | ✓ checkbox | *hidden* |
+
+**Save semantics (self scope):** clicking **Save Changes** inside the modal calls `PUT /api/Account/profile` with only the fields the form rendered. All DTO fields are optional; **missing fields are preserved from the stored row** (not nulled out). Empty-string values fail validation (FirstName and LastName must be non-empty). Server guard: if the caller is **not** Admin and `Email` is present and differs from the stored row → `403 Forbidden`.
+
+**Save semantics (admin scope):** `Save Changes` calls `PUT /api/User/{id}` with the fields the form rendered. Admin cannot soft-delete himself or demote himself; the backend returns `403` even if the UI is bypassed.
+
+### 5.10 Change password page (`/profile/change-password`)
+Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not a modal) because it is a security-sensitive flow with its own success path (sign-out-everywhere + redirect to login).
+
+- Page heading `<h1>Change Password</h1>` and a brief hint ("You will be signed out of all sessions after a successful change.").
+- Form with three password fields, each paired with a show/hide eye icon toggle:
+  - **Current password** — required.
+  - **New password** — required, 12–128 characters.
+  - **Confirm new password** — required, must equal New password.
+- Buttons: **[Change password]** (primary submit) + **[Cancel]** (link back to `/profile`).
+
+**Submit flow:**
+1. SPA calls `POST /api/Account/change-password` with `ChangePasswordDto { CurrentPassword, NewPassword }`.
+2. Backend verifies CurrentPassword against the stored hash. If wrong → `400` with a field error.
+3. Backend writes the new hash (same PBKDF2 handler) and calls `RefreshTokenRepository.RevokeAllForUserAsync(callerId)` → **every refresh row for the user is revoked**, including the one the current browser is using.
+4. Backend clears `sp_access` and `sp_refresh` cookies in the response.
+5. SPA receives `204`, calls `clearAuthSession({ redirectToLogin: true })`, and shows a success toast on the login page: *"Password changed — please sign in with your new password."*
 
 ---
 
 ## 6. Security requirements (basic / junior scope)
 
+- **No public self-registration.** The user base is managed entirely by Admins. There is no `/register` endpoint, no `RegisterStudentDto`, no public sign-up form.
 - All non-auth endpoints require authentication.
 - Admin-only endpoints enforce the Admin role via a controller/action attribute.
 - Professor-only endpoints enforce the Professor role plus a service-level ownership check (professor can only touch grades, drafts, and appeals on their own subjects).
 - Student-only endpoints enforce the Student role plus a service-level ownership check (student can only touch their own enrollments, grades, and appeals).
+- Self-service profile edit (`PUT /api/Account/profile`) is role-agnostic authenticated. Server guard: non-Admin callers cannot change their own `Email`; attempting to send a different Email returns `403`.
+- Password change (`POST /api/Account/change-password`) requires the correct current password. On success, every refresh row for the user is revoked (sign-out-everywhere, including the current session), the SPA is redirected to `/login`, and the user re-authenticates with the new password.
+- Admin cannot soft-delete himself or demote himself; backend returns `403` even if the frontend UI is bypassed.
 - Mass-assignment is impossible: incoming DTOs for self-service flows do not expose role, soft-delete flag, or password-hash fields.
 - Access token lives in an **httpOnly, Secure, SameSite=Strict** cookie set by the server. The SPA never reads a token in JS.
 - Refresh token lives in a separate httpOnly cookie; on each refresh the server rotates it (new value, old row revoked) and detects re-use (if a previously-rotated refresh token is presented, revoke the entire chain for that user).
@@ -318,24 +373,26 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 
 ### Task 4 — Mass-assignment fix (DTO split + mapping)
 
-- **4.1** Split `UserCreateDto` into `RegisterStudentDto` (no role, no soft-delete) and `AdminCreateUserDto` (role allowed). Split `UserUpdateDto` into `UpdateProfileDto` (first + last name only) and `AdminUpdateUserDto` (role + email + soft-delete). Delete the old DTOs.
-  - Commit: `security(backend): split user DTOs by actor to prevent mass-assignment`
+- **4.1** Replace the legacy `UserCreateDto` with `AdminCreateUserDto` (admin-only; role allowed; no `IsDeleted` from client). Replace the legacy `UserUpdateDto` with two DTOs: `UpdateProfileDto` (self-service — `FirstName?`, `LastName?`, `Email?`, all optional, missing fields preserved on write) and `AdminUpdateUserDto` (admin-only — `FirstName`, `LastName`, `Email`, `IndexNumber?`, `UserRole`, `IsDeleted`). Add `ChangePasswordDto` (`CurrentPassword`, `NewPassword`). Delete the old `UserCreateDto` and `UserUpdateDto`. **No `RegisterStudentDto`** — there is no public self-registration.
+  - Commit: `security(backend): add admin, profile, and change-password DTOs and remove legacy user DTOs`
 - **4.2** Update `MappingProfile` to ignore protected fields (`Id`, `PasswordHash`, `UserRole`, `IsDeleted`, `CreatedAt`) on self-service maps.
   - Commit: `refactor(backend): tighten AutoMapper profile for user DTOs`
-- **4.3** In `UserRepository`, add `GetUserByIdForUpdateAsync` returning a tracked entity. In `UserService.UpdateUserAsync`, copy only whitelisted fields instead of `_mapper.Map(dto, entity)` on the whole entity.
-  - Commit: `security(backend): copy only whitelisted fields when updating users`
-- **4.4** In `UserController`, split the single `UpdateUser` endpoint into `PutProfile` (self-service, `[Authorize]`) and `PutAdminUpdate` (`[Authorize(Roles="Admin")]`). Take `id` from the route; ignore any `Id` in the body.
+- **4.3** In `UserRepository`, add `GetUserByIdForUpdateAsync` returning a tracked entity. In `UserService`, implement `UpdateProfileAsync(callerId, UpdateProfileDto)` (copies only `FirstName`/`LastName`/`Email` into the row; preserves missing fields; if `callerRole != Admin` and `dto.Email` differs from stored row → throw `ForbiddenAccessException`) and `AdminUpdateUserAsync(targetId, callerId, AdminUpdateUserDto)` (service-level guards: cannot soft-delete self, cannot demote self, cannot change role of another admin). Both bypass `_mapper.Map(dto, entity)` on the whole entity.
+  - Commit: `security(backend): copy only whitelisted fields when updating users and add admin self-guards`
+- **4.4** In `UserController`, delete the generic `UpdateUser` action. Add `PUT /api/Account/profile` (self-service — reads caller id from the JWT; `[Authorize]`) and `PUT /api/User/{id}` (admin — `[Authorize(Roles="Admin")]`). Take `id` from the route; ignore any `Id` in the body.
   - Commit: `security(backend): separate self-service and admin user update endpoints`
 - **4.5** Remove `IsDeleted` from `UserDto` and `LoginResponseDto` (internal state leak).
   - Commit: `security(backend): stop leaking IsDeleted in response DTOs`
+- **4.6** Add `POST /api/Account/change-password` action on `AccountController` (`[Authorize]`). `UserService.ChangePasswordAsync(callerId, ChangePasswordDto)` verifies the current password with `PasswordHashHandler.VerifyPassword`, re-hashes the new password, writes the row, then calls `IRefreshTokenRepository.RevokeAllForUserAsync(callerId)`. Controller clears `sp_access` and `sp_refresh` cookies in the response, returns `204`.
+  - Commit: `feat(backend): add change-password endpoint with sign-out-everywhere`
 
 ---
 
 ### Task 5 — FluentValidation
 
 - **5.1** Add the `FluentValidation.AspNetCore` NuGet package. Register `AddFluentValidationAutoValidation()` in `Program.cs`.
-  - Commit: ` (backend): add FluentValidation.AspNetCore package`
-- **5.2** Create `Validators/` folder. Write `LoginRequestDtoValidator`, `RegisterStudentDtoValidator`, `AdminCreateUserDtoValidator`, `UpdateProfileDtoValidator`, `AdminUpdateUserDtoValidator`.
+  - Commit: `chore(backend): add FluentValidation.AspNetCore package`
+- **5.2** Create `Validators/` folder. Write `LoginRequestDtoValidator`, `AdminCreateUserDtoValidator`, `UpdateProfileDtoValidator`, `AdminUpdateUserDtoValidator`, `ChangePasswordDtoValidator`. `UpdateProfileDtoValidator` must allow every field to be absent but, when present, enforce the same per-field constraints (FirstName/LastName 1–50 chars non-empty; Email format and 1–100 chars). `ChangePasswordDtoValidator` enforces `NewPassword` 12–128 chars; `CurrentPassword` non-empty.
   - Commit: `feat(backend): add FluentValidation validators for user and auth DTOs`
 - **5.3** Write `SubjectCreateDtoValidator`, `SubjectUpdateDtoValidator`, `EnrollmentCreateDtoValidator`.
   - Commit: `feat(backend): add FluentValidation validators for subject and enrollment DTOs`
@@ -516,8 +573,25 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 
 ### Task 19 — Admin dashboard polish
 
-- **19.1** Add show/hide password toggle (inline SVG eye icon) to `UserCreateForm.tsx` only. Edit form has no password field.
+- **19.1** Add show/hide password toggle (inline SVG eye icon) to `UserCreateForm.tsx` only. Edit form has no password field (admins never see or set another user's password; the owner changes their own password via `/profile/change-password`).
   - Commit: `feat(admin): show/hide password toggle on user create`
+- **19.2** Refactor the admin Users table's Edit flow to use the reusable `<UserEditForm scope='admin'>` opened inside the shared `<Modal>`. Field visibility follows the §5.9 matrix (IndexNumber only for Student target; UserRole and IsDeleted hidden when target is Admin). **Admin's own row renders no Edit button**.
+  - Commit: `feat(admin): reuse UserEditForm with role-driven field matrix`
+
+---
+
+### Task 19B — My Profile page and Change Password page
+
+- **19B.1** Build the reusable `<UserEditForm>` component in `src/components/shared/UserEditForm.tsx` taking props `{ scope: 'self' | 'admin', user, callerRole, onSaved }`. Internally computes field visibility per the §5.9 matrix, renders Bootstrap `.form-control` / `.form-check` / `<select>` inputs, uses Zod `safeParse` for client-side validation, and dispatches to `PUT /api/Account/profile` (self scope) or `PUT /api/User/{id}` (admin scope).
+  - Commit: `feat(user): reusable UserEditForm with per-scope field matrix`
+- **19B.2** Add `src/features/user/api/profileService.ts` with `getMe(signal)`, `updateProfile(dto, signal)`, `changePassword(dto, signal)`. Add Zod schemas in `src/features/user/utils/profileSchemas.ts`.
+  - Commit: `feat(user): profile and change-password service and schemas`
+- **19B.3** Add `src/features/user/pages/MyProfilePage.tsx` at route `/profile` (behind `<AuthGuard>`): read-only "Your Info" card + `[Edit profile]` button (opens Modal with `<UserEditForm scope='self'>`) + `[Change password]` link to `/profile/change-password`.
+  - Commit: `feat(user): My Profile page with edit modal and change-password link`
+- **19B.4** Add `src/features/user/pages/ChangePasswordPage.tsx` at route `/profile/change-password` (behind `<AuthGuard>`): three password inputs with show/hide toggle, submit → `profileService.changePassword`, on success → `clearAuthSession({ redirectToLogin: true })` plus a success toast fired via `toast.success("Password changed — please sign in with your new password")` on the login page.
+  - Commit: `feat(user): change-password page with sign-out-everywhere flow`
+- **19B.5** Add a "My Profile" entry to the Navbar greeting dropdown (clicking the greeting opens a small menu: `My Profile`, `Logout`).
+  - Commit: `feat(navbar): add My Profile dropdown entry`
 
 ---
 
@@ -535,18 +609,18 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 ### Task 21 — Toast integration
 
 - **21.1** Mount `<ToastContainer>` from `react-toastify` in `App.tsx`. Import the CSS in `main.tsx`.
-  - Commit: ` (frontend): mount react-toastify ToastContainer`
-- **21.2** Fire a toast on login error, logout, appeal submit success, appeal submit error, confirm grade success, deny undo success.
+  - Commit: `chore(frontend): mount react-toastify ToastContainer`
+- **21.2** Fire a toast on login error, logout, appeal submit success, appeal submit error, confirm grade success, deny undo success, profile save success, password change success (on redirected `/login`).
   - Commit: `feat(frontend): user-facing toasts for key actions`
 
 ---
 
 ### Task 22 — Tests
 
-- **22.1** Backend xUnit tests for `AuthService` (login happy / wrong password / soft-deleted / unknown-email latency), `AppealService` (submit inside window / outside window / second-appeal-blocked-while-Pending / overdue flip-on-read / fresh window after overdue / deny → ECTS counts / undo-deny within 24h / undo-deny after original SubmittedAt + 7d flips straight to Overdue), `GradeService` (confirm → final grade computation / reconfirm after accept).
-  - Commit: `test(backend): unit tests for auth, appeal, and grade services`
-- **22.2** Frontend Vitest + MSW tests for `axiosClient` (silent refresh happy/failure), `LoginPage` (validation gates submit), `authGuard`, `App.tsx` bootstrap effects.
-  - Commit: `test(frontend): axios interceptor, login, authGuard, bootstrap tests`
+- **22.1** Backend xUnit tests for `AuthService` (login happy / wrong password / soft-deleted / unknown-email latency), `AppealService` (submit inside window / outside window / second-appeal-blocked-while-Pending / overdue flip-on-read / fresh window after overdue / deny → ECTS counts / undo-deny within 24h / undo-deny after original SubmittedAt + 7d flips straight to Overdue), `GradeService` (confirm → final grade computation / reconfirm after accept), `UserService` (UpdateProfileAsync preserves missing fields / rejects email change by non-admin / AdminUpdateUserAsync blocks self soft-delete and self demote / ChangePasswordAsync verifies current password and revokes all refresh tokens on success).
+  - Commit: `test(backend): unit tests for auth, appeal, grade, and user services`
+- **22.2** Frontend Vitest + MSW tests for `axiosClient` (silent refresh happy/failure), `LoginPage` (validation gates submit), `authGuard`, `App.tsx` bootstrap effects, `<UserEditForm>` (self vs admin field matrix, missing-field preservation on submit), `ChangePasswordPage` (confirm-mismatch gates submit, success triggers clearAuthSession and toast).
+  - Commit: `test(frontend): axios interceptor, login, authGuard, bootstrap, profile tests`
 
 ---
 
