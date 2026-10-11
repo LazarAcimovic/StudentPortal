@@ -48,9 +48,11 @@ namespace StudentPortal.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(JwtRegisteredClaimNames.Sub, userAccount.Email), // Koristi email kao Sub claim
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Dodaj jedinstveni ID tokena
-                    new Claim(ClaimTypes.Role, userAccount.UserRole.ToString()), // Dodaj ulogu korisnika
+                    new Claim(JwtRegisteredClaimNames.Sub, userAccount.Id.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, userAccount.Id.ToString()),
+                    new Claim(JwtRegisteredClaimNames.Email, userAccount.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(ClaimTypes.Role, userAccount.UserRole.ToString()),
                 }),
                 Expires = tokenExpiryTimeStamp,
                 Issuer = issuer,
