@@ -66,7 +66,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IGradeService, GradeService>();
-builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
@@ -135,7 +135,6 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ProfessorOnly", policy => policy.RequireRole("Professor"));
     options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
 });
-builder.Services.AddScoped<JwtService>();
 
 var app = builder.Build();
 

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
 using StudentPortal.Interfaces;
-using StudentPortal.Services;
 
 namespace WebApiDemo.Controllers
 {
@@ -13,12 +12,12 @@ namespace WebApiDemo.Controllers
     [Authorize]
     public class AccountController : ControllerBase
     {
-        private readonly JwtService _jwtService;
+        private readonly IAuthService _authService;
         private readonly IUserService _userService;
 
-        public AccountController(JwtService jwtService, IUserService userService)
+        public AccountController(IAuthService authService, IUserService userService)
         {
-            _jwtService = jwtService;
+            _authService = authService;
             _userService = userService;
         }
 
@@ -26,10 +25,21 @@ namespace WebApiDemo.Controllers
         [HttpPost("Login")]
         public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
         {
-            var result = await _jwtService.Authenticate(request);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var result = await _authService.AuthenticateAsync(request, ipAddress);
             if (result is null)
                 return Unauthorized("Invalid email or password.");
-            return result;
+
+            return Ok(new LoginResponseDto
+            {
+                Id = result.User.Id,
+                Email = result.User.Email,
+                IndexNumber = result.User.IndexNumber,
+                AccessToken = result.AccessToken,
+                UserRole = result.User.UserRole,
+                FirstName = result.User.FirstName,
+                LastName = result.User.LastName,
+            });
         }
 
         [HttpPut("profile")]
