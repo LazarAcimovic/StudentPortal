@@ -41,7 +41,7 @@ public class UserService : IUserService
         return _mapper.Map<UserDto>(user);
     }
 
-    public async Task<UserDto> AddUserAsync(UserCreateDto userDto)
+    public async Task<UserDto> AddUserAsync(AdminCreateUserDto userDto)
     {
 
         var hashedPassword = PasswordHashHandler.HashPassword(userDto.Password);
@@ -58,7 +58,7 @@ public class UserService : IUserService
     }
 
 
-    public async Task<UserDto> UpdateUserAsync(Guid id, UserUpdateDto userDto)
+    public async Task<UserDto> UpdateUserAsync(Guid id, AdminUpdateUserDto userDto)
     {
         var userToUpdate = await _userRepository.GetUserByIdAsync(id);
         if (userToUpdate == null) return null; // Vraćamo null ako korisnik nije pronađen

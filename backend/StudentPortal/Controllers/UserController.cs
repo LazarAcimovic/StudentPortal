@@ -73,7 +73,7 @@ namespace StudentPortal.Controllers
         // POST: api/user
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<UserDto>> AddUser([FromBody] UserCreateDto userDto)
+        public async Task<ActionResult<UserDto>> AddUser([FromBody] AdminCreateUserDto userDto)
         {
             try
             {
@@ -95,7 +95,7 @@ namespace StudentPortal.Controllers
         // PUT: api/user/{id}
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] UserUpdateDto userDto)
+        public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] AdminUpdateUserDto userDto)
         {
             try
             {
