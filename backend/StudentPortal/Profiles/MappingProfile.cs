@@ -8,7 +8,6 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // USER mapiranja
         CreateMap<User, UserDto>();
         CreateMap<AdminCreateUserDto, User>()
             .ForMember(dest => dest.UserPassword, opt => opt.MapFrom(src => src.Password))
@@ -30,7 +29,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Enrollments, opt => opt.Ignore())
             .ForMember(dest => dest.Subjects, opt => opt.Ignore());
 
-        //Subject mapiranja
 
         CreateMap<Subject, SubjectDto>()
             .ForMember(dest => dest.ProfessorFirstName, opt => opt.MapFrom(src => src.Professor.FirstName))
@@ -39,21 +37,36 @@ public class MappingProfile : Profile
         CreateMap<SubjectCreateDto, Subject>();
         CreateMap<SubjectUpdateDto, Subject>();
 
-        // ENROLLMENT mapiranja
         CreateMap<Enrollment, EnrollmentDto>()
             .ForMember(dest => dest.StudentFirstName, opt => opt.MapFrom(src => src.Student.FirstName))
             .ForMember(dest => dest.StudentLastName, opt => opt.MapFrom(src => src.Student.LastName))
             .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject.SubjectName));
         CreateMap<EnrollmentCreateDto, Enrollment>();
 
-        //mapiranja za grades
 
         CreateMap<Grade, GradeDto>()
-    .ForMember(dest => dest.StudentFirstName, opt => opt.MapFrom(src => src.Enrollment.Student.FirstName))
-    .ForMember(dest => dest.StudentLastName, opt => opt.MapFrom(src => src.Enrollment.Student.LastName))
-    .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Enrollment.Subject.SubjectName));
+            .ForMember(dest => dest.StudentFirstName, opt => opt.MapFrom(src => src.Enrollment.Student.FirstName))
+            .ForMember(dest => dest.StudentLastName, opt => opt.MapFrom(src => src.Enrollment.Student.LastName))
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Enrollment.Subject.SubjectName));
 
-        CreateMap<GradeCreateDto, Grade>();
-        CreateMap<GradeUpdateDto, Grade>();
+        CreateMap<GradeCreateDto, Grade>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.FinalGrade, opt => opt.Ignore())
+            .ForMember(dest => dest.ConfirmedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.StudentConfirmedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.FinalizedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+            .ForMember(dest => dest.Enrollment, opt => opt.Ignore());
+
+        CreateMap<GradeUpdateDto, Grade>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.FinalGrade, opt => opt.Ignore())
+            .ForMember(dest => dest.ConfirmedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.StudentConfirmedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.FinalizedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+            .ForMember(dest => dest.Enrollment, opt => opt.Ignore());
     }
 }

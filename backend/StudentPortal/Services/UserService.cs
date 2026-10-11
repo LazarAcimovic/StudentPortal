@@ -145,8 +145,9 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
                 EnrollmentId = enrollment.Id,
                 // Mapiramo Subject entitet u SubjectDto
                 Subject = _mapper.Map<SubjectDto>(enrollment.Subject),
-                // Mapiramo ocene, isključujući izbrisane
-                Grades = _mapper.Map<ICollection<GradeDto>>(enrollment.Grades.Where(g => !g.IsDeleted))
+                Grades = enrollment.Grade != null && !enrollment.Grade.IsDeleted
+                    ? new List<GradeDto> { _mapper.Map<GradeDto>(enrollment.Grade) }
+                    : new List<GradeDto>()
             });
         }
 

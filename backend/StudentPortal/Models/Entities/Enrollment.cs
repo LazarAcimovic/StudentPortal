@@ -15,7 +15,7 @@ public class Enrollment
 
     public DateTime? EnrolledAt { get; set; }
 
-    public virtual IEnumerable<Grade> Grades { get; set; } = new List<Grade>();
+    public virtual Grade? Grade { get; set; }
 
     public virtual User Student { get; set; }
 

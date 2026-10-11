@@ -51,16 +51,35 @@ public partial class StudentPortalApiContext : DbContext
         {
             entity.HasKey(e => e.Id);
 
-            entity.ToTable(t => t.HasCheckConstraint("CK_Grades_Grade_Range", "\"Grade\" >= 5 AND \"Grade\" <= 10"));
+            entity.HasIndex(e => e.EnrollmentId).IsUnique();
 
-            entity.Property(e => e.Comment).HasMaxLength(500);
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.StudentGrade).HasColumnName("Grade");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.Enrollment).WithMany(p => p.Grades)
-                .HasForeignKey(d => d.EnrollmentId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
+            entity.Property(e => e.Midterm1Points).HasColumnType("numeric(4,1)");
+            entity.Property(e => e.Midterm2Points).HasColumnType("numeric(4,1)");
+            entity.Property(e => e.AttendancePoints).HasColumnType("numeric(3,1)");
+            entity.Property(e => e.PracticalPoints).HasColumnType("numeric(3,1)");
+            entity.Property(e => e.ExamPoints).HasColumnType("numeric(4,1)");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Grades_FinalGrade_Range", "\"FinalGrade\" BETWEEN 5 AND 10");
+                t.HasCheckConstraint("CK_Grades_Midterm1_Range", "\"Midterm1Points\" BETWEEN 0 AND 30");
+                t.HasCheckConstraint("CK_Grades_Midterm2_Range", "\"Midterm2Points\" BETWEEN 0 AND 30");
+                t.HasCheckConstraint("CK_Grades_Attendance_Range", "\"AttendancePoints\" BETWEEN 0 AND 5");
+                t.HasCheckConstraint("CK_Grades_Practical_Range", "\"PracticalPoints\" BETWEEN 0 AND 5");
+                t.HasCheckConstraint("CK_Grades_Exam_Range", "\"ExamPoints\" BETWEEN 0 AND 30");
+                t.HasCheckConstraint("CK_Grades_Half_Step",
+                    "\"Midterm1Points\" * 2 = FLOOR(\"Midterm1Points\" * 2) " +
+                    "AND \"Midterm2Points\" * 2 = FLOOR(\"Midterm2Points\" * 2) " +
+                    "AND \"AttendancePoints\" * 2 = FLOOR(\"AttendancePoints\" * 2) " +
+                    "AND \"PracticalPoints\" * 2 = FLOOR(\"PracticalPoints\" * 2) " +
+                    "AND \"ExamPoints\" * 2 = FLOOR(\"ExamPoints\" * 2)");
+            });
+
+            entity.HasOne(d => d.Enrollment).WithOne(p => p.Grade)
+                .HasForeignKey<Grade>(d => d.EnrollmentId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>

@@ -80,7 +80,7 @@ public class GradeRepository : IGradeRepository
         var gradeToConfirm = await _context.Grades.FindAsync(id);
         if (gradeToConfirm != null)
         {
-            gradeToConfirm.IsConfirmed = true;
+            gradeToConfirm.ConfirmedAt = DateTime.UtcNow;
             _context.Grades.Update(gradeToConfirm);
             await _context.SaveChangesAsync();
             return gradeToConfirm;
@@ -91,7 +91,7 @@ public class GradeRepository : IGradeRepository
     public async Task<bool> DeleteGradeAsync(Guid id)
     {
         var gradeToDelete = await _context.Grades.FindAsync(id);
-        if (gradeToDelete != null && !gradeToDelete.IsConfirmed)
+        if (gradeToDelete != null && gradeToDelete.FinalizedAt == null)
         {
             gradeToDelete.IsDeleted = true;
             _context.Grades.Update(gradeToDelete);

@@ -60,7 +60,7 @@ public class UserRepository : IUserRepository
         return await _context.Enrollments
             .Where(e => e.StudentId == studentId)
             .Include(e => e.Subject)
-            .Include(e => e.Grades)
+            .Include(e => e.Grade)
             .AsNoTracking()
             .ToListAsync();
     }

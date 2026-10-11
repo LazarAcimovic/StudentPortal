@@ -86,7 +86,7 @@ public class EnrollmentRepository : IEnrollmentRepository
         return await _context.Enrollments
             .Where(e => e.StudentId == studentId)
             .Include(e => e.Subject) // Eager loading predmeta
-            .Include(e => e.Grades)   // Eager loading ocena
+            .Include(e => e.Grade)
             .AsNoTracking() // Dodajte .AsNoTracking() radi performansi, jer ne planirate menjati ove podatke
             .ToListAsync();
     }
