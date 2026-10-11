@@ -10,7 +10,6 @@ namespace StudentPortal.Dtos
         public string Email { get; set; }
         public RoleEnum UserRole { get; set; }
         public string IndexNumber { get; set; }
-        public bool IsDeleted { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
