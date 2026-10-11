@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudentPortal.Models.Enums;
+using StudentPortal.Models.Entities;
 
 namespace StudentPortal.Models.Entities;
 
@@ -22,6 +23,8 @@ public partial class StudentPortalApiContext : DbContext
     public virtual DbSet<Grade> Grades { get; set; }
 
     public virtual DbSet<GradeDraft> GradeDrafts { get; set; }
+
+    public virtual DbSet<Appeal> Appeals { get; set; }
 
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
@@ -120,6 +123,25 @@ public partial class StudentPortalApiContext : DbContext
 
             entity.HasOne(d => d.Enrollment).WithOne(p => p.GradeDraft)
                 .HasForeignKey<GradeDraft>(d => d.EnrollmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Appeal>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => e.GradeId);
+
+            entity.Property(e => e.Text).HasMaxLength(1000).IsRequired();
+
+            var appealStatusConverter = new EnumToStringConverter<AppealStatus>();
+            entity.Property(e => e.Status)
+                .HasConversion(appealStatusConverter)
+                .HasMaxLength(16)
+                .HasDefaultValue(AppealStatus.Pending);
+
+            entity.HasOne(d => d.Grade).WithMany(p => p.Appeals)
+                .HasForeignKey(d => d.GradeId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

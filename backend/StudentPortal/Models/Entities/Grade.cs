@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace StudentPortal.Models.Entities;
 
@@ -31,4 +32,6 @@ public class Grade
     public bool IsDeleted { get; set; }
 
     public virtual Enrollment Enrollment { get; set; }
+
+    public virtual ICollection<Appeal> Appeals { get; set; } = new List<Appeal>();
 }
