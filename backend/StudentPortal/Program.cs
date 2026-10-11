@@ -128,6 +128,16 @@ builder.Services.AddAuthentication(options =>
         ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha512 },
         ClockSkew = TimeSpan.FromSeconds(30)
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            var token = ctx.Request.Cookies["sp_access"];
+            if (!string.IsNullOrEmpty(token))
+                ctx.Token = token;
+            return Task.CompletedTask;
+        }
+    };
 });
 builder.Services.AddAuthorization(options =>
 {
