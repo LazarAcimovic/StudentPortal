@@ -11,8 +11,24 @@ public class MappingProfile : Profile
         // USER mapiranja
         CreateMap<User, UserDto>();
         CreateMap<AdminCreateUserDto, User>()
-            .ForMember(dest => dest.UserPassword, opt => opt.MapFrom(src => src.Password));
-        CreateMap<AdminUpdateUserDto, User>();
+            .ForMember(dest => dest.UserPassword, opt => opt.MapFrom(src => src.Password))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+
+        CreateMap<AdminUpdateUserDto, User>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.UserPassword, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+
+        CreateMap<UpdateProfileDto, User>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.UserPassword, opt => opt.Ignore())
+            .ForMember(dest => dest.UserRole, opt => opt.Ignore())
+            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.IndexNumber, opt => opt.Ignore())
+            .ForMember(dest => dest.Enrollments, opt => opt.Ignore())
+            .ForMember(dest => dest.Subjects, opt => opt.Ignore());
 
         //Subject mapiranja
 
