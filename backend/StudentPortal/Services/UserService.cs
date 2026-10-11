@@ -59,20 +59,7 @@ public class UserService : IUserService
     }
 
 
-    public async Task<UserDto> UpdateUserAsync(Guid id, AdminUpdateUserDto userDto)
-    {
-        var userToUpdate = await _userRepository.GetUserByIdAsync(id);
-        if (userToUpdate == null) return null; // Vraćamo null ako korisnik nije pronađen
-
-        _mapper.Map(userDto, userToUpdate);
-
-        await _userRepository.UpdateUserAsync(userToUpdate);
-
-
-        return _mapper.Map<UserDto>(userToUpdate);
-    }
-
-    public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dto)
+public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dto)
     {
         var user = await _userRepository.GetUserByIdForUpdateAsync(callerId);
         if (user == null) return null;

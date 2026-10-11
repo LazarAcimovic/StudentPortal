@@ -9,7 +9,6 @@ public interface IUserService
     Task<UserDto> GetUserByIdAsync(Guid id);
     Task<UserDto> FindByEmailAsync(string email);
     Task<UserDto> AddUserAsync(AdminCreateUserDto userDto);
-    Task<UserDto> UpdateUserAsync(Guid id, AdminUpdateUserDto userDto);
     Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dto);
 
     Task<UserDto> AdminUpdateUserAsync(Guid targetId, Guid callerId, AdminUpdateUserDto dto);

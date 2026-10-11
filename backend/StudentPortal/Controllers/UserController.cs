@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
+using StudentPortal.Exceptions;
 using StudentPortal.Interfaces;
-using StudentPortal.Services;
 
 namespace StudentPortal.Controllers
 {
@@ -12,22 +13,10 @@ namespace StudentPortal.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IJwtService _jwtService;
 
-        public UserController(IUserService userService, IJwtService jwtService)
+        public UserController(IUserService userService)
         {
             _userService = userService;
-            _jwtService = jwtService;
-        }
-
-        [AllowAnonymous]
-        [HttpPost("Login")]
-        public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
-        {
-            var result = await _jwtService.Authenticate(request);
-            if (result is null)
-                return Unauthorized("Invalid email or password.");
-            return result;
         }
 
         // GET: api/user
@@ -97,16 +86,21 @@ namespace StudentPortal.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] AdminUpdateUserDto userDto)
         {
+            var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(callerIdStr, out var callerId))
+                return Unauthorized();
+
             try
             {
-                var updatedUser = await _userService.UpdateUserAsync(id, userDto);
-
+                var updatedUser = await _userService.AdminUpdateUserAsync(id, callerId, userDto);
                 if (updatedUser == null)
-                {
-                    return NotFound($"User with ID {id} not found or update failed.");
-                }
+                    return NotFound($"User with ID {id} not found.");
 
                 return Ok(updatedUser);
+            }
+            catch (ForbiddenAccessException ex)
+            {
+                return StatusCode(403, ex.Message);
             }
             catch (Exception ex)
             {
