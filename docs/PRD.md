@@ -91,7 +91,9 @@ From the moment the professor confirms a grade, the student has **7 calendar day
 
 If the student does **neither** for the full 7 days: on day 8 the grade is treated as "truly final" automatically (same effect as if they had clicked Confirm grade).
 
-While the grade is in the 7-day window and the student has not yet acted, the status column shows **"Awaiting confirmation"**.
+**Once the student submits an appeal, both buttons disappear and the 7-day action window no longer applies.** The grade is held open by the Pending appeal; the only path forward is the professor's review (accept / deny) or the appeal going Overdue (§4.5), which starts a brand-new 7-day action window.
+
+While the grade is in the initial 7-day window and the student has not yet acted, the status column shows **"Awaiting confirmation"**.
 
 ### 4.2 Professor's review
 When any appeal exists on a professor's subject, their dashboard shows an **Appeals** section with one row per pending or overdue appeal. The professor clicks **View appeal** → modal opens showing:
@@ -110,7 +112,7 @@ When any appeal exists on a professor's subject, their dashboard shows an **Appe
 - Professor clicks **Deny** on the Pending appeal.
 - The appeal row's status becomes `Denied`; `ReviewedAt` is stored.
 - The grade is immediately treated as truly final: ECTS counts, the student's buttons disappear, the status column shows the final `Passed` / `Failed` label plus a red **Appeal denied** badge.
-- For **24 hours** after denial, the professor's dashboard shows an **Undo deny** button next to that appeal with a countdown. Clicking Undo returns the appeal to `Pending` and resumes the student's 7-day window from where it was paused when the appeal was first submitted (see §4.6 for the pause math).
+- For **24 hours** after denial, the professor's dashboard shows an **Undo deny** button next to that appeal with a countdown. Clicking Undo returns the appeal to `Pending` and un-finalizes the grade (`FinalizedAt` back to NULL). The student's view flips back to "Appeal pending" (no buttons — see §4.1). The professor's own 7-day review clock does **not** reset on undo; it still counts from the appeal's original `SubmittedAt`, so if the undo happens after day 7 of the appeal's life the appeal immediately reads as Overdue on the next request (§4.5).
 
 ### 4.5 Overdue (professor forgets)
 - A Pending appeal that has not been accepted or denied within **7 days of its submission** is treated as `Overdue`.
@@ -120,19 +122,40 @@ When any appeal exists on a professor's subject, their dashboard shows an **Appe
 - The student can submit one more appeal; the first overdue one stays in the DB as audit.
 - A professor **cannot** accept or deny an overdue appeal (the Accept/Deny buttons are not rendered for overdue entries in the View appeal modal).
 
-### 4.6 7-day student-window pause math
-The 7-day window pauses while an appeal is Pending. Formally:
-```
-daysConsumed  = daysBetween(ConfirmedAt, EarliestAppealSubmittedAt)   // first appeal only
-windowDeadline = reviewMoment + (7 - daysConsumed) days
-```
-where `reviewMoment` is `Appeal.ReviewedAt` (for accept/deny followed by undo scenarios) or the overdue moment. In the common case of no appeal at all, deadline is simply `ConfirmedAt + 7 days`.
+### 4.6 Student's 7-day action window — when it applies
+
+There is one rule, no pause / resume math:
+
+- **Fresh grade:** the window is 7 calendar days from `Grade.ConfirmedAt`.
+- **After an appeal went Overdue (§4.5):** a brand-new 7-day window from the overdue moment; the student can submit one more appeal.
+
+The window is **only active when the grade has no Pending or Accepted-awaiting-reconfirm appeal**. The moment the student submits an appeal, the window stops applying — the grade is held open by the appeal itself until the professor reviews it or the appeal goes Overdue.
+
+What ends the window:
+
+| Trigger | Effect |
+|---|---|
+| Student clicks **Confirm grade** | Grade is immediately truly final (§4.7). ECTS counts. |
+| Student clicks **Write appeal** (fresh or post-overdue) | Grade stays open until the professor accepts, denies, or the new appeal goes Overdue. The window becomes irrelevant for the duration of the Pending appeal. |
+| Window silently expires (7 days of silence on the initial window) | Grade is auto-finalized on day 8, same effect as if the student had clicked Confirm grade (per Q28). |
+| Post-overdue window silently expires | Grade stays open — no auto-finalize. A grade with an overdue chain is only closed by a professor's accept/deny on a subsequent student appeal (per Q53). |
+
+What the student sees during each state:
+
+| Grade state | Student dashboard status | Action buttons |
+|---|---|---|
+| Fresh confirm, window live | 🟡 Awaiting confirmation | **Write appeal** + **Confirm grade** |
+| Pending appeal (initial or post-overdue) | 🔵 Appeal pending | *(none)* |
+| Appeal denied, grade truly final | 🟢 Passed / 🔴 Failed + 🔴 Appeal denied badge | *(none)* |
+| Appeal accepted, prof hasn't re-confirmed yet | 🔵 Appeal pending | *(none)* |
+| Overdue chain, window live | 🟡 Awaiting confirmation | **Write appeal** (fresh window) |
+| Truly final (any route) | 🟢 Passed / 🔴 Failed | *(none)* |
 
 ### 4.7 Earned ECTS rule
 A grade contributes its subject's ECTS to **Earned ECTS** only when the grade is **truly final** AND the final grade is ≥ 6. A grade becomes truly final in exactly these cases:
 1. The student clicks **Confirm grade**.
-2. 7 days pass with no student action and no pending appeal.
-3. The professor denies the appeal AND the 24-hour undo window has elapsed.
+2. 7 days pass with no student action on the **initial** window (no pending appeal has ever been submitted). This path does not apply to the post-overdue window — see §4.6.
+3. The professor denies the appeal (ECTS counts from the deny moment; the 24-hour undo window flicks it off if used — see §4.4).
 4. The professor accepts the appeal and re-confirms the exam points.
 
 ---
@@ -252,7 +275,7 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 ### Task 0 — Redo the Serbian → English UI translation
 
 - **0.1** Translate every Serbian string in `frontend/src/pages/`, `frontend/src/components/`, and anywhere else to English, matching the pre-reset content exactly (no new copy introduced here).
-  - Commit: `chore(i18n): translate frontend UI strings from Serbian to English`
+  - Commit: ` (i18n): translate frontend UI strings from Serbian to English`
 
 ---
 
@@ -266,11 +289,11 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 ### Task 2 — Secrets removal and `.env` for production
 
 - **2.1** Add `appsettings.Local.json`, `.env`, `.env.local`, `.env.*.local` to `.gitignore`.
-  - Commit: `chore(gitignore): exclude local env and appsettings files`
+  - Commit: ` (gitignore): exclude local env and appsettings files`
 - **2.2** Remove `JwtConfig:Key` and the DB password from `appsettings.json`. Keep only the Issuer, Audience, token lifetimes, and empty connection string shell.
   - Commit: `security(backend): remove JWT key and DB password from appsettings`
 - **2.3** Add a `UserSecretsId` to `StudentPortal.csproj`. **You:** run `dotnet user-secrets init` (idempotent), then `dotnet user-secrets set "JwtConfig:Key" "$(openssl rand -base64 64)"` and `dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=StudentPortal;Username=postgres;Password=postgres"`.
-  - Commit: `chore(backend): enable user-secrets for local dev`
+  - Commit: ` (backend): enable user-secrets for local dev`
 - **2.4** In `Program.cs`, add fail-fast reads for `JwtConfig:Key`, `JwtConfig:Issuer`, `JwtConfig:Audience`, and `ConnectionStrings:DefaultConnection`; reject keys shorter than 32 bytes.
   - Commit: `security(backend): fail fast on missing or weak JWT / DB config`
 - **2.5** Create `.env.example` in repo root listing the production env var names (`JwtConfig__Key`, `ConnectionStrings__DefaultConnection`, `Cors__Origins__0`, `Cors__Origins__1`) with placeholder values.
@@ -311,7 +334,7 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 ### Task 5 — FluentValidation
 
 - **5.1** Add the `FluentValidation.AspNetCore` NuGet package. Register `AddFluentValidationAutoValidation()` in `Program.cs`.
-  - Commit: `chore(backend): add FluentValidation.AspNetCore package`
+  - Commit: ` (backend): add FluentValidation.AspNetCore package`
 - **5.2** Create `Validators/` folder. Write `LoginRequestDtoValidator`, `RegisterStudentDtoValidator`, `AdminCreateUserDtoValidator`, `UpdateProfileDtoValidator`, `AdminUpdateUserDtoValidator`.
   - Commit: `feat(backend): add FluentValidation validators for user and auth DTOs`
 - **5.3** Write `SubjectCreateDtoValidator`, `SubjectUpdateDtoValidator`, `EnrollmentCreateDtoValidator`.
@@ -365,8 +388,8 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
   - Commit: `feat(backend): grade confirmation service with final grade computation`
 - **8.4** Rewrite `GradeController`: `POST /api/Grade/confirm` (prof confirms new grade), `POST /api/Grade/reconfirm-exam` (prof re-confirms after accept), `POST /api/Grade/student-confirm` (student clicks Confirm). All actions `[Authorize(Roles = "...")]` + ownership check in service.
   - Commit: `feat(backend): grade confirmation API endpoints`
-- **8.5** `IAppealService` + `AppealService`: `SubmitAsync` (student, enforces 7-day window + at most one Pending), `GetPendingForProfessorAsync`, `GetByGradeAsync` (returns full history incl. overdue), `AcceptAsync`, `DenyAsync`, `UndoDenyAsync` (only within 24h of ReviewedAt). Overdue is computed on read, never stored.
-  - Commit: `feat(backend): appeal service with pause/overdue/undo logic`
+- **8.5** `IAppealService` + `AppealService`: `SubmitAsync` (student, enforces the §4.6 action window + at most one Pending per cycle), `GetPendingForProfessorAsync`, `GetByGradeAsync` (returns full history incl. overdue), `AcceptAsync`, `DenyAsync`, `UndoDenyAsync` (only within 24h of ReviewedAt; does **not** reset the appeal's own 7-day review clock — overdue is still computed from original `SubmittedAt`). Overdue is computed on read, never stored.
+  - Commit: `feat(backend): appeal service with overdue and undo-deny logic`
 - **8.6** `AppealController`: `POST /api/Appeal` (student), `GET /api/Appeal/pending` (professor, filtered by their subjects), `GET /api/Appeal/by-grade/{gradeId}`, `POST /api/Appeal/{id}/accept`, `POST /api/Appeal/{id}/deny`, `POST /api/Appeal/{id}/undo-deny`.
   - Commit: `feat(backend): appeal API endpoints`
 
@@ -394,7 +417,7 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 ### Task 11 — Frontend architecture foundation
 
 - **11.1** Install new dev dependencies: `zod`, `vitest`, `jsdom`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `msw`, `react-toastify`, `babel-plugin-react-compiler`.
-  - Commit: `chore(frontend): add zod, vitest, msw, react-toastify, react-compiler`
+  - Commit: ` (frontend): add zod, vitest, msw, react-toastify, react-compiler`
 - **11.2** Create `src/config/constants.ts` with `APP_ROUTES` and `API_ROUTES` enums. Replace route string literals across the codebase.
   - Commit: `refactor(frontend): centralize routes in APP_ROUTES and API_ROUTES`
 - **11.3** Create `src/lib/navigation.ts` (navigation singleton), `src/lib/auth.ts` (`clearAuthSession`, `withAuthRedirect`, `getRedirectTarget`).
@@ -408,9 +431,9 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 - **11.7** Create `src/components/ui/Modal.tsx` (reusable modal built on Bootstrap `.modal` classes, backdrop blur via inline style, controlled by `open` + `onClose`).
   - Commit: `feat(frontend): reusable Modal component`
 - **11.8** Create `src/test/setup.ts` and `src/test/server.ts` (MSW 2 server with `onUnhandledRequest: 'error'`, handlers that emit `Set-Cookie` headers for `sp_access` / `sp_refresh`). Update `vite.config.ts` to enable React Compiler via `babel-plugin-react-compiler` and point Vitest at `src/test/setup.ts`.
-  - Commit: `chore(frontend): wire Vitest, MSW, and React Compiler`
+  - Commit: ` (frontend): wire Vitest, MSW, and React Compiler`
 - **11.9** Add `.env.development` (`VITE_API_BASE_URL=/api`) and `.env.production` (placeholder). Add `server.proxy['/api']` in `vite.config.ts` → `https://localhost:7253`.
-  - Commit: `chore(frontend): add env-driven API base URL and dev proxy`
+  - Commit: ` (frontend): add env-driven API base URL and dev proxy`
 - **11.10** Create `src/features/auth/`, `src/features/user/`, `src/features/subjects/`, `src/features/grades/`, `src/features/appeals/`, each with `api/ components/ models/ pages/ utils/ index.ts` subfolders (hooks subfolder only in features that need data-fetching custom hooks).
   - Commit: `refactor(frontend): add feature-sliced folder scaffolding`
 
@@ -439,7 +462,7 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 - **14.3** Rewrite `src/features/auth/pages/LoginPage.tsx` using manual `useState`, Zod `safeParse`, show errors only on `touched[field]`, submit, set user via store, navigate to role dashboard. Use existing Bootstrap classes. Keep `console.log` out of production.
   - Commit: `feat(auth): login page with Zod validation`
 - **14.4** Delete the old `src/pages/login/LoginPage.tsx`.
-  - Commit: `chore(frontend): remove old LoginPage location`
+  - Commit: ` (frontend): remove old LoginPage location`
 
 ---
 
@@ -468,7 +491,7 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 - **17.4** Add the **Confirm grade** button when `canConfirmGrade` is true; posts to `POST /api/Grade/student-confirm` and refreshes.
   - Commit: `feat(student): student-side confirm grade button`
 - **17.5** Delete `src/pages/students/StudentsPage.tsx` and its route.
-  - Commit: `chore(student): remove Students page`
+  - Commit: ` (student): remove Students page`
 
 ---
 
@@ -512,7 +535,7 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 ### Task 21 — Toast integration
 
 - **21.1** Mount `<ToastContainer>` from `react-toastify` in `App.tsx`. Import the CSS in `main.tsx`.
-  - Commit: `chore(frontend): mount react-toastify ToastContainer`
+  - Commit: ` (frontend): mount react-toastify ToastContainer`
 - **21.2** Fire a toast on login error, logout, appeal submit success, appeal submit error, confirm grade success, deny undo success.
   - Commit: `feat(frontend): user-facing toasts for key actions`
 
@@ -520,7 +543,7 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 
 ### Task 22 — Tests
 
-- **22.1** Backend xUnit tests for `AuthService` (login happy / wrong password / soft-deleted / unknown-email latency), `AppealService` (submit inside window / outside window / overdue / pause math / undo), `GradeService` (confirm → final grade computation / reconfirm after accept).
+- **22.1** Backend xUnit tests for `AuthService` (login happy / wrong password / soft-deleted / unknown-email latency), `AppealService` (submit inside window / outside window / second-appeal-blocked-while-Pending / overdue flip-on-read / fresh window after overdue / deny → ECTS counts / undo-deny within 24h / undo-deny after original SubmittedAt + 7d flips straight to Overdue), `GradeService` (confirm → final grade computation / reconfirm after accept).
   - Commit: `test(backend): unit tests for auth, appeal, and grade services`
 - **22.2** Frontend Vitest + MSW tests for `axiosClient` (silent refresh happy/failure), `LoginPage` (validation gates submit), `authGuard`, `App.tsx` bootstrap effects.
   - Commit: `test(frontend): axios interceptor, login, authGuard, bootstrap tests`
