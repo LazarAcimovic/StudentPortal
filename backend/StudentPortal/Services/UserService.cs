@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
 using StudentPortal.Dtos;
+using StudentPortal.Exceptions;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
-
 using StudentPortal.Models.Entities;
+using StudentPortal.Models.Enums;
 
 
 namespace StudentPortal.Services;
@@ -69,6 +70,47 @@ public class UserService : IUserService
 
 
         return _mapper.Map<UserDto>(userToUpdate);
+    }
+
+    public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dto)
+    {
+        var user = await _userRepository.GetUserByIdForUpdateAsync(callerId);
+        if (user == null) return null;
+
+        if (dto.Email != null && dto.Email != user.Email && user.UserRole != RoleEnum.Admin)
+            throw new ForbiddenAccessException("Only admins can change their email.");
+
+        if (dto.FirstName != null) user.FirstName = dto.FirstName;
+        if (dto.LastName != null) user.LastName = dto.LastName;
+        if (dto.Email != null) user.Email = dto.Email;
+
+        await _userRepository.UpdateUserAsync(user);
+        return _mapper.Map<UserDto>(user);
+    }
+
+    public async Task<UserDto> AdminUpdateUserAsync(Guid targetId, Guid callerId, AdminUpdateUserDto dto)
+    {
+        var target = await _userRepository.GetUserByIdForUpdateAsync(targetId);
+        if (target == null) return null;
+
+        if (targetId == callerId && dto.IsDeleted)
+            throw new ForbiddenAccessException("Admin cannot soft-delete themselves.");
+
+        if (targetId == callerId && dto.UserRole != target.UserRole)
+            throw new ForbiddenAccessException("Admin cannot change their own role.");
+
+        if (target.UserRole == RoleEnum.Admin && dto.UserRole != RoleEnum.Admin)
+            throw new ForbiddenAccessException("Admin cannot demote another admin.");
+
+        target.FirstName = dto.FirstName;
+        target.LastName = dto.LastName;
+        target.Email = dto.Email;
+        target.IndexNumber = dto.IndexNumber;
+        target.UserRole = dto.UserRole;
+        target.IsDeleted = dto.IsDeleted;
+
+        await _userRepository.UpdateUserAsync(target);
+        return _mapper.Map<UserDto>(target);
     }
 
     public async Task<bool> DeleteUserAsync(Guid id)
