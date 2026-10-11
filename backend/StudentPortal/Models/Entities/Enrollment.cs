@@ -17,6 +17,8 @@ public class Enrollment
 
     public virtual Grade? Grade { get; set; }
 
+    public virtual GradeDraft? GradeDraft { get; set; }
+
     public virtual User Student { get; set; }
 
     public virtual Subject Subject { get; set; }

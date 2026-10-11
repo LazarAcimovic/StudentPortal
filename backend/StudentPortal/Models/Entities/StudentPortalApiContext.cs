@@ -21,6 +21,8 @@ public partial class StudentPortalApiContext : DbContext
 
     public virtual DbSet<Grade> Grades { get; set; }
 
+    public virtual DbSet<GradeDraft> GradeDrafts { get; set; }
+
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public virtual DbSet<Subject> Subjects { get; set; }
@@ -79,6 +81,45 @@ public partial class StudentPortalApiContext : DbContext
 
             entity.HasOne(d => d.Enrollment).WithOne(p => p.Grade)
                 .HasForeignKey<Grade>(d => d.EnrollmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GradeDraft>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => e.EnrollmentId).IsUnique();
+
+            entity.Property(e => e.LastEditedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.Midterm1Points).HasColumnType("numeric(4,1)");
+            entity.Property(e => e.Midterm2Points).HasColumnType("numeric(4,1)");
+            entity.Property(e => e.AttendancePoints).HasColumnType("numeric(3,1)");
+            entity.Property(e => e.PracticalPoints).HasColumnType("numeric(3,1)");
+            entity.Property(e => e.ExamPoints).HasColumnType("numeric(4,1)");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_GradeDrafts_Midterm1_Range",
+                    "\"Midterm1Points\" IS NULL OR \"Midterm1Points\" BETWEEN 0 AND 30");
+                t.HasCheckConstraint("CK_GradeDrafts_Midterm2_Range",
+                    "\"Midterm2Points\" IS NULL OR \"Midterm2Points\" BETWEEN 0 AND 30");
+                t.HasCheckConstraint("CK_GradeDrafts_Attendance_Range",
+                    "\"AttendancePoints\" IS NULL OR \"AttendancePoints\" BETWEEN 0 AND 5");
+                t.HasCheckConstraint("CK_GradeDrafts_Practical_Range",
+                    "\"PracticalPoints\" IS NULL OR \"PracticalPoints\" BETWEEN 0 AND 5");
+                t.HasCheckConstraint("CK_GradeDrafts_Exam_Range",
+                    "\"ExamPoints\" IS NULL OR \"ExamPoints\" BETWEEN 0 AND 30");
+                t.HasCheckConstraint("CK_GradeDrafts_Half_Step",
+                    "(\"Midterm1Points\" IS NULL OR \"Midterm1Points\" * 2 = FLOOR(\"Midterm1Points\" * 2)) " +
+                    "AND (\"Midterm2Points\" IS NULL OR \"Midterm2Points\" * 2 = FLOOR(\"Midterm2Points\" * 2)) " +
+                    "AND (\"AttendancePoints\" IS NULL OR \"AttendancePoints\" * 2 = FLOOR(\"AttendancePoints\" * 2)) " +
+                    "AND (\"PracticalPoints\" IS NULL OR \"PracticalPoints\" * 2 = FLOOR(\"PracticalPoints\" * 2)) " +
+                    "AND (\"ExamPoints\" IS NULL OR \"ExamPoints\" * 2 = FLOOR(\"ExamPoints\" * 2))");
+            });
+
+            entity.HasOne(d => d.Enrollment).WithOne(p => p.GradeDraft)
+                .HasForeignKey<GradeDraft>(d => d.EnrollmentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
