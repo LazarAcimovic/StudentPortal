@@ -61,6 +61,7 @@ builder.Services.AddScoped<IGradeRepository, GradeRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 // Registracija servisa za Dependency Injection
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
