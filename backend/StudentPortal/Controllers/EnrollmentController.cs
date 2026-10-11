@@ -56,6 +56,7 @@ namespace StudentPortal.Controllers
         }
 
         // POST: api/enrollment
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<EnrollmentDto>> AddEnrollment([FromBody] EnrollmentCreateDto enrollmentDto)
         {
@@ -77,6 +78,7 @@ namespace StudentPortal.Controllers
   
 
         // DELETE: api/enrollment/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEnrollment(Guid id)
         {

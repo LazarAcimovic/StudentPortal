@@ -7,7 +7,7 @@ namespace StudentPortal.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles = "Professor")]
     public class GradeController : ControllerBase
     {
         private readonly IGradeService _gradeService;

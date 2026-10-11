@@ -8,7 +8,7 @@ namespace StudentPortal.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
- 
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -31,6 +31,7 @@ namespace StudentPortal.Controllers
         }
 
         // GET: api/user
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
         {
@@ -50,6 +51,7 @@ namespace StudentPortal.Controllers
         }
 
         // GET: api/user/{id}
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUserById(Guid id)
         {
@@ -69,6 +71,7 @@ namespace StudentPortal.Controllers
         }
 
         // POST: api/user
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<UserDto>> AddUser([FromBody] UserCreateDto userDto)
         {
@@ -90,6 +93,7 @@ namespace StudentPortal.Controllers
         }
 
         // PUT: api/user/{id}
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] UserUpdateDto userDto)
         {
@@ -111,6 +115,7 @@ namespace StudentPortal.Controllers
         }
 
         // DELETE: api/user/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
@@ -129,6 +134,7 @@ namespace StudentPortal.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("{studentId}/subjects-and-grades")]
         public async Task<ActionResult<IEnumerable<StudentSubjectGradesDto>>> GetStudentSubjectsAndGrades(Guid studentId)
         {

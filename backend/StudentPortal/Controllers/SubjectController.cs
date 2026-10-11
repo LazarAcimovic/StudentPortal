@@ -96,6 +96,7 @@ namespace StudentPortal.Controllers
 
 
         // POST: api/subject
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<SubjectDto>> AddSubject([FromBody] SubjectCreateDto subjectDto)
         {
@@ -116,6 +117,7 @@ namespace StudentPortal.Controllers
         }
 
         // PUT: api/subject/{id}
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSubject(Guid id, [FromBody] SubjectUpdateDto subjectDto)
         {
@@ -131,6 +133,7 @@ namespace StudentPortal.Controllers
         }
 
         // DELETE: api/subject/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSubject(Guid id)
         {
