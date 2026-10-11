@@ -105,9 +105,13 @@ public class UserService : IUserService
         target.FirstName = dto.FirstName;
         target.LastName = dto.LastName;
         target.Email = dto.Email;
-        target.IndexNumber = dto.IndexNumber;
         target.UserRole = dto.UserRole;
         target.IsDeleted = dto.IsDeleted;
+
+        if (target.UserRole == RoleEnum.Student)
+            target.IndexNumber = dto.IndexNumber;
+        else
+            target.IndexNumber = null;
 
         await _userRepository.UpdateUserAsync(target);
         return _mapper.Map<UserDto>(target);
