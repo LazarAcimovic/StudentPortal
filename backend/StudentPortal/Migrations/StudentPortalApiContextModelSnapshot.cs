@@ -22,6 +22,40 @@ namespace StudentPortal.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("StudentPortal.Models.Entities.Appeal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GradeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeId");
+
+                    b.ToTable("Appeals");
+                });
+
             modelBuilder.Entity("StudentPortal.Models.Entities.Enrollment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -58,9 +92,11 @@ namespace StudentPortal.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Comment")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                    b.Property<decimal>("AttendancePoints")
+                        .HasColumnType("numeric(3,1)");
+
+                    b.Property<DateTime>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -70,23 +106,100 @@ namespace StudentPortal.Migrations
                     b.Property<Guid>("EnrollmentId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("IsConfirmed")
-                        .HasColumnType("boolean");
+                    b.Property<decimal>("ExamPoints")
+                        .HasColumnType("numeric(4,1)");
+
+                    b.Property<int>("FinalGrade")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("FinalizedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("StudentGrade")
-                        .HasColumnType("integer")
-                        .HasColumnName("Grade");
+                    b.Property<decimal>("Midterm1Points")
+                        .HasColumnType("numeric(4,1)");
+
+                    b.Property<decimal>("Midterm2Points")
+                        .HasColumnType("numeric(4,1)");
+
+                    b.Property<decimal>("PracticalPoints")
+                        .HasColumnType("numeric(3,1)");
+
+                    b.Property<DateTime?>("StudentConfirmedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EnrollmentId");
+                    b.HasIndex("EnrollmentId")
+                        .IsUnique();
 
                     b.ToTable("Grades", t =>
                         {
-                            t.HasCheckConstraint("CK_Grades_Grade_Range", "\"Grade\" >= 5 AND \"Grade\" <= 10");
+                            t.HasCheckConstraint("CK_Grades_Attendance_Range", "\"AttendancePoints\" BETWEEN 0 AND 5");
+
+                            t.HasCheckConstraint("CK_Grades_Exam_Range", "\"ExamPoints\" BETWEEN 0 AND 30");
+
+                            t.HasCheckConstraint("CK_Grades_FinalGrade_Range", "\"FinalGrade\" BETWEEN 5 AND 10");
+
+                            t.HasCheckConstraint("CK_Grades_Half_Step", "\"Midterm1Points\" * 2 = FLOOR(\"Midterm1Points\" * 2) AND \"Midterm2Points\" * 2 = FLOOR(\"Midterm2Points\" * 2) AND \"AttendancePoints\" * 2 = FLOOR(\"AttendancePoints\" * 2) AND \"PracticalPoints\" * 2 = FLOOR(\"PracticalPoints\" * 2) AND \"ExamPoints\" * 2 = FLOOR(\"ExamPoints\" * 2)");
+
+                            t.HasCheckConstraint("CK_Grades_Midterm1_Range", "\"Midterm1Points\" BETWEEN 0 AND 30");
+
+                            t.HasCheckConstraint("CK_Grades_Midterm2_Range", "\"Midterm2Points\" BETWEEN 0 AND 30");
+
+                            t.HasCheckConstraint("CK_Grades_Practical_Range", "\"PracticalPoints\" BETWEEN 0 AND 5");
+                        });
+                });
+
+            modelBuilder.Entity("StudentPortal.Models.Entities.GradeDraft", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("AttendancePoints")
+                        .HasColumnType("numeric(3,1)");
+
+                    b.Property<Guid>("EnrollmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ExamPoints")
+                        .HasColumnType("numeric(4,1)");
+
+                    b.Property<DateTime>("LastEditedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<decimal?>("Midterm1Points")
+                        .HasColumnType("numeric(4,1)");
+
+                    b.Property<decimal?>("Midterm2Points")
+                        .HasColumnType("numeric(4,1)");
+
+                    b.Property<decimal?>("PracticalPoints")
+                        .HasColumnType("numeric(3,1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId")
+                        .IsUnique();
+
+                    b.ToTable("GradeDrafts", t =>
+                        {
+                            t.HasCheckConstraint("CK_GradeDrafts_Attendance_Range", "\"AttendancePoints\" IS NULL OR \"AttendancePoints\" BETWEEN 0 AND 5");
+
+                            t.HasCheckConstraint("CK_GradeDrafts_Exam_Range", "\"ExamPoints\" IS NULL OR \"ExamPoints\" BETWEEN 0 AND 30");
+
+                            t.HasCheckConstraint("CK_GradeDrafts_Half_Step", "(\"Midterm1Points\" IS NULL OR \"Midterm1Points\" * 2 = FLOOR(\"Midterm1Points\" * 2)) AND (\"Midterm2Points\" IS NULL OR \"Midterm2Points\" * 2 = FLOOR(\"Midterm2Points\" * 2)) AND (\"AttendancePoints\" IS NULL OR \"AttendancePoints\" * 2 = FLOOR(\"AttendancePoints\" * 2)) AND (\"PracticalPoints\" IS NULL OR \"PracticalPoints\" * 2 = FLOOR(\"PracticalPoints\" * 2)) AND (\"ExamPoints\" IS NULL OR \"ExamPoints\" * 2 = FLOOR(\"ExamPoints\" * 2))");
+
+                            t.HasCheckConstraint("CK_GradeDrafts_Midterm1_Range", "\"Midterm1Points\" IS NULL OR \"Midterm1Points\" BETWEEN 0 AND 30");
+
+                            t.HasCheckConstraint("CK_GradeDrafts_Midterm2_Range", "\"Midterm2Points\" IS NULL OR \"Midterm2Points\" BETWEEN 0 AND 30");
+
+                            t.HasCheckConstraint("CK_GradeDrafts_Practical_Range", "\"PracticalPoints\" IS NULL OR \"PracticalPoints\" BETWEEN 0 AND 5");
                         });
                 });
 
@@ -206,6 +319,17 @@ namespace StudentPortal.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("StudentPortal.Models.Entities.Appeal", b =>
+                {
+                    b.HasOne("StudentPortal.Models.Entities.Grade", "Grade")
+                        .WithMany("Appeals")
+                        .HasForeignKey("GradeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Grade");
+                });
+
             modelBuilder.Entity("StudentPortal.Models.Entities.Enrollment", b =>
                 {
                     b.HasOne("StudentPortal.Models.Entities.User", "Student")
@@ -226,8 +350,20 @@ namespace StudentPortal.Migrations
             modelBuilder.Entity("StudentPortal.Models.Entities.Grade", b =>
                 {
                     b.HasOne("StudentPortal.Models.Entities.Enrollment", "Enrollment")
-                        .WithMany("Grades")
-                        .HasForeignKey("EnrollmentId")
+                        .WithOne("Grade")
+                        .HasForeignKey("StudentPortal.Models.Entities.Grade", "EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
+                });
+
+            modelBuilder.Entity("StudentPortal.Models.Entities.GradeDraft", b =>
+                {
+                    b.HasOne("StudentPortal.Models.Entities.Enrollment", "Enrollment")
+                        .WithOne("GradeDraft")
+                        .HasForeignKey("StudentPortal.Models.Entities.GradeDraft", "EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Enrollment");
@@ -256,7 +392,14 @@ namespace StudentPortal.Migrations
 
             modelBuilder.Entity("StudentPortal.Models.Entities.Enrollment", b =>
                 {
-                    b.Navigation("Grades");
+                    b.Navigation("Grade");
+
+                    b.Navigation("GradeDraft");
+                });
+
+            modelBuilder.Entity("StudentPortal.Models.Entities.Grade", b =>
+                {
+                    b.Navigation("Appeals");
                 });
 
             modelBuilder.Entity("StudentPortal.Models.Entities.Subject", b =>
