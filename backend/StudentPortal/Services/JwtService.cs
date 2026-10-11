@@ -29,7 +29,7 @@ namespace StudentPortal.Services
                 return null;
 
             var userAccount = await _userRepository.FindByEmailAsync(request.Email);
-            if (userAccount is null)
+            if (userAccount is null || userAccount.IsDeleted)
                 return null;
 
             bool isPasswordValid = PasswordHashHandler.VerifyPassword(request.Password, userAccount.UserPassword);

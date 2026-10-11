@@ -26,8 +26,7 @@ namespace StudentPortal.Controllers
         {
             var result = await _jwtService.Authenticate(request);
             if (result is null)
-                return Unauthorized();
-
+                return Unauthorized("Invalid email or password.");
             return result;
         }
 
