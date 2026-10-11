@@ -56,5 +56,29 @@ namespace WebApiDemo.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(callerIdStr, out var callerId))
+                return Unauthorized();
+
+            try
+            {
+                await _userService.ChangePasswordAsync(callerId, dto);
+
+                // TODO Task 6: delete sp_access and sp_refresh cookies once cookie auth is in place
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { field = "currentPassword", message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

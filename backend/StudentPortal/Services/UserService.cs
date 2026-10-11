@@ -113,6 +113,19 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         return true;
     }
 
+    public async Task ChangePasswordAsync(Guid callerId, ChangePasswordDto dto)
+    {
+        var user = await _userRepository.GetUserByIdForUpdateAsync(callerId);
+        if (user == null) return;
+
+        if (!PasswordHashHandler.VerifyPassword(dto.CurrentPassword, user.UserPassword))
+            throw new InvalidOperationException("Current password is incorrect.");
+
+        user.UserPassword = PasswordHashHandler.HashPassword(dto.NewPassword);
+        await _userRepository.UpdateUserAsync(user);
+        // TODO Task 6: call IRefreshTokenRepository.RevokeAllForUserAsync(callerId) here
+    }
+
     public async Task<IEnumerable<StudentSubjectGradesDto>> GetStudentSubjectsAndGradesAsync(Guid studentId)
     {
         // Koristimo novu metodu iz UserRepository-a
