@@ -153,7 +153,7 @@ namespace StudentPortal.Controllers
         {
             HttpOnly = true,
             Secure = !_env.IsDevelopment(),
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.Strict,
             Path = "/",
             Expires = expires,
         };
