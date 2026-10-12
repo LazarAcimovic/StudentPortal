@@ -6,6 +6,7 @@ public interface IGradeRepository
 {
     Task<IEnumerable<Grade>> GetAllGradesAsync();
     Task<Grade> GetGradeByIdAsync(Guid id);
+    Task<Grade?> GetByEnrollmentIdAsync(Guid enrollmentId);
     Task<Grade> AddGradeAsync(Grade grade);
     Task<IEnumerable<Grade>> GetGradeByStudentIdAsync(Guid studentId);
     Task UpdateGradeAsync(Grade grade);

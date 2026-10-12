@@ -54,6 +54,15 @@ public class GradeRepository : IGradeRepository
                              .ToListAsync();
     }
 
+    public async Task<Grade?> GetByEnrollmentIdAsync(Guid enrollmentId)
+    {
+        return await _context.Grades
+            .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Subject)
+            .Include(g => g.Appeals)
+            .FirstOrDefaultAsync(g => g.EnrollmentId == enrollmentId);
+    }
+
     public async Task<Grade> AddGradeAsync(Grade grade)
     {
         await _context.Grades.AddAsync(grade);
