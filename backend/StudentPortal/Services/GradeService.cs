@@ -30,43 +30,35 @@ public class GradeService : IGradeService
         return grade == null ? null : MapToDto(grade);
     }
 
-    public async Task<GradeDto> ConfirmGradeAsync(Guid enrollmentId, Guid callerProfId)
+    public async Task<GradeDto> ConfirmGradeAsync(Guid enrollmentId, Guid callerProfId, decimal midterm1Points, decimal midterm2Points, decimal attendancePoints, decimal practicalPoints, decimal examPoints)
     {
         await VerifyOwnershipAsync(enrollmentId, callerProfId);
-
-        var draft = await _draftRepository.GetByEnrollmentIdAsync(enrollmentId);
-        if (draft == null)
-            throw new InvalidOperationException("No draft exists for this enrollment.");
-
-        if (draft.Midterm1Points == null || draft.Midterm2Points == null ||
-            draft.AttendancePoints == null || draft.PracticalPoints == null ||
-            draft.ExamPoints == null)
-            throw new InvalidOperationException("All five point fields must be filled before confirming.");
 
         var existingGrade = await _gradeRepository.GetByEnrollmentIdAsync(enrollmentId);
         if (existingGrade != null)
             throw new InvalidOperationException("A grade already exists for this enrollment.");
 
-        var sum = draft.Midterm1Points.Value + draft.Midterm2Points.Value +
-                  draft.AttendancePoints.Value + draft.PracticalPoints.Value +
-                  draft.ExamPoints.Value;
+        var sum = midterm1Points + midterm2Points + attendancePoints + practicalPoints + examPoints;
 
         var grade = new Grade
         {
             Id = Guid.NewGuid(),
             EnrollmentId = enrollmentId,
-            Midterm1Points = draft.Midterm1Points.Value,
-            Midterm2Points = draft.Midterm2Points.Value,
-            AttendancePoints = draft.AttendancePoints.Value,
-            PracticalPoints = draft.PracticalPoints.Value,
-            ExamPoints = draft.ExamPoints.Value,
+            Midterm1Points = midterm1Points,
+            Midterm2Points = midterm2Points,
+            AttendancePoints = attendancePoints,
+            PracticalPoints = practicalPoints,
+            ExamPoints = examPoints,
             FinalGrade = ComputeFinalGrade(sum),
             ConfirmedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
         };
 
         await _gradeRepository.AddGradeAsync(grade);
-        await _draftRepository.DeleteAsync(draft);
+
+        var draft = await _draftRepository.GetByEnrollmentIdAsync(enrollmentId);
+        if (draft != null)
+            await _draftRepository.DeleteAsync(draft);
 
         var saved = await _gradeRepository.GetByEnrollmentIdAsync(enrollmentId);
         return MapToDto(saved!);
