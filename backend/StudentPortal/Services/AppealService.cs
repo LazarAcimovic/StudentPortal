@@ -52,10 +52,15 @@ public class AppealService : IAppealService
         if (acceptedAwaitingReconfirm != null)
             throw new InvalidOperationException("An accepted appeal is awaiting professor re-confirmation.");
 
-        var latestOverdue = appeals
+        var overdueAppeals = appeals
             .Where(a => a.Status == AppealStatus.Pending && a.SubmittedAt.AddDays(7) < now)
             .OrderByDescending(a => a.SubmittedAt)
-            .FirstOrDefault();
+            .ToList();
+
+        if (overdueAppeals.Count >= 2)
+            throw new InvalidOperationException("No further appeals are allowed. The maximum appeal chain has been reached.");
+
+        var latestOverdue = overdueAppeals.FirstOrDefault();
 
         if (latestOverdue != null)
         {
