@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
+using StudentPortal.Models.Enums;
 
 namespace StudentPortal.Repositories;
 
@@ -17,6 +18,8 @@ public class AppealRepository : IAppealRepository
     {
         return await _context.Appeals
             .Include(a => a.Grade)
+                .ThenInclude(g => g.Enrollment)
+                    .ThenInclude(e => e.Subject)
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
@@ -24,6 +27,21 @@ public class AppealRepository : IAppealRepository
     {
         return await _context.Appeals
             .Where(a => a.GradeId == gradeId)
+            .OrderBy(a => a.SubmittedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Appeal>> GetPendingByProfessorIdAsync(Guid professorId)
+    {
+        return await _context.Appeals
+            .Include(a => a.Grade)
+                .ThenInclude(g => g.Enrollment)
+                    .ThenInclude(e => e.Subject)
+            .Include(a => a.Grade)
+                .ThenInclude(g => g.Enrollment)
+                    .ThenInclude(e => e.Student)
+            .Where(a => a.Status == AppealStatus.Pending &&
+                        a.Grade.Enrollment.Subject.ProfessorId == professorId)
             .OrderBy(a => a.SubmittedAt)
             .ToListAsync();
     }

@@ -6,6 +6,7 @@ public interface IAppealRepository
 {
     Task<Appeal?> GetByIdAsync(Guid id);
     Task<IEnumerable<Appeal>> GetByGradeIdAsync(Guid gradeId);
+    Task<IEnumerable<Appeal>> GetPendingByProfessorIdAsync(Guid professorId);
     Task<Appeal> AddAsync(Appeal appeal);
     Task UpdateAsync(Appeal appeal);
 }
