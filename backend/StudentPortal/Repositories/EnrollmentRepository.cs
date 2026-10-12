@@ -85,9 +85,21 @@ public class EnrollmentRepository : IEnrollmentRepository
     {
         return await _context.Enrollments
             .Where(e => e.StudentId == studentId)
-            .Include(e => e.Subject) // Eager loading predmeta
+            .Include(e => e.Subject)
             .Include(e => e.Grade)
-            .AsNoTracking() // Dodajte .AsNoTracking() radi performansi, jer ne planirate menjati ove podatke
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Enrollment>> GetStudentEnrollmentsForDashboardAsync(Guid studentId)
+    {
+        return await _context.Enrollments
+            .Where(e => e.StudentId == studentId && !e.IsDeleted)
+            .Include(e => e.Subject)
+                .ThenInclude(s => s.Professor)
+            .Include(e => e.Grade)
+                .ThenInclude(g => g!.Appeals)
+            .AsNoTracking()
             .ToListAsync();
     }
 }

@@ -15,4 +15,5 @@ public interface IEnrollmentRepository
     Task<Enrollment> GetEnrollmentByStudentAndSubjectIdAsync(Guid studentId, Guid subjectId);
 
     Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(Guid studentId);
+    Task<IEnumerable<Enrollment>> GetStudentEnrollmentsForDashboardAsync(Guid studentId);
 }
