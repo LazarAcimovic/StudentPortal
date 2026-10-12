@@ -48,6 +48,10 @@ public class AppealService : IAppealService
         if (activePending != null)
             throw new InvalidOperationException("An appeal is already pending for this grade.");
 
+        var acceptedAwaitingReconfirm = appeals.FirstOrDefault(a => a.Status == AppealStatus.Accepted);
+        if (acceptedAwaitingReconfirm != null)
+            throw new InvalidOperationException("An accepted appeal is awaiting professor re-confirmation.");
+
         var latestOverdue = appeals
             .Where(a => a.Status == AppealStatus.Pending && a.SubmittedAt.AddDays(7) < now)
             .OrderByDescending(a => a.SubmittedAt)
