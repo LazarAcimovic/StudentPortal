@@ -97,19 +97,16 @@ public class AppealService : IAppealService
 
     public async Task<IEnumerable<AppealDto>> GetByGradeAsync(Guid gradeId, Guid callerProfId)
     {
-        var appeals = await _appealRepository.GetByGradeIdAsync(gradeId);
-        if (!appeals.Any())
-            return Enumerable.Empty<AppealDto>();
-
-        // Verify professor owns this grade's subject via the first appeal, or load grade directly
-        var grade = await _gradeRepository.GetByEnrollmentIdAsync(
-            (await _gradeRepository.GetGradeByIdAsync(gradeId))?.EnrollmentId ?? Guid.Empty);
-
+        var grade = await _gradeRepository.GetGradeByIdAsync(gradeId);
         if (grade == null)
             throw new KeyNotFoundException("Grade not found.");
 
         if (grade.Enrollment.Subject.ProfessorId != callerProfId)
             throw new ForbiddenAccessException("You do not teach the subject for this grade.");
+
+        var appeals = await _appealRepository.GetByGradeIdAsync(gradeId);
+        if (!appeals.Any())
+            throw new KeyNotFoundException("No appeals found for this grade.");
 
         var now = DateTime.UtcNow;
         return appeals.Select(a => MapToDto(a, now)).ToList();
