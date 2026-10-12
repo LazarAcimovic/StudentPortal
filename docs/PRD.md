@@ -617,10 +617,169 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 
 ### Task 22 — Tests
 
-- **22.1** Backend xUnit tests for `AuthService` (login happy / wrong password / soft-deleted / unknown-email latency), `AppealService` (submit inside window / outside window / second-appeal-blocked-while-Pending / overdue flip-on-read / fresh window after overdue / deny → ECTS counts / undo-deny within 24h / undo-deny after original SubmittedAt + 7d flips straight to Overdue), `GradeService` (confirm → final grade computation / reconfirm after accept), `UserService` (UpdateProfileAsync preserves missing fields / rejects email change by non-admin / AdminUpdateUserAsync blocks self soft-delete and self demote / ChangePasswordAsync verifies current password and revokes all refresh tokens on success).
-  - Commit: `test(backend): unit tests for auth, appeal, grade, and user services`
-- **22.2** Frontend Vitest + MSW tests for `axiosClient` (silent refresh happy/failure), `LoginPage` (validation gates submit), `authGuard`, `App.tsx` bootstrap effects, `<UserEditForm>` (self vs admin field matrix, missing-field preservation on submit), `ChangePasswordPage` (confirm-mismatch gates submit, success triggers clearAuthSession and toast).
-  - Commit: `test(frontend): axios interceptor, login, authGuard, bootstrap, profile tests`
+# Task: Create a Comprehensive Unit Test Suite Based on the PRD
+
+Your task is to create a concise, maintainable, and reliable **unit test suite only** for this project. All tests must be derived from the Product Requirements Document (PRD), not from the existing implementation's behavior.
+
+Follow the testing best practices described in this article:
+
+https://milanjovanovic.tech/blog/unit-testing-best-practices-dotnet
+
+## 1. Analyze the Requirements First
+
+1. Locate and read the PRD and any relevant supporting documentation.
+2. Extract all functional requirements, business rules, validation rules, authorization rules, and state transitions that can be tested at the unit level.
+3. Treat the PRD as the single source of truth for expected behavior.
+4. Do not infer expected behavior from the existing implementation. The implementation may contain bugs or contradict the PRD.
+5. If a requirement is ambiguous, incomplete, or contradictory, document the ambiguity instead of inventing a rule.
+6. Identify requirements that cannot be adequately verified through unit tests alone and document them as testing limitations. Do not create other types of tests to cover them.
+
+Create a concise requirements traceability matrix mapping each relevant PRD requirement to its planned unit test scenarios.
+
+## 2. Inspect the Existing Project
+
+After identifying the expected behavior from the PRD, inspect the codebase to understand the project structure and determine how to test the requirements.
+
+* Identify the existing test projects, testing frameworks, libraries, dependencies, and conventions.
+* Identify the application's services, domain logic, validators, and other components containing business logic.
+* Determine which methods and components are suitable for isolated unit testing.
+* Reuse the existing testing infrastructure where appropriate.
+* Avoid testing trivial DTOs, simple property assignments, framework behavior, or third-party library functionality.
+
+Inspecting the implementation is necessary to determine how to exercise the application, but it must not influence the expected outcomes defined by the PRD.
+
+## 3. Scope Restriction: Unit Tests Only
+
+**Create unit tests exclusively. Do not create integration tests, API tests, or end-to-end tests.**
+
+* Test individual methods, classes, and units of business logic in isolation.
+* Use mocks, stubs, or substitutes for external dependencies, such as repositories, services, or other collaborators, where appropriate.
+* Do not connect to a database, start the application or HTTP server, or depend on external services.
+* Do not test EF Core, ASP.NET Core middleware, authentication infrastructure, or third-party framework behavior directly.
+* Test application-level authorization and business rules when they can be verified by invoking the relevant unit in isolation.
+* Do not mock the business logic that the test is intended to verify.
+* If a requirement requires integration or end-to-end testing to be verified properly, document it as a limitation instead of creating that type of test.
+
+## 4. Design Test Scenarios
+
+For each applicable business rule and functional requirement, consider the following scenarios:
+
+* **Happy paths:** valid operations that should succeed.
+* **Unhappy paths:** invalid operations, rejected operations, exceptions, and business rule violations.
+* **Edge cases:** boundary values, empty collections, missing or null data where applicable, duplicate operations, and state-transition boundaries.
+* **Authorization and ownership:** attempts to access or modify resources belonging to another user, insufficient permissions, and invalid caller identities where applicable to the unit under test.
+* **Time-dependent behavior:** deadlines, expiration windows, and exact boundary conditions.
+* **Data and state integrity:** correct state transitions, calculated values, and returned results.
+
+For time-dependent logic, test the exact boundary conditions, such as immediately before a deadline, exactly at the deadline, and immediately after it, wherever relevant to the PRD.
+
+Do not create redundant tests merely to increase the test count. Prioritize meaningful scenarios that verify distinct behaviors.
+
+Use parameterized tests when multiple input values exercise the same logical behavior and can share a clear, concise test structure.
+
+## 5. Follow Unit Testing Best Practices
+
+Apply the principles described in the referenced article:
+
+* Structure tests using Arrange, Act, Assert (AAA).
+* Use descriptive test names following a consistent convention, such as `MethodName_Scenario_ExpectedResult`.
+* Keep tests concise, readable, isolated, deterministic, repeatable, and self-validating.
+* Verify one logical behavior per test.
+* Test observable behavior rather than implementation details or internal call sequences.
+* Mock or substitute external dependencies only when appropriate.
+* Avoid excessive mocking, brittle assertions, unnecessary abstractions, and duplicated setup.
+* Use test data builders or focused helper methods when they improve readability and reduce duplication.
+* Avoid tests that depend on execution order, real-time delays, shared mutable state, production data, or external services.
+* Use controlled time or an appropriate time abstraction for time-dependent tests wherever possible.
+* Use clear, domain-specific assertions and meaningful failure messages.
+* Follow existing project conventions unless they conflict with these principles.
+
+Do not aim for 100% code coverage at the expense of meaningful tests. Prioritize business rule coverage and the ability of tests to detect incorrect behavior.
+
+## 6. Implement the Unit Tests
+
+Implement the unit test suite based on the requirements traceability matrix and the approved test strategy.
+
+* Use the testing framework and libraries appropriate for the project's existing .NET version and architecture.
+* Prefer existing dependencies and conventions over introducing unnecessary new libraries.
+* Add tests to the appropriate existing test project, or create a dedicated unit test project if necessary.
+* Keep production code unchanged during test implementation.
+* Do not change production code, business rules, the PRD, or existing assertions merely to make tests pass.
+* Do not weaken assertions, skip failing tests, or change expected results to match the current implementation.
+* Do not create integration, API, or E2E tests under any circumstances as part of this task.
+
+If the current architecture makes a unit difficult to test, document the issue and suggest a possible improvement, but do not refactor production code without my approval.
+
+## 7. Execute and Evaluate the Tests
+
+Run the unit test suite and report the actual results.
+
+For every failing test, provide:
+
+1. The fully qualified test name.
+2. The related application method or component, where identifiable.
+3. The PRD requirement that the test verifies.
+4. The expected result according to the PRD.
+5. The actual result and the relevant failure message or stack trace.
+6. The likely root cause, clearly distinguishing confirmed findings from hypotheses.
+7. A concrete, ordered remediation plan explaining how you propose to fix the problem.
+8. The files and methods you expect to modify during the proposed fix.
+
+Distinguish between:
+
+* An application implementation defect.
+* A defect in the test itself.
+* An environment, configuration, or dependency problem.
+* An ambiguous or conflicting requirement.
+
+A failing test does not automatically mean that the application code is wrong. Investigate the evidence before drawing a conclusion.
+
+Do not claim that a test passed unless you actually executed it and observed the result. If a test cannot run, report it as blocked and explain why.
+
+## 8. Stop Before Fixing Production Code
+
+If any tests fail, **do not modify production code to fix them yet**.
+
+First, present the test results, identify the affected application methods, explain the discrepancies against the PRD, and provide a concrete, step-by-step remediation plan.
+
+Wait for my explicit approval before implementing any production-code fixes.
+
+If you discover a defect in a test itself, explain the problem and the proposed correction. Do not alter a test's expected behavior merely to match the current implementation.
+
+After I approve a remediation plan, apply only the approved production-code changes, rerun the relevant unit tests, and report the final results.
+
+## 9. Final Report
+
+Provide a concise report containing:
+
+* The test project and framework used.
+* The number of unit tests added.
+* The actual number of passing, failing, and blocked tests.
+* The PRD requirements covered and any uncovered requirements.
+* The happy-path, unhappy-path, and edge-case scenarios covered.
+* Any discrepancies between the PRD and the current implementation.
+* The names of failing tests and their associated application methods.
+* The proposed remediation steps for each confirmed or suspected implementation defect.
+* Any requirements that could not be fully verified through unit testing.
+* Any environment limitations or unresolved ambiguities.
+
+Do not report code coverage unless you actually measured it. If measured, report it as supplementary information rather than the primary measure of test quality.
+
+## 10. Execution Order
+
+Follow this order strictly:
+
+1. Read and analyze the PRD.
+2. Create the requirements traceability matrix.
+3. Inspect the codebase and existing test infrastructure.
+4. Present the proposed unit test strategy and identify ambiguities.
+5. Implement the unit tests without changing production code.
+6. Run the unit tests.
+7. Report the results, identify failing application methods, and propose a remediation plan.
+8. Stop and wait for my explicit approval before fixing production code.
+
+**Start with steps 1–4. Do not modify any files until you have presented the initial analysis and proposed test plan for my review.**
+
 
 ---
 
