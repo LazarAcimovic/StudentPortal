@@ -92,6 +92,35 @@ public class GradeService : IGradeService
         return MapToDto(saved!);
     }
 
+    public async Task<GradeDto> StudentConfirmAsync(Guid enrollmentId, Guid callerStudentId)
+    {
+        var enrollment = await _enrollmentRepository.GetEnrollmentByIdAsync(enrollmentId);
+        if (enrollment == null)
+            throw new KeyNotFoundException($"Enrollment {enrollmentId} not found.");
+
+        if (enrollment.StudentId != callerStudentId)
+            throw new ForbiddenAccessException("This enrollment does not belong to you.");
+
+        var grade = await _gradeRepository.GetByEnrollmentIdAsync(enrollmentId);
+        if (grade == null)
+            throw new InvalidOperationException("No confirmed grade exists for this enrollment.");
+
+        if (grade.FinalizedAt != null)
+            throw new InvalidOperationException("This grade is already finalized.");
+
+        var hasPendingAppeal = grade.Appeals.Any(a => a.Status == AppealStatus.Pending);
+        if (hasPendingAppeal)
+            throw new InvalidOperationException("Cannot confirm while an appeal is pending.");
+
+        grade.StudentConfirmedAt = DateTime.UtcNow;
+        grade.FinalizedAt = DateTime.UtcNow;
+
+        await _gradeRepository.UpdateGradeAsync(grade);
+
+        var saved = await _gradeRepository.GetByEnrollmentIdAsync(enrollmentId);
+        return MapToDto(saved!);
+    }
+
     private async Task VerifyOwnershipAsync(Guid enrollmentId, Guid callerProfId)
     {
         var enrollment = await _enrollmentRepository.GetEnrollmentByIdAsync(enrollmentId);
