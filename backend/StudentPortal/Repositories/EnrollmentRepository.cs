@@ -102,4 +102,20 @@ public class EnrollmentRepository : IEnrollmentRepository
             .AsNoTracking()
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Enrollment>> GetEnrollmentsForProfessorDashboardAsync(Guid professorId)
+    {
+        return await _context.Enrollments
+            .Where(e => !e.IsDeleted && e.Subject.ProfessorId == professorId && !e.Subject.IsDeleted)
+            .Include(e => e.Subject)
+            .Include(e => e.Student)
+            .Include(e => e.Grade)
+                .ThenInclude(g => g!.Appeals)
+            .Include(e => e.GradeDraft)
+            .AsNoTracking()
+            .OrderBy(e => e.Subject.SubjectName)
+                .ThenBy(e => e.Student.LastName)
+                .ThenBy(e => e.Student.FirstName)
+            .ToListAsync();
+    }
 }

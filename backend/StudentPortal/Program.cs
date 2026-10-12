@@ -73,6 +73,7 @@ builder.Services.AddScoped<IGradeDraftService, GradeDraftService>();
 builder.Services.AddScoped<IAppealService, AppealService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IStudentDashboardService, StudentDashboardService>();
+builder.Services.AddScoped<IProfessorDashboardService, ProfessorDashboardService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {

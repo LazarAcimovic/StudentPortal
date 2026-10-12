@@ -16,4 +16,5 @@ public interface IEnrollmentRepository
 
     Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(Guid studentId);
     Task<IEnumerable<Enrollment>> GetStudentEnrollmentsForDashboardAsync(Guid studentId);
+    Task<IEnumerable<Enrollment>> GetEnrollmentsForProfessorDashboardAsync(Guid professorId);
 }

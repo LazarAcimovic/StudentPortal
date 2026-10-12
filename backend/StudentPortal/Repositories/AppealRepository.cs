@@ -58,4 +58,23 @@ public class AppealRepository : IAppealRepository
         _context.Appeals.Update(appeal);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<Appeal>> GetAppealsByProfessorIdForDashboardAsync(Guid professorId)
+    {
+        var undoCutoff = DateTime.UtcNow.AddHours(-24);
+        return await _context.Appeals
+            .Include(a => a.Grade)
+                .ThenInclude(g => g.Enrollment)
+                    .ThenInclude(e => e.Student)
+            .Include(a => a.Grade)
+                .ThenInclude(g => g.Enrollment)
+                    .ThenInclude(e => e.Subject)
+            .Where(a => a.Grade.Enrollment.Subject.ProfessorId == professorId &&
+                        (a.Status == AppealStatus.Pending ||
+                         (a.Status == AppealStatus.Denied &&
+                          a.ReviewedAt != null && a.ReviewedAt > undoCutoff)))
+            .OrderBy(a => a.SubmittedAt)
+            .AsNoTracking()
+            .ToListAsync();
+    }
 }
