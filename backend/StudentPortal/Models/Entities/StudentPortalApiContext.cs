@@ -164,6 +164,7 @@ public partial class StudentPortalApiContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.SubjectName).HasMaxLength(100);
+            entity.Property(e => e.ECTS).HasDefaultValue(6);
 
             entity.HasOne(d => d.Professor).WithMany(p => p.Subjects)
                 .HasForeignKey(d => d.ProfessorId)

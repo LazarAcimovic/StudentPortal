@@ -252,7 +252,9 @@ namespace StudentPortal.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("ECTS")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(6);
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
