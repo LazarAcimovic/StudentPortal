@@ -199,6 +199,8 @@ Three columns on desktop:
 
 Below those columns, an **Appeals** section listing every Pending or Overdue appeal across all the professor's subjects. Each row has a **View appeal** button opening the appeal modal (see §4.2).
 
+The Appeals section is **vertically scrollable** when the list gets long — the section wraps its table in a container with a fixed `max-height` (desktop target: ~360 px, roughly 6 rows) and `overflow-y: auto`, so a professor with many open appeals sees a scrollbar inside the section rather than the appeals pushing the rest of the page off-screen. The section header stays sticky at the top of the scroll area so the column labels remain visible while scrolling. On mobile (where the table collapses to stacked cards, see below) the same fixed-height + overflow-y rule applies — the whole card stack scrolls inside its container.
+
 Responsiveness: at <576 px (`sm` breakpoint) the three columns stack vertically and the Appeals list becomes stacked cards.
 
 ### 5.5 Student dashboard (`/student-dashboard`)
