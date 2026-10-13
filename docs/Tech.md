@@ -163,46 +163,62 @@ frontend/src/
       components/LoginForm.tsx
       models/                   LoginRequest, LoginResponse
       pages/LoginPage.tsx
-      utils/loginSchema.ts      Zod schema + type exports
+      utils/loginSchema.ts, helper functions      Zod schema + type exports
       index.ts
     user/
-      api/userService.ts
+      api/userService.ts            CRUD on /api/User (admin side)
       api/profileService.ts         getMe, updateProfile, changePassword
-      hooks/useStudentDashboard.ts   data-fetching custom hook (allowed exception per user)
+      hooks/useStudentDashboard.ts  Pattern A — GET /api/Student/me/dashboard
+      hooks/useAdminUsers.ts        Pattern A — GET /api/User (admin list)
       models/User.ts
       pages/StudentDashboardPage.tsx
       pages/MyProfilePage.tsx        /profile (any authenticated user)
       pages/ChangePasswordPage.tsx   /profile/change-password (any authenticated user)
-      utils/profileSchemas.ts        Zod schemas for UpdateProfile and ChangePassword
+      utils/profileSchemas.ts, helper functions         Zod schemas for UpdateProfile and ChangePassword
       index.ts
     grades/
-      api/gradeService.ts
-      api/gradeDraftService.ts
+      api/gradeService.ts             POST /api/Grade/confirm, /reconfirm-exam, /student-confirm
+      api/gradeDraftService.ts        GET+PUT /api/GradeDraft/{enrollmentId}
       components/GradingPanel.tsx
-      hooks/useProfessorDashboard.ts
+      hooks/useProfessorDashboard.ts  Pattern A — GET /api/Professor/me/dashboard
+                                      (returns BOTH subjects+student rows AND the appeals
+                                      inbox in one payload — see note below)
+      hooks/useGradeDraft.ts          Pattern B — loadDraft(enrollmentId) on student select
       models/Grade.ts GradeDraft.ts
-      utils/calculateFinalGrade.ts   pure helper (not a hook)
+      utils/calculateFinalGrade.ts    pure helper (not a hook)
       pages/ProfessorDashboardPage.tsx
       index.ts
     appeals/
-      api/appealService.ts
+      api/appealService.ts            POST /api/Appeal (submit),
+                                      POST /api/Appeal/{id}/accept, /deny, /undo-deny
       components/AppealModal.tsx ViewAppealModal.tsx
+      hooks/useAppealsByGrade.ts     Pattern B — loadForGrade(gradeId); hits
+                                      GET /api/Appeal/by-grade/{gradeId}; used by View Appeal
+                                      modal to render the overdue history chain for one grade
       models/Appeal.ts
       utils/computeAppealWindowRemaining.ts   pure helper
       index.ts
     subjects/
       api/subjectService.ts
       components/SubjectsTable.tsx SubjectCreateForm.tsx SubjectEditForm.tsx
+      hooks/useSubjects.ts            Pattern A — GET /api/Subject (admin Subjects tab)
+      hooks/useSubjectsByProfessor.ts Pattern A — GET /api/Subject/professor/{professorId}
+                                      (standalone endpoint; prof dashboard renders from the
+                                      aggregate call instead — hook retained for admin or
+                                      future standalone screens)
+      hooks/useStudentsBySubject.ts   Pattern B — loadStudents(subjectId) hitting
+                                      GET /api/Subject/{subjectId}/students (same note)
       models/Subject.ts
       index.ts
     enrollments/
       api/enrollmentService.ts
       components/EnrollmentsTable.tsx EnrollmentCreateForm.tsx
+      hooks/useEnrollments.ts        Pattern A — admin's Enrollments tab list
       models/Enrollment.ts
       index.ts
     admin/
-      pages/AdminDashboardPage.tsx    hosts the three tabs
-      components/UsersTable.tsx UserCreateForm.tsx UserEditForm.tsx
+      pages/AdminDashboardPage.tsx    hosts the three tabs (reuses hooks from user/subjects/enrollments)
+      components/UsersTable.tsx UserCreateForm.tsx
   lib/
     navigation.ts               navigation singleton
     auth.ts                     clearAuthSession, withAuthRedirect, getRedirectTarget
@@ -221,6 +237,21 @@ frontend/src/
 
 Every folder exports its public surface via `index.ts`. Imports go through the barrel, not deep paths.
 
+**Where the professor dashboard's appeal states live (critical read-before-coding note):**
+
+`GET /api/Professor/me/dashboard` returns one `ProfessorDashboardDto` payload with two arrays — `subjects: ProfessorSubjectDto[]` and `appeals: ProfessorAppealRowDto[]` — that together surface every state the professor UI cares about. Don't call `/api/Appeal/pending` from the dashboard page; that endpoint returns a literal `Status = Pending` subset only, which is a narrower slice than what the UI needs.
+
+| Appeal state | Where it appears in the dashboard payload | How the UI knows |
+|---|---|---|
+| **Pending** | `appeals[]` row | `row.status === "Pending"`, no `canUndoDeny` |
+| **Overdue** (prof missed the 7-day review deadline) | `appeals[]` row | `row.status === "Overdue"` (computed on-read by `ProfessorDashboardService` from `SubmittedAt + 7d < NOW`) |
+| **Denied within the 24h undo window** | `appeals[]` row | `row.status === "Denied"` + `row.canUndoDeny === true` + `row.undoDenyDeadline` for the countdown |
+| **Accepted — exam not yet re-confirmed** | `subjects[].students[]` row (NOT in `appeals[]`) | `student.gradeState === "ReconfirmNeeded"` + `student.hasActiveAppeal === true`. The grading panel opens the exam field alone for re-entry (per PRD §4.3). |
+| **Denied past 24h** | NOT in the payload at all | Filtered out server-side by `AppealRepository.GetAppealsByProfessorIdForDashboardAsync` (`Pending OR (Denied AND ReviewedAt > NOW - 24h)`). Clutter-free inbox. |
+| **Accepted + already re-confirmed, grade final** | NOT in the payload at all | Grade is truly final; nothing left to do. |
+
+So the Appeals section renders from `payload.appeals`, and the "needs re-grade" signal lives inside the subject column's student row — one data source, two render locations. The standalone `GET /api/Appeal/pending` endpoint stays reachable for Swagger / debugging but no production UI calls it.
+
 ### 3.2 React patterns in use (and NOT in use)
 
 **In use:**
@@ -229,16 +260,135 @@ Every folder exports its public surface via `index.ts`. Imports go through the b
 - Composition via `children` / `<Outlet/>`.
 - `useState`, `useEffect`, `useCallback` (only when a stable identity is required for a dependency), `useMemo` (only when profiling shows a real need), `useRef` sparingly (mount guards).
 - Zustand slice-selectors: `useUserStore(s => s.currentUser)` — never whole-store destructuring.
-- Custom hooks **only** for data fetching (one per domain), as an explicit exception to the "no custom hooks" rule. These follow the frontend_skills.md pattern A (auto-fetch with `AbortController`).
-- `AbortSignal` plumbed hook → service → axios.
+- **Data-fetching custom hooks are the first-class pattern for every network read**: one hook per fetch, living in the owning feature's `hooks/` folder, named `use<Noun>` (plural when the result is a collection) and calling a service function from the feature's `api/` folder. See §3.3 for the two canonical templates.
+- `AbortSignal` plumbed hook → service → axios on every fetch.
 
 **Not in use (do not introduce):**
 - Class components. HOCs. React Context (except React's own default context for Router / providers). `React.memo`, `React.lazy`, `Suspense`. `forwardRef`, `useImperativeHandle`. `useReducer`, `useLayoutEffect`, `useTransition`, `useSyncExternalStore`, `useFormStatus`, `useActionState`.
 - Advanced TypeScript (no conditional types, no mapped types beyond trivial, no deep inference puzzles). Prefer `type` over `interface`.
-- A custom `useForm` hook. Forms are raw `useState` + Zod `safeParse`.
+- Custom hooks of any kind **other than data-fetching hooks**. No `useForm`, no `useToggle`, no `useLocalStorage`, no `useDebounce`. Forms use raw `useState` + Zod `safeParse`.
 - A cookie / local-storage / auth-token wrapper service.
 
-### 3.3 Axios singleton
+### 3.3 Data-fetching custom hook templates
+
+Every network read in the SPA goes through one of these two shapes. **Match them exactly** — do not invent variants, do not substitute React Query, SWR, or TanStack Query. One hook per fetch; one service per feature; both live in the feature folder.
+
+**Pattern A — auto-fetch on mount** (used for data a page always needs the moment it opens: dashboards, admin lists, "my subjects" sidebar, prof's pending-appeals inbox).
+
+```ts
+// features/user/hooks/useStudentDashboard.ts
+import { useEffect, useState } from 'react';
+import { getStudentDashboard } from '@/features/user/api/userService';
+import type { StudentDashboard } from '@/features/user/models/User';
+
+export function useStudentDashboard() {
+  const [data, setData] = useState<StudentDashboard | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadStudentDashboard() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const dashboard = await getStudentDashboard(controller.signal);
+
+        setData(dashboard);
+      } catch (loadError) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setError(loadError instanceof Error ? loadError : new Error('Failed to load dashboard.'));
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadStudentDashboard();
+
+    return () => controller.abort();
+  }, []);
+
+  return { data, isLoading, error };
+}
+```
+
+Rules for Pattern A:
+- `useState` initializes `data` to `null` for a single object, `[]` for a collection, `isLoading` to `true`, `error` to `null`.
+- `useEffect` dep array is **empty** (`[]`). The hook fetches exactly once per mount.
+- Inside the effect, build an `AbortController`, define an inner `async function load<Noun>()`, and `void` the call (no top-level await — React effects can't be async).
+- `try` sets loading + clears error, calls the service with `controller.signal`.
+- `catch`: ignore if `controller.signal.aborted` (component unmounted mid-flight); otherwise coerce to `Error` and `setError`.
+- `finally`: only `setIsLoading(false)` if NOT aborted (so a late response from an abandoned mount doesn't flip loading on a now-stale state).
+- Cleanup returns `() => controller.abort()`.
+- Return shape is always `{ data, isLoading, error }` (or renamed first key — `dishes`, `appeals`, `subjects` — matching the hook's noun).
+
+**Pattern B — imperative loader** (used when the fetch depends on something the user does after the page is already mounted: picking a subject, selecting a student, opening a modal that needs to fetch the appeal history).
+
+```ts
+// features/subjects/hooks/useStudentsBySubject.ts
+import { useCallback, useState } from 'react';
+import { getStudentsBySubject } from '@/features/subjects/api/subjectService';
+import type { Student } from '@/features/user/models/User';
+
+export function useStudentsBySubject() {
+  const [data, setData] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const loadStudents = useCallback(async (subjectId: string, signal?: AbortSignal) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const students = await getStudentsBySubject(subjectId, signal);
+
+      if (!signal?.aborted) {
+        setData(students);
+      }
+    } catch (loadError) {
+      if (signal?.aborted) {
+        return;
+      }
+
+      setError(loadError instanceof Error ? loadError : new Error('Failed to load students.'));
+    } finally {
+      if (!signal?.aborted) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  return { data, isLoading, error, loadStudents };
+}
+```
+
+Rules for Pattern B:
+- No `useEffect` inside the hook. Fetching is caller-triggered.
+- The loader is wrapped in `useCallback` with an empty dep array so its identity is stable (safe to pass as a dependency to the caller's own `useEffect`).
+- The caller owns the `AbortController` (so they can cancel on their own trigger changes). Example use:
+
+  ```tsx
+  const { data: students, isLoading, loadStudents } = useStudentsBySubject();
+
+  useEffect(() => {
+    if (!selectedSubjectId) return;
+    const controller = new AbortController();
+    void loadStudents(selectedSubjectId, controller.signal);
+    return () => controller.abort();
+  }, [selectedSubjectId, loadStudents]);
+  ```
+- Return shape is `{ data, isLoading, error, load<Noun> }`.
+
+**Both patterns call the feature's own `api/*Service.ts` functions.** Services catch and re-throw as `Error`, accept an optional `AbortSignal`, and run response rows through a mapper from `utils/map*.ts` where field renames are needed. Services never set React state — they return data, that's it.
+
+### 3.4 Axios singleton
 
 Behaviour on every request:
 - `baseURL = import.meta.env.VITE_API_BASE_URL ?? '/api'`.
@@ -250,20 +400,20 @@ Response interceptor:
 - On `401` and `!config._retry`: set `_retry = true`, call `POST /api/Account/Refresh` (serialised via a module-scoped `refreshPromise` so a burst of 401s triggers exactly one refresh), retry the original request on success.
 - On refresh failure OR on `403`: call `clearAuthSession({ redirectToLogin: true })` (clears user store, fire-and-forget `POST /api/Account/Logout`, navigates to `/login` via the navigation singleton).
 
-### 3.4 Routing
+### 3.5 Routing
 
 - `createBrowserRouter` + `<RouterProvider/>` in `main.tsx`.
 - Protected routes wrap `<AuthGuard>` which reads `currentUser` + `isHydrating` from the store, renders a spinner while hydrating, and `<Navigate to={APP_ROUTES.AUTH_LOGIN} state={withAuthRedirect(location)} replace/>` when not authenticated.
 - Role-restricted routes additionally wrap `<RoleGate roles={[USER_ROLES.ADMIN]}>`.
 - Imperative navigation from non-components uses `src/lib/navigation.ts` (the singleton is registered by `App.tsx`'s first `useEffect`).
 
-### 3.5 State management
+### 3.6 State management
 
 - `useUserStore` — the only global slice. Fields: `currentUser`, `isHydrating`, `setCurrentUser`, `clearCurrentUser`, `setHydrating`. **No `token` field** — the server owns token lifetime via cookies.
 - Local state via `useState`. No `useReducer`.
 - No Redux / Jotai / Recoil / MobX / React Query / SWR / TanStack Query.
 
-### 3.6 Forms
+### 3.7 Forms
 
 - Raw `useState` for form values. `touched` flags via a parallel `useState`.
 - Zod schema per form in the feature's `utils/`:
@@ -274,14 +424,14 @@ Response interceptor:
   ```
 - Submit flow: mark all touched → bail if invalid → set `isSubmitting` → service call → `setServerError` on failure → navigate on success.
 
-### 3.7 Testing
+### 3.8 Testing
 
 - Vitest + jsdom + @testing-library/react + @testing-library/user-event + @testing-library/jest-dom.
 - MSW 2 with `onUnhandledRequest: 'error'` in `src/test/server.ts`. Handlers emit `Set-Cookie` headers to exercise the full cookie plumbing (axios + browser cookie jar emulation in jsdom).
 - Vitest globals (`describe`, `it`, `expect`, `vi`) — not imported.
 - Co-locate tests next to source: `features/auth/pages/LoginPage.test.tsx`, etc.
 
-### 3.8 Styling
+### 3.9 Styling
 
 - Bootstrap 5 via the CSS import in `main.tsx`.
 - No Tailwind, no shadcn, no CSS modules, no styled-components.
