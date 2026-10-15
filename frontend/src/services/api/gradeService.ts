@@ -3,6 +3,7 @@
 import type { Grade, CreateGrade, UpdateGrade } from "../../models/GradeModel";
 import apiClient from "./apiClient";
 import axios, { AxiosError } from "axios";
+import { API_ROUTES } from "../../config/constants";
 
 export const getGradesByStudentAndSubject = async (
   studentId: number,
@@ -23,7 +24,7 @@ export const createGrade = async (
   newGrade: CreateGrade
 ): Promise<Grade | Error> => {
   try {
-    const response = await apiClient.post<Grade>("/grade", newGrade);
+    const response = await apiClient.post<Grade>(API_ROUTES.GRADE_CONFIRM, newGrade);
     return response.data;
   } catch (error: unknown) {
     console.error("Error creating grade:", error);

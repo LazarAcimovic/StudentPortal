@@ -1,0 +1,29 @@
+export const APP_ROUTES = {
+  HOME: '/',
+  AUTH_LOGIN: '/login',
+  ADMIN_DASHBOARD: '/admin-dashboard',
+  PROFESSOR_DASHBOARD: '/professor-dashboard',
+  STUDENT_DASHBOARD: '/student-dashboard',
+  PROFILE: '/profile',
+  CHANGE_PASSWORD: '/profile/change-password',
+} as const;
+
+export const API_ROUTES = {
+  ACCOUNT_LOGIN: '/Account/Login',
+  ACCOUNT_LOGOUT: '/Account/Logout',
+  ACCOUNT_REFRESH: '/Account/Refresh',
+  ACCOUNT_ME: '/Account/Me',
+  ACCOUNT_PROFILE: '/Account/profile',
+  ACCOUNT_CHANGE_PASSWORD: '/Account/change-password',
+  USER: '/User',
+  SUBJECT: '/Subject',
+  ENROLLMENT: '/Enrollment',
+  GRADE_CONFIRM: '/Grade/confirm',
+  GRADE_RECONFIRM_EXAM: '/Grade/reconfirm-exam',
+  GRADE_STUDENT_CONFIRM: '/Grade/student-confirm',
+  GRADE_DRAFT: '/GradeDraft',
+  APPEAL: '/Appeal',
+  APPEAL_PENDING: '/Appeal/pending',
+  STUDENT_ME_DASHBOARD: '/Student/me/dashboard',
+  PROFESSOR_ME_DASHBOARD: '/Professor/me/dashboard',
+} as const;

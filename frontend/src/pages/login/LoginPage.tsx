@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import { RoleEnum } from "../../models/Enums";
+import { APP_ROUTES } from "../../config/constants";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -34,11 +35,11 @@ const LoginPage: React.FC = () => {
       console.log(userResult);
       // Check role and redirect to the appropriate dashboard
       if (userResult?.userRole === RoleEnum.Admin) {
-        navigate("/admin-dashboard");
+        navigate(APP_ROUTES.ADMIN_DASHBOARD);
       } else if (userResult?.userRole === RoleEnum.Professor) {
-        navigate("/professor-dashboard");
+        navigate(APP_ROUTES.PROFESSOR_DASHBOARD);
       } else if (userResult?.userRole === RoleEnum.Student) {
-        navigate("/student-dashboard");
+        navigate(APP_ROUTES.STUDENT_DASHBOARD);
       }
     } else {
       setError("Invalid email or password");

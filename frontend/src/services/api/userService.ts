@@ -2,10 +2,11 @@ import type { CreateUser, User, UpdateUser } from "../../models/UserModel";
 import { MOCK_STUDENTS } from "../data/studentMock";
 import { RoleEnum } from "../../models/Enums";
 import apiClient from "./apiClient";
+import { API_ROUTES } from "../../config/constants";
 
 export const getAllUsers = async (): Promise<User[] | null> => {
   try {
-    const response = await apiClient.get<User[]>("/user");
+    const response = await apiClient.get<User[]>(API_ROUTES.USER);
     return response.data;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -16,7 +17,7 @@ export const getAllUsers = async (): Promise<User[] | null> => {
 // Funkcija za kreiranje novog korisnika na backendu
 export const addUser = async (userData: CreateUser): Promise<User | null> => {
   try {
-    const response = await apiClient.post<User>("/user", userData);
+    const response = await apiClient.post<User>(API_ROUTES.USER, userData);
     return response.data;
   } catch (error) {
     console.error("Error creating user:", error);
@@ -37,7 +38,7 @@ export const updateUser = async (
       IsDeleted: updatedUser.IsDeleted,
     };
     const response = await apiClient.put<User>(
-      `/user/${updatedUser.Id}`,
+      `${API_ROUTES.USER}/${updatedUser.Id}`,
       dataToSend
     );
     return response.data;
@@ -50,7 +51,7 @@ export const updateUser = async (
 
 export const deleteUser = async (userId: number): Promise<boolean> => {
   try {
-    await apiClient.delete(`/user/${userId}`);
+    await apiClient.delete(`${API_ROUTES.USER}/${userId}`);
     return true; 
   } catch (error) {
     console.error("Error deleting user:", error);

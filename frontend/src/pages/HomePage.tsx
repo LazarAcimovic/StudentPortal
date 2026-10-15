@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { APP_ROUTES } from "../config/constants";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const HomePage = () => {
         </p>
         <button
           className="btn btn-primary btn-lg rounded-pill shadow-sm"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate(APP_ROUTES.AUTH_LOGIN)}
         >
           Log in
         </button>

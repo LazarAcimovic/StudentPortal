@@ -2,13 +2,14 @@ import type { User } from "../../models/UserModel";
 import type { Subject } from "../../models/SubjectModel";
 import apiClient from "./apiClient";
 import type { StudentSubjectData } from "../../models/StudentSubjectData";
+import { API_ROUTES } from "../../config/constants";
 
 export const getStudentsBySubject = async (
   subjectId: number
 ): Promise<User[]> => {
   try {
     const response = await apiClient.get<User[]>(
-      `/subject/${subjectId}/students`
+      `${API_ROUTES.SUBJECT}/${subjectId}/students`
     );
     return response.data;
   } catch (error) {
@@ -22,7 +23,7 @@ export const getProfessorSubjects = async (
 ): Promise<Subject[]> => {
   try {
     const response = await apiClient.get<Subject[]>(
-      `/subject/professor/${professorId}`
+      `${API_ROUTES.SUBJECT}/professor/${professorId}`
     );
     return response.data;
   } catch (error) {
@@ -36,7 +37,7 @@ export const getStudentSubjectsAndGrades = async (
 ): Promise<StudentSubjectData[]> => {
   try {
     const response = await apiClient.get<StudentSubjectData[]>(
-      `/user/${studentId}/subjects-and-grades`
+      `${API_ROUTES.STUDENT_ME_DASHBOARD}`
     );
     return response.data;
   } catch (error) {

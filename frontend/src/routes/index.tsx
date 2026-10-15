@@ -6,33 +6,34 @@ import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
 import ProfessorDashboardPage from "../pages/dashboard/ProfessorDashboardPage";
 import StudentDashboardPage from "../pages/dashboard/StudentDashboardPage";
 import ProtectedRoute from "../components/common/ProtectedRoute";
+import { APP_ROUTES } from "../config/constants";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: APP_ROUTES.HOME,
     element: <App />,
     children: [
       {
-        index: true, // ruta /
+        index: true,
         element: <HomePage />,
       },
       {
-        path: "login",
+        path: APP_ROUTES.AUTH_LOGIN.slice(1),
         element: <LoginPage />,
       },
       {
         element: <ProtectedRoute />,
         children: [
           {
-            path: "admin-dashboard",
+            path: APP_ROUTES.ADMIN_DASHBOARD.slice(1),
             element: <AdminDashboardPage />,
           },
           {
-            path: "professor-dashboard",
+            path: APP_ROUTES.PROFESSOR_DASHBOARD.slice(1),
             element: <ProfessorDashboardPage />,
           },
           {
-            path: "student-dashboard",
+            path: APP_ROUTES.STUDENT_DASHBOARD.slice(1),
             element: <StudentDashboardPage />,
           },
         ],

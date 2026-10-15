@@ -3,10 +3,11 @@ import type {
   Enrollment,
   CreateEnrollment,
 } from "../../models/EnrollmentModel";
+import { API_ROUTES } from "../../config/constants";
 
 export const getAllEnrollments = async (): Promise<Enrollment[] | null> => {
   try {
-    const response = await apiClient.get<Enrollment[]>("/enrollment");
+    const response = await apiClient.get<Enrollment[]>(API_ROUTES.ENROLLMENT);
     console.log(response.data);
     return response.data;
   } catch (error) {
@@ -25,7 +26,7 @@ export const createEnrollment = async (
     };
 
     const response = await apiClient.post<Enrollment>(
-      `/enrollment`,
+      API_ROUTES.ENROLLMENT,
       dataToSend
     );
     return response.data;

@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import { RoleEnum } from "../../models/Enums";
+import { APP_ROUTES } from "../../config/constants";
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -9,20 +10,20 @@ const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate(APP_ROUTES.AUTH_LOGIN);
   };
 
   const getDashboardLink = () => {
-    if (!user) return "/";
+    if (!user) return APP_ROUTES.HOME;
     switch (user.userRole) {
       case RoleEnum.Admin:
-        return "/admin-dashboard";
+        return APP_ROUTES.ADMIN_DASHBOARD;
       case RoleEnum.Professor:
-        return "/professor-dashboard";
+        return APP_ROUTES.PROFESSOR_DASHBOARD;
       case RoleEnum.Student:
-        return "/student-dashboard";
+        return APP_ROUTES.STUDENT_DASHBOARD;
       default:
-        return "/";
+        return APP_ROUTES.HOME;
     }
   };
 
@@ -30,7 +31,7 @@ const Navbar: React.FC = () => {
     <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
         <div className="container-fluid">
-          <Link className="navbar-brand" to="/">
+          <Link className="navbar-brand" to={APP_ROUTES.HOME}>
             Student Portal
           </Link>
           <div className="collapse navbar-collapse" id="navbarNav">
@@ -39,13 +40,6 @@ const Navbar: React.FC = () => {
                 <li className="nav-item">
                   <Link className="nav-link" to={getDashboardLink()}>
                     Dashboard
-                  </Link>
-                </li>
-              )}
-              {user?.userRole === RoleEnum.Student && (
-                <li className="nav-item">
-                  <Link className="nav-link" to="/students">
-                    Students
                   </Link>
                 </li>
               )}
@@ -69,7 +63,7 @@ const Navbar: React.FC = () => {
                 </>
               ) : (
                 <li className="nav-item">
-                  <Link className="btn btn-outline-light" to="/login">
+                  <Link className="btn btn-outline-light" to={APP_ROUTES.AUTH_LOGIN}>
                     Login
                   </Link>
                 </li>

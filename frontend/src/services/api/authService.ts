@@ -3,6 +3,7 @@ import apiClient from "./apiClient";
 import type { LoginRequest } from "../../models/LoginRequest";
 import type { LoginResponse } from "../../models/LoginResponse";
 import type { User } from "../../models/UserModel";
+import { API_ROUTES } from "../../config/constants";
 // import { RoleEnum } from "../../models/Enums";
 
 // Funkcija za mapiranje DTO-a sa backenda na frontend model
@@ -25,7 +26,7 @@ export const login = async (Email: string, Password: string) => {
   try {
     const loginData: LoginRequest = { Email, Password };
     const response = await apiClient.post<LoginResponse>(
-      "/User/Login",
+      API_ROUTES.ACCOUNT_LOGIN,
       loginData,
       {
         headers: { Authorization: undefined },
