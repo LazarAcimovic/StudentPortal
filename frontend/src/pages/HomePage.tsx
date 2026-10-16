@@ -1,11 +1,6 @@
-import { useNavigate } from "react-router-dom";
-import { APP_ROUTES } from "../config/constants";
-
 const HomePage = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="text-center py-5 bg-light">
+    <div className="text-center py-5 bg-light min-vh-100">
       <div className="container">
         <h1 className="display-4 fw-bold text-primary">
           Welcome to Student Portal!
@@ -14,12 +9,6 @@ const HomePage = () => {
           Your central hub for tracking academic progress, grades, and all
           important announcements.
         </p>
-        <button
-          className="btn btn-primary btn-lg rounded-pill shadow-sm"
-          onClick={() => navigate(APP_ROUTES.AUTH_LOGIN)}
-        >
-          Log in
-        </button>
       </div>
 
       <div className="container mt-5 pt-5">
