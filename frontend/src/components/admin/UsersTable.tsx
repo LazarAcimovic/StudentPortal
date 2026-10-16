@@ -1,6 +1,6 @@
 import React from "react";
 import type { User } from "../../models/UserModel";
-import { RoleEnum } from "../../models/Enums";
+import { USER_ROLES } from "../../shared/constants/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -42,9 +42,9 @@ const UsersTable: React.FC<UsersTableProps> = ({
               <td>{user.lastName}</td>
               <td>{user.email}</td>
               <td>
-                {user.userRole === RoleEnum.Student ? "Student" : ""}
-                {user.userRole === RoleEnum.Professor ? "Professor" : ""}
-                {user.userRole === RoleEnum.Admin ? "Admin" : ""}
+                {user.userRole === USER_ROLES.Student ? "Student" : ""}
+                {user.userRole === USER_ROLES.Professor ? "Professor" : ""}
+                {user.userRole === USER_ROLES.Admin ? "Admin" : ""}
               </td>
               <td>
                 {user.isDeleted ? (

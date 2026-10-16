@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { Subject, UpdateSubject } from "../../models/SubjectModel";
 import type { User } from "../../models/UserModel";
-import { RoleEnum } from "../../models/Enums";
+import { USER_ROLES } from "../../shared/constants/constants";
 
 interface SubjectEditFormProps {
   subject: Subject;
@@ -103,7 +103,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
             >
               <option value="">Select professor</option>
               {professors
-                .filter((p) => p.userRole === RoleEnum.Professor)
+                .filter((p) => p.userRole === USER_ROLES.Professor)
                 .map((prof) => (
                   <option key={prof.id} value={prof.id}>
                     {prof.firstName} {prof.lastName}

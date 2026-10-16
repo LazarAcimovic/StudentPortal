@@ -1,5 +1,5 @@
 import type { User } from "../../models/UserModel";
-import { RoleEnum } from "../../models/Enums";
+import { USER_ROLES } from "../../shared/constants/constants";
 
 export const MOCK_PROFESSORS: User[] = [
   {
@@ -8,7 +8,7 @@ export const MOCK_PROFESSORS: User[] = [
     LastName: "Petrovic",
     Email: "petar.petrovic@professor.com",
     UserPassword: "professorpass",
-    UserRole: RoleEnum.Professor,
+    UserRole: USER_ROLES.Professor,
     IsDeleted: false,
   },
   {
@@ -17,7 +17,7 @@ export const MOCK_PROFESSORS: User[] = [
     LastName: "Stefanovic",
     Email: "stefan.stefanovic@professor.com",
     UserPassword: "professorpass",
-    UserRole: RoleEnum.Professor,
+    UserRole: USER_ROLES.Professor,
     IsDeleted: false,
   },
 ];

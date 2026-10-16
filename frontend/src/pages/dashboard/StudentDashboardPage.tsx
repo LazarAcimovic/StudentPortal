@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useAuthStore } from "../../store/authStore";
-import { RoleEnum } from "../../models/Enums";
+import { useUserStore } from "../../store/user/useUserStore";
+import { USER_ROLES } from "../../shared/constants/constants";
 import type { Subject } from "../../models/SubjectModel";
 import type { Grade } from "../../models/GradeModel";
 import { getStudentSubjectsAndGrades } from "../../services/api/studentService";
@@ -12,18 +12,18 @@ type StudentSubjectData = {
 };
 
 const StudentDashboardPage: React.FC = () => {
-  const { user } = useAuthStore();
+  const { currentUser } = useUserStore();
   const [studentData, setStudentData] = useState<StudentSubjectData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (user?.userRole === RoleEnum.Student && user?.id) {
+      if (currentUser?.userRole === USER_ROLES.Student && currentUser?.id) {
         setIsLoading(true);
         setError(null);
         try {
-          const data = await getStudentSubjectsAndGrades(user.id);
+          const data = await getStudentSubjectsAndGrades(currentUser.id);
           setStudentData(data);
         } catch (err) {
           console.error("Error fetching data:", err);
@@ -36,7 +36,7 @@ const StudentDashboardPage: React.FC = () => {
     };
 
     fetchStudentData();
-  }, [user]);
+  }, [currentUser]);
 
   const getSubjectStatus = (
     grades: Grade[]
@@ -82,7 +82,7 @@ const StudentDashboardPage: React.FC = () => {
     };
   }, [studentData]);
 
-  if (!user || user.userRole !== RoleEnum.Student) {
+  if (!currentUser || currentUser.userRole !== USER_ROLES.Student) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
@@ -119,7 +119,7 @@ const StudentDashboardPage: React.FC = () => {
     <div className="container mt-4">
       <h2 className="mb-4">Student Dashboard</h2>
       <h4 className="mb-4">
-        Hello, {user.firstName} {user.lastName}!
+        Hello, {currentUser.firstName} {currentUser.lastName}!
       </h4>
 
       <div className="card mb-4">
@@ -128,15 +128,15 @@ const StudentDashboardPage: React.FC = () => {
         </div>
         <div className="card-body">
           <p>
-            <span className="fw-bold">Full name:</span> {user.firstName}{" "}
-            {user.lastName}
+            <span className="fw-bold">Full name:</span> {currentUser.firstName}{" "}
+            {currentUser.lastName}
           </p>
           <p>
-            <span className="fw-bold">Email:</span> {user.email}
+            <span className="fw-bold">Email:</span> {currentUser.email}
           </p>
           <p>
             <span className="fw-bold">Index number:</span>{" "}
-            {user.indexNumber || "Not provided"}
+            {currentUser.indexNumber || "Not provided"}
           </p>
         </div>
       </div>

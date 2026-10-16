@@ -1,12 +1,15 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
+import { useUserStore } from '../store/user/useUserStore';
 import { APP_ROUTES } from '../config/constants';
 
 export default function AuthGuard() {
-  const { user, token } = useAuthStore();
-  const isAuthenticated = !!token && !!user;
+  const { currentUser, isHydrating } = useUserStore();
 
-  if (!isAuthenticated) {
+  if (isHydrating) {
+    return null;
+  }
+
+  if (!currentUser) {
     return <Navigate to={APP_ROUTES.AUTH_LOGIN} replace />;
   }
 

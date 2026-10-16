@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/authStore";
-import { RoleEnum } from "../../models/Enums";
+import { useUserStore } from "../../store/user/useUserStore";
+import { USER_ROLES } from "../../shared/constants/constants";
+import { login as authServiceLogin } from "../../services/api/authService";
 import { APP_ROUTES } from "../../config/constants";
 
 const LoginPage: React.FC = () => {
@@ -10,13 +11,11 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  //const login = useAuthStore((state) => state.login); //contains login function
-  const { login } = useAuthStore();
+  const { setCurrentUser } = useUserStore();
 
   const handleInputChange: React.ChangeEventHandler<HTMLInputElement> = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    // console.log(event.target);
     const { id, value } = event.target;
     if (id === "email") {
       setEmail(value);
@@ -28,17 +27,15 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
-    const userResult = await login(email, password);
+    const result = await authServiceLogin(email, password);
 
-    if (userResult) {
-      console.log("Login successful, redirecting...");
-      console.log(userResult);
-      // Check role and redirect to the appropriate dashboard
-      if (userResult?.userRole === RoleEnum.Admin) {
+    if (result.success && result.user) {
+      setCurrentUser(result.user);
+      if (result.user.userRole === USER_ROLES.Admin) {
         navigate(APP_ROUTES.ADMIN_DASHBOARD);
-      } else if (userResult?.userRole === RoleEnum.Professor) {
+      } else if (result.user.userRole === USER_ROLES.Professor) {
         navigate(APP_ROUTES.PROFESSOR_DASHBOARD);
-      } else if (userResult?.userRole === RoleEnum.Student) {
+      } else if (result.user.userRole === USER_ROLES.Student) {
         navigate(APP_ROUTES.STUDENT_DASHBOARD);
       }
     } else {

@@ -1,6 +1,6 @@
 import type { CreateUser, User, UpdateUser } from "../../models/UserModel";
 import { MOCK_STUDENTS } from "../data/studentMock";
-import { RoleEnum } from "../../models/Enums";
+import { USER_ROLES } from "../../shared/constants/constants";
 import apiClient from "../../shared/api/axiosClient";
 import { API_ROUTES } from "../../config/constants";
 
@@ -77,7 +77,7 @@ export const createStudent = (newUser: CreateUser): User | Error => {
     Email: newUser.Email,
     UserPassword: newUser.UserPassword,
     IndexNumber: newUser.IndexNumber,
-    UserRole: RoleEnum.Student,
+    UserRole: USER_ROLES.Student,
     IsDeleted: false,
     CreatedAt: new Date(),
   };

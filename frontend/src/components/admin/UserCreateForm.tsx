@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { CreateUser } from "../../models/UserModel";
-import { RoleEnum } from "../../models/Enums";
+import { USER_ROLES } from "../../shared/constants/constants";
 
 interface UserCreateFormProps {
   onSave: (newUser: CreateUser) => void;
@@ -16,7 +16,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
     LastName: "",
     Email: "",
     Password: "",
-    UserRole: RoleEnum.Student,
+    UserRole: USER_ROLES.Student,
     IndexNumber: "",
   });
 
@@ -28,7 +28,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
       setFormData((prev) => ({
         ...prev,
         [name]: Number(value),
-        ...(Number(value) === RoleEnum.Professor && { IndexNumber: undefined }),
+        ...(Number(value) === USER_ROLES.Professor && { IndexNumber: undefined }),
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -115,12 +115,12 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               onChange={handleChange}
               required
             >
-              <option value={RoleEnum.Student}>Student</option>
-              <option value={RoleEnum.Professor}>Professor</option>
+              <option value={USER_ROLES.Student}>Student</option>
+              <option value={USER_ROLES.Professor}>Professor</option>
             </select>
           </div>
 
-          {formData.UserRole === RoleEnum.Student && (
+          {formData.UserRole === USER_ROLES.Student && (
             <div className="mb-3">
               <label htmlFor="indexNumber" className="form-label">
                 Index Number

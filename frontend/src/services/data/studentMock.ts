@@ -1,5 +1,5 @@
 import type { User } from "../../models/UserModel";
-import { RoleEnum } from "../../models/Enums";
+import { USER_ROLES } from "../../shared/constants/constants";
 
 export const MOCK_STUDENTS: User[] = [
   {
@@ -9,7 +9,7 @@ export const MOCK_STUDENTS: User[] = [
     Email: "jovan.jovanovic@student.com",
     UserPassword: "jovanpass",
     IndexNumber: "IT 35/2021",
-    UserRole: RoleEnum.Student,
+    UserRole: USER_ROLES.Student,
     IsDeleted: false,
   },
   {
@@ -19,7 +19,7 @@ export const MOCK_STUDENTS: User[] = [
     Email: "marko.markovic@student.com",
     UserPassword: "markopass",
     IndexNumber: "IT 42/2021",
-    UserRole: RoleEnum.Student,
+    UserRole: USER_ROLES.Student,
     IsDeleted: false,
   },
   {
@@ -29,7 +29,7 @@ export const MOCK_STUDENTS: User[] = [
     Email: "ana.anic@student.com",
     UserPassword: "anapass",
     IndexNumber: "IT 11/2022",
-    UserRole: RoleEnum.Student,
+    UserRole: USER_ROLES.Student,
     IsDeleted: false,
   },
   {
@@ -39,7 +39,7 @@ export const MOCK_STUDENTS: User[] = [
     Email: "ivan.ilic@student.com",
     UserPassword: "ivanpass",
     IndexNumber: "IT 12/2022",
-    UserRole: RoleEnum.Student,
+    UserRole: USER_ROLES.Student,
     IsDeleted: false,
   },
 ];

@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react';
-import { useAuthStore } from '../../store/authStore';
-import { RoleEnum } from '../../models/Enums';
+import { useUserStore } from '../../store/user/useUserStore';
+import type { UserRole } from '../../shared/constants/constants';
 
 interface RoleGateProps {
-  allowed: RoleEnum | RoleEnum[];
+  allowed: UserRole | UserRole[];
   children: ReactNode;
   fallback?: ReactNode;
 }
 
 export default function RoleGate({ allowed, children, fallback = null }: RoleGateProps) {
-  const { user } = useAuthStore();
+  const { currentUser } = useUserStore();
   const allowedRoles = Array.isArray(allowed) ? allowed : [allowed];
 
-  if (!user || !allowedRoles.includes(user.userRole as RoleEnum)) {
+  if (!currentUser || !allowedRoles.includes(currentUser.userRole)) {
     return <>{fallback}</>;
   }
 

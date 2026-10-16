@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useAuthStore } from "../../store/authStore";
-import { RoleEnum } from "../../models/Enums";
+import { useUserStore } from "../../store/user/useUserStore";
+import { USER_ROLES } from "../../shared/constants/constants";
 
 import { createEnrollment } from "../../services/api/enrollmentService";
 import { getAllUsers } from "../../services/api/userService";
@@ -31,7 +31,7 @@ import EnrollmentsTable from "../../components/admin/EnrollmentsTable";
 import EnrollmentCreateForm from "../../components/admin/EnrollmentCreateForm";
 
 const AdminDashboardPage: React.FC = () => {
-  const { user } = useAuthStore();
+  const { currentUser } = useUserStore();
   const [users, setUsers] = useState<User[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -71,7 +71,7 @@ const AdminDashboardPage: React.FC = () => {
     fetchSubjects();
     fetchEnrollments();
   }, []);
-  if (!user || user.userRole !== RoleEnum.Admin) {
+  if (!currentUser || currentUser.userRole !== USER_ROLES.Admin) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">
@@ -208,7 +208,7 @@ const AdminDashboardPage: React.FC = () => {
             {isCreatingSubject ? (
               <SubjectCreateForm
                 professors={users.filter(
-                  (u) => u.userRole === RoleEnum.Professor
+                  (u) => u.userRole === USER_ROLES.Professor
                 )}
                 onSave={handleCreateSubject}
                 onCancel={() => setIsCreatingSubject(false)}
@@ -217,7 +217,7 @@ const AdminDashboardPage: React.FC = () => {
               <SubjectEditForm
                 subject={editingSubject}
                 professors={users.filter(
-                  (u) => u.userRole === RoleEnum.Professor
+                  (u) => u.userRole === USER_ROLES.Professor
                 )}
                 onSave={handleUpdateSubject}
                 onCancel={() => setEditingSubject(null)}
@@ -248,7 +248,7 @@ const AdminDashboardPage: React.FC = () => {
             <h3>Student Enrollments</h3>
             {isCreatingEnrollment ? (
               <EnrollmentCreateForm
-                students={users.filter((u) => u.userRole === RoleEnum.Student)}
+                students={users.filter((u) => u.userRole === USER_ROLES.Student)}
                 subjects={subjects}
                 enrollments={enrollments}
                 onSave={handleCreateEnrollment}

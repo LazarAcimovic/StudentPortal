@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { CreateSubject } from "../../models/SubjectModel";
 import type { User } from "../../models/UserModel";
-import { RoleEnum } from "../../models/Enums";
+import { USER_ROLES } from "../../shared/constants/constants";
 
 interface SubjectCreateFormProps {
   professors: User[];
@@ -84,7 +84,7 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
             >
               <option value="">Select professor</option>
               {professors
-                .filter((p) => p.userRole === RoleEnum.Professor)
+                .filter((p) => p.userRole === USER_ROLES.Professor)
                 .map((prof) => (
                   <option key={prof.id} value={prof.id}>
                     {prof.firstName} {prof.lastName}

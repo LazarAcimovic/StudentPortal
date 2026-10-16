@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useAuthStore } from "../../store/authStore";
-import { RoleEnum } from "../../models/Enums";
+import { useUserStore } from "../../store/user/useUserStore";
+import { USER_ROLES } from "../../shared/constants/constants";
 import type { User } from "../../models/UserModel";
 import type { Subject } from "../../models/SubjectModel";
 import type { Grade, CreateGrade, UpdateGrade } from "../../models/GradeModel";
@@ -18,7 +18,7 @@ import {
 } from "../../services/api/gradeService";
 
 const ProfessorDashboardPage: React.FC = () => {
-  const { user } = useAuthStore();
+  const { currentUser } = useUserStore();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [students, setStudents] = useState<User[]>([]);
@@ -31,10 +31,9 @@ const ProfessorDashboardPage: React.FC = () => {
 
   useEffect(() => {
     const fetchProfessorData = async () => {
-      if (user?.userRole === RoleEnum.Professor) {
+      if (currentUser?.userRole === USER_ROLES.Professor) {
         try {
-          console.log(user.id);
-          const professorSubjects = await getProfessorSubjects(user.id);
+          const professorSubjects = await getProfessorSubjects(currentUser.id);
           setSubjects(professorSubjects);
         } catch (error) {
           console.error("Failed to fetch professor's subjects:", error);
@@ -43,7 +42,7 @@ const ProfessorDashboardPage: React.FC = () => {
       }
     };
     fetchProfessorData();
-  }, [user]);
+  }, [currentUser]);
 
   const fetchGrades = async () => {
     if (selectedSubject && selectedStudent) {
@@ -74,7 +73,7 @@ const ProfessorDashboardPage: React.FC = () => {
     setNewComment("");
     setEditingGrade(null);
     setError(null);
-    if (user) {
+    if (currentUser) {
       try {
         const studentsList = await getStudentsBySubject(subject.id);
         setStudents(studentsList);
@@ -186,7 +185,7 @@ const ProfessorDashboardPage: React.FC = () => {
     }
   };
 
-  if (!user || user.userRole !== RoleEnum.Professor) {
+  if (!currentUser || currentUser.userRole !== USER_ROLES.Professor) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger text-center">

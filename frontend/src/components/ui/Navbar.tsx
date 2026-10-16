@@ -1,26 +1,26 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/authStore";
-import { RoleEnum } from "../../models/Enums";
+import { useUserStore } from "../../store/user/useUserStore";
+import { USER_ROLES } from "../../shared/constants/constants";
 import { APP_ROUTES } from "../../config/constants";
 
 const Navbar: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const { currentUser, clearCurrentUser } = useUserStore();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    clearCurrentUser();
     navigate(APP_ROUTES.AUTH_LOGIN);
   };
 
   const getDashboardLink = () => {
-    if (!user) return APP_ROUTES.HOME;
-    switch (user.userRole) {
-      case RoleEnum.Admin:
+    if (!currentUser) return APP_ROUTES.HOME;
+    switch (currentUser.userRole) {
+      case USER_ROLES.Admin:
         return APP_ROUTES.ADMIN_DASHBOARD;
-      case RoleEnum.Professor:
+      case USER_ROLES.Professor:
         return APP_ROUTES.PROFESSOR_DASHBOARD;
-      case RoleEnum.Student:
+      case USER_ROLES.Student:
         return APP_ROUTES.STUDENT_DASHBOARD;
       default:
         return APP_ROUTES.HOME;
@@ -36,7 +36,7 @@ const Navbar: React.FC = () => {
           </Link>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              {user && (
+              {currentUser && (
                 <li className="nav-item">
                   <Link className="nav-link" to={getDashboardLink()}>
                     Dashboard
@@ -45,11 +45,11 @@ const Navbar: React.FC = () => {
               )}
             </ul>
             <ul className="navbar-nav">
-              {user ? (
+              {currentUser ? (
                 <>
                   <li className="nav-item">
                     <span className="nav-link">
-                      Welcome, {user.firstName}
+                      Welcome, {currentUser.firstName}
                     </span>
                   </li>
                   <li className="nav-item">

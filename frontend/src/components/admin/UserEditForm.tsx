@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { User, UpdateUser } from "../../models/UserModel";
-import { RoleEnum } from "../../models/Enums";
+import { USER_ROLES } from "../../shared/constants/constants";
 
 interface UserEditFormProps {
   user: User;
@@ -111,8 +111,8 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
               onChange={handleChange}
               required
             >
-              <option value={RoleEnum.Student}>Student</option>
-              <option value={RoleEnum.Professor}>Professor</option>
+              <option value={USER_ROLES.Student}>Student</option>
+              <option value={USER_ROLES.Professor}>Professor</option>
             </select>
           </div>
           <div className="mb-3 form-check">
