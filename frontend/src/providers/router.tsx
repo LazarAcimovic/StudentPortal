@@ -1,12 +1,12 @@
-import { createBrowserRouter } from "react-router-dom";
-import App from "../App";
-import HomePage from "../pages/HomePage";
-import LoginPage from "../pages/login/LoginPage";
-import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
-import ProfessorDashboardPage from "../pages/dashboard/ProfessorDashboardPage";
-import StudentDashboardPage from "../pages/dashboard/StudentDashboardPage";
-import ProtectedRoute from "../components/common/ProtectedRoute";
-import { APP_ROUTES } from "../config/constants";
+import { createBrowserRouter } from 'react-router-dom';
+import App from '../App';
+import HomePage from '../pages/HomePage';
+import LoginPage from '../pages/login/LoginPage';
+import AdminDashboardPage from '../pages/dashboard/AdminDashboardPage';
+import ProfessorDashboardPage from '../pages/dashboard/ProfessorDashboardPage';
+import StudentDashboardPage from '../pages/dashboard/StudentDashboardPage';
+import AuthGuard from './authGuard';
+import { APP_ROUTES } from '../config/constants';
 
 export const router = createBrowserRouter([
   {
@@ -22,7 +22,7 @@ export const router = createBrowserRouter([
         element: <LoginPage />,
       },
       {
-        element: <ProtectedRoute />,
+        element: <AuthGuard />,
         children: [
           {
             path: APP_ROUTES.ADMIN_DASHBOARD.slice(1),
@@ -39,7 +39,7 @@ export const router = createBrowserRouter([
         ],
       },
       {
-        path: "*",
+        path: '*',
         element: <h1>404 - Page not found.</h1>,
       },
     ],
