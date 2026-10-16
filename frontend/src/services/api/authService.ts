@@ -1,5 +1,5 @@
 // src/services/api/authService.ts
-import apiClient from "./apiClient";
+import apiClient from "../../shared/api/axiosClient";
 import type { LoginRequest } from "../../models/LoginRequest";
 import type { LoginResponse } from "../../models/LoginResponse";
 import type { User } from "../../models/UserModel";

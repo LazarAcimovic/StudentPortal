@@ -1,7 +1,7 @@
 import type { CreateUser, User, UpdateUser } from "../../models/UserModel";
 import { MOCK_STUDENTS } from "../data/studentMock";
 import { RoleEnum } from "../../models/Enums";
-import apiClient from "./apiClient";
+import apiClient from "../../shared/api/axiosClient";
 import { API_ROUTES } from "../../config/constants";
 
 export const getAllUsers = async (): Promise<User[] | null> => {

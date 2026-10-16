@@ -1,7 +1,7 @@
 //import type { User } from "../../models/UserModel";
 //import type { Subject } from "../../models/SubjectModel";
 import type { Grade, CreateGrade, UpdateGrade } from "../../models/GradeModel";
-import apiClient from "./apiClient";
+import apiClient from "../../shared/api/axiosClient";
 import axios, { AxiosError } from "axios";
 import { API_ROUTES } from "../../config/constants";
 

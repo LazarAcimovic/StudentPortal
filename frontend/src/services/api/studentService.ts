@@ -1,6 +1,6 @@
 import type { User } from "../../models/UserModel";
 import type { Subject } from "../../models/SubjectModel";
-import apiClient from "./apiClient";
+import apiClient from "../../shared/api/axiosClient";
 import type { StudentSubjectData } from "../../models/StudentSubjectData";
 import { API_ROUTES } from "../../config/constants";
 
