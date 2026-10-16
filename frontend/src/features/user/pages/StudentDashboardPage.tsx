@@ -13,6 +13,7 @@ import {
 import type { SubjectActionLayout } from '../constants/constants';
 import Modal from '../../../components/ui/Modal';
 import { submitAppeal } from '../../appeals/api/appealService';
+import { studentConfirmGrade } from '../../grades/api/gradeService';
 
 function StatusBadge({
   status,
@@ -35,10 +36,14 @@ function SubjectActions({
   subject,
   layout,
   onWriteAppeal,
+  onConfirmGrade,
+  isConfirming,
 }: {
   subject: StudentDashboardSubject;
   layout: SubjectActionLayout;
   onWriteAppeal: (enrollmentId: string) => void;
+  onConfirmGrade: (enrollmentId: string) => void;
+  isConfirming: boolean;
 }) {
   if (!subject.canWriteAppeal && !subject.canConfirmGrade) return null;
 
@@ -54,13 +59,26 @@ function SubjectActions({
           className="btn btn-warning btn-sm"
           type="button"
           onClick={() => onWriteAppeal(subject.enrollmentId)}
+          disabled={isConfirming}
         >
           Write appeal
         </button>
       )}
       {subject.canConfirmGrade && (
-        <button className="btn btn-success btn-sm" type="button">
-          Confirm grade
+        <button
+          className="btn btn-success btn-sm"
+          type="button"
+          onClick={() => onConfirmGrade(subject.enrollmentId)}
+          disabled={isConfirming}
+        >
+          {isConfirming ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
+              Confirming…
+            </>
+          ) : (
+            'Confirm grade'
+          )}
         </button>
       )}
     </div>
@@ -71,11 +89,17 @@ function SubjectItem({
   subject,
   layout,
   onWriteAppeal,
+  onConfirmGrade,
+  confirmingEnrollmentId,
 }: {
   subject: StudentDashboardSubject;
   layout: SubjectActionLayout;
   onWriteAppeal: (enrollmentId: string) => void;
+  onConfirmGrade: (enrollmentId: string) => void;
+  confirmingEnrollmentId: string | null;
 }) {
+  const isConfirming = confirmingEnrollmentId === subject.enrollmentId;
+
   if (layout === SUBJECT_ACTION_LAYOUT.TABLE) {
     return (
       <tr>
@@ -86,7 +110,13 @@ function SubjectItem({
           <StatusBadge status={subject.status} appealStatus={subject.appealStatus} />
         </td>
         <td className="text-center">
-          <SubjectActions subject={subject} layout={layout} onWriteAppeal={onWriteAppeal} />
+          <SubjectActions
+            subject={subject}
+            layout={layout}
+            onWriteAppeal={onWriteAppeal}
+            onConfirmGrade={onConfirmGrade}
+            isConfirming={isConfirming}
+          />
         </td>
       </tr>
     );
@@ -101,7 +131,13 @@ function SubjectItem({
         <div className="mb-2">
           <StatusBadge status={subject.status} appealStatus={subject.appealStatus} />
         </div>
-        <SubjectActions subject={subject} layout={layout} onWriteAppeal={onWriteAppeal} />
+        <SubjectActions
+          subject={subject}
+          layout={layout}
+          onWriteAppeal={onWriteAppeal}
+          onConfirmGrade={onConfirmGrade}
+          isConfirming={isConfirming}
+        />
       </div>
     </div>
   );
@@ -117,6 +153,8 @@ interface AppealModalState {
 const StudentDashboardPage: React.FC = () => {
   const { data, isLoading, error, refresh } = useStudentDashboard();
   const [appealModal, setAppealModal] = useState<AppealModalState | null>(APPEAL_MODAL_INITIAL_STATE);
+  const [confirmingEnrollmentId, setConfirmingEnrollmentId] = useState<string | null>(null);
+  const [confirmGradeEnrollmentId, setConfirmGradeEnrollmentId] = useState<string | null>(null);
 
   const openAppealModal = (enrollmentId: string) => {
     setAppealModal({ enrollmentId, text: '', isSubmitting: false, error: null });
@@ -125,6 +163,27 @@ const StudentDashboardPage: React.FC = () => {
   const closeAppealModal = () => {
     if (appealModal?.isSubmitting) return;
     setAppealModal(APPEAL_MODAL_INITIAL_STATE);
+  };
+
+  const openConfirmGradeModal = (enrollmentId: string) => {
+    setConfirmGradeEnrollmentId(enrollmentId);
+  };
+
+  const closeConfirmGradeModal = () => {
+    if (confirmingEnrollmentId) return;
+    setConfirmGradeEnrollmentId(null);
+  };
+
+  const handleConfirmGrade = async () => {
+    if (!confirmGradeEnrollmentId || confirmingEnrollmentId) return;
+    setConfirmingEnrollmentId(confirmGradeEnrollmentId);
+    try {
+      await studentConfirmGrade({ enrollmentId: confirmGradeEnrollmentId });
+      setConfirmGradeEnrollmentId(null);
+      refresh();
+    } finally {
+      setConfirmingEnrollmentId(null);
+    }
   };
 
   const handleAppealTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -274,6 +333,8 @@ const StudentDashboardPage: React.FC = () => {
                         subject={s}
                         layout={SUBJECT_ACTION_LAYOUT.TABLE}
                         onWriteAppeal={openAppealModal}
+                        onConfirmGrade={openConfirmGradeModal}
+                        confirmingEnrollmentId={confirmingEnrollmentId}
                       />
                     ))}
                   </tbody>
@@ -287,6 +348,8 @@ const StudentDashboardPage: React.FC = () => {
                     subject={s}
                     layout={SUBJECT_ACTION_LAYOUT.CARD}
                     onWriteAppeal={openAppealModal}
+                    onConfirmGrade={openConfirmGradeModal}
+                    confirmingEnrollmentId={confirmingEnrollmentId}
                   />
                 ))}
               </div>
@@ -294,6 +357,41 @@ const StudentDashboardPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      <Modal
+        open={confirmGradeEnrollmentId !== null}
+        onClose={closeConfirmGradeModal}
+        title="Confirm grade"
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={closeConfirmGradeModal}
+              disabled={!!confirmingEnrollmentId}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-success"
+              onClick={handleConfirmGrade}
+              disabled={!!confirmingEnrollmentId}
+            >
+              {confirmingEnrollmentId ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
+                  Confirming…
+                </>
+              ) : (
+                'Yes, confirm'
+              )}
+            </button>
+          </>
+        }
+      >
+        <p className="mb-0">Are you sure you want to confirm this grade? This action cannot be undone.</p>
+      </Modal>
 
       <Modal
         open={appealModal !== null}
