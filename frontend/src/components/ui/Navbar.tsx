@@ -1,16 +1,21 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../store/user/useUserStore";
 import { USER_ROLES } from "../../shared/constants/constants";
 import { APP_ROUTES } from "../../config/constants";
+import { logout } from "../../features/auth/api/authService";
 
 const Navbar: React.FC = () => {
   const { currentUser, clearCurrentUser } = useUserStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    clearCurrentUser();
-    navigate(APP_ROUTES.AUTH_LOGIN);
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      clearCurrentUser();
+      navigate(APP_ROUTES.AUTH_LOGIN);
+    }
   };
 
   const getDashboardLink = () => {
@@ -31,16 +36,21 @@ const Navbar: React.FC = () => {
     <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
         <div className="container-fluid">
-          <Link className="navbar-brand" to={APP_ROUTES.HOME}>
+          <NavLink className="navbar-brand" to={APP_ROUTES.HOME}>
             Student Portal
-          </Link>
+          </NavLink>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               {currentUser && (
                 <li className="nav-item">
-                  <Link className="nav-link" to={getDashboardLink()}>
+                  <NavLink
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active" : "nav-link"
+                    }
+                    to={getDashboardLink()}
+                  >
                     Dashboard
-                  </Link>
+                  </NavLink>
                 </li>
               )}
             </ul>
@@ -63,9 +73,16 @@ const Navbar: React.FC = () => {
                 </>
               ) : (
                 <li className="nav-item">
-                  <Link className="btn btn-outline-light" to={APP_ROUTES.AUTH_LOGIN}>
+                  <NavLink
+                    className={({ isActive }) =>
+                      isActive
+                        ? "btn btn-outline-light active"
+                        : "btn btn-outline-light"
+                    }
+                    to={APP_ROUTES.AUTH_LOGIN}
+                  >
                     Login
-                  </Link>
+                  </NavLink>
                 </li>
               )}
             </ul>
