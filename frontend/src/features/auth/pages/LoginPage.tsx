@@ -130,7 +130,7 @@ const LoginPage: React.FC = () => {
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !parseResult.success}
                   >
                     {isSubmitting ? "Logging in…" : "Log in"}
                   </button>
