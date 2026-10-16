@@ -8,6 +8,11 @@ export const STUDENT_DASHBOARD_INITIAL_REFRESH_KEY = 0;
 
 export const APPEAL_DENIED_STATUS = 'Appeal denied' as const;
 
+export const APPEAL_MAX_LENGTH = 1000;
+export const APPEAL_MODAL_INITIAL_STATE = null;
+export const APPEAL_TEXT_REQUIRED_ERROR = 'Appeal text is required.' as const;
+export const APPEAL_SUBMIT_ERROR = 'Failed to submit appeal. Please try again.' as const;
+
 export const SUBJECT_ACTION_LAYOUT = {
   TABLE: 'table',
   CARD: 'card',

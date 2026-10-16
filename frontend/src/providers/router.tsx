@@ -4,7 +4,7 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../features/auth/pages/LoginPage';
 import AdminDashboardPage from '../pages/dashboard/AdminDashboardPage';
 import ProfessorDashboardPage from '../pages/dashboard/ProfessorDashboardPage';
-import StudentDashboardPage from '../pages/dashboard/StudentDashboardPage';
+import StudentDashboardPage from '../features/user/pages/StudentDashboardPage';
 import AuthGuard from './authGuard';
 import { APP_ROUTES } from '../config/constants';
 

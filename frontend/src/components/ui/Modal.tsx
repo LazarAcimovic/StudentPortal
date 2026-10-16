@@ -35,6 +35,12 @@ export default function Modal({
 
     document.body.style.overflow = 'hidden';
 
+    const root = document.getElementById('root');
+    if (blurBackdrop && root) {
+      root.style.filter = 'blur(8px)';
+      root.style.transition = 'filter 0.15s ease';
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -42,9 +48,13 @@ export default function Modal({
 
     return () => {
       document.body.style.overflow = '';
+      if (root) {
+        root.style.filter = '';
+        root.style.transition = '';
+      }
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [open, onClose, blurBackdrop]);
 
   if (!open) return null;
 
@@ -80,10 +90,7 @@ export default function Modal({
         </div>
       </div>
 
-      <div
-        className="modal-backdrop show"
-        style={blurBackdrop ? { backdropFilter: 'blur(4px)' } : undefined}
-      />
+      <div className="modal-backdrop show" />
     </>,
     modalRoot
   );

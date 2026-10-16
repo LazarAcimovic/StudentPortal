@@ -1,12 +1,18 @@
-import React from 'react';
-import { useStudentDashboard } from '../../features/user/hooks/useStudentDashboard';
-import type { StudentDashboardSubject } from '../../features/user/models/studentDashboard';
+import React, { useState } from 'react';
+import { useStudentDashboard } from '../hooks/useStudentDashboard';
+import type { StudentDashboardSubject } from '../models/studentDashboard';
 import {
   APPEAL_DENIED_STATUS,
+  APPEAL_MAX_LENGTH,
+  APPEAL_MODAL_INITIAL_STATE,
+  APPEAL_SUBMIT_ERROR,
+  APPEAL_TEXT_REQUIRED_ERROR,
   SUBJECT_ACTION_LAYOUT,
   STATUS_BADGE_MAP,
-} from '../../features/user/constants/constants';
-import type { SubjectActionLayout } from '../../features/user/constants/constants';
+} from '../constants/constants';
+import type { SubjectActionLayout } from '../constants/constants';
+import Modal from '../../../components/ui/Modal';
+import { submitAppeal } from '../../appeals/api/appealService';
 
 function StatusBadge({
   status,
@@ -28,9 +34,11 @@ function StatusBadge({
 function SubjectActions({
   subject,
   layout,
+  onWriteAppeal,
 }: {
   subject: StudentDashboardSubject;
   layout: SubjectActionLayout;
+  onWriteAppeal: (enrollmentId: string) => void;
 }) {
   if (!subject.canWriteAppeal && !subject.canConfirmGrade) return null;
 
@@ -42,7 +50,11 @@ function SubjectActions({
   return (
     <div className={wrapperClass}>
       {subject.canWriteAppeal && (
-        <button className="btn btn-warning btn-sm" type="button">
+        <button
+          className="btn btn-warning btn-sm"
+          type="button"
+          onClick={() => onWriteAppeal(subject.enrollmentId)}
+        >
           Write appeal
         </button>
       )}
@@ -58,9 +70,11 @@ function SubjectActions({
 function SubjectItem({
   subject,
   layout,
+  onWriteAppeal,
 }: {
   subject: StudentDashboardSubject;
   layout: SubjectActionLayout;
+  onWriteAppeal: (enrollmentId: string) => void;
 }) {
   if (layout === SUBJECT_ACTION_LAYOUT.TABLE) {
     return (
@@ -72,7 +86,7 @@ function SubjectItem({
           <StatusBadge status={subject.status} appealStatus={subject.appealStatus} />
         </td>
         <td className="text-center">
-          <SubjectActions subject={subject} layout={layout} />
+          <SubjectActions subject={subject} layout={layout} onWriteAppeal={onWriteAppeal} />
         </td>
       </tr>
     );
@@ -87,14 +101,58 @@ function SubjectItem({
         <div className="mb-2">
           <StatusBadge status={subject.status} appealStatus={subject.appealStatus} />
         </div>
-        <SubjectActions subject={subject} layout={layout} />
+        <SubjectActions subject={subject} layout={layout} onWriteAppeal={onWriteAppeal} />
       </div>
     </div>
   );
 }
 
+interface AppealModalState {
+  enrollmentId: string;
+  text: string;
+  isSubmitting: boolean;
+  error: string | null;
+}
+
 const StudentDashboardPage: React.FC = () => {
-  const { data, isLoading, error } = useStudentDashboard();
+  const { data, isLoading, error, refresh } = useStudentDashboard();
+  const [appealModal, setAppealModal] = useState<AppealModalState | null>(APPEAL_MODAL_INITIAL_STATE);
+
+  const openAppealModal = (enrollmentId: string) => {
+    setAppealModal({ enrollmentId, text: '', isSubmitting: false, error: null });
+  };
+
+  const closeAppealModal = () => {
+    if (appealModal?.isSubmitting) return;
+    setAppealModal(APPEAL_MODAL_INITIAL_STATE);
+  };
+
+  const handleAppealTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!appealModal) return;
+    setAppealModal({ ...appealModal, text: e.target.value });
+  };
+
+  const handleAppealSubmit = async () => {
+    if (!appealModal || appealModal.isSubmitting) return;
+
+    const text = appealModal.text.trim();
+    if (!text) {
+      setAppealModal({ ...appealModal, error: APPEAL_TEXT_REQUIRED_ERROR });
+      return;
+    }
+
+    setAppealModal({ ...appealModal, isSubmitting: true, error: null });
+
+    try {
+      await submitAppeal({ enrollmentId: appealModal.enrollmentId, text });
+      setAppealModal(APPEAL_MODAL_INITIAL_STATE);
+      refresh();
+    } catch {
+      setAppealModal((prev) =>
+        prev ? { ...prev, isSubmitting: false, error: APPEAL_SUBMIT_ERROR } : null
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -117,6 +175,8 @@ const StudentDashboardPage: React.FC = () => {
   if (!data) return null;
 
   const { profile, stats, subjects } = data;
+
+  const appealCharsLeft = appealModal ? APPEAL_MAX_LENGTH - appealModal.text.length : 0;
 
   return (
     <main className="container my-4">
@@ -209,7 +269,12 @@ const StudentDashboardPage: React.FC = () => {
                   </thead>
                   <tbody>
                     {subjects.map((s) => (
-                      <SubjectItem key={s.enrollmentId} subject={s} layout={SUBJECT_ACTION_LAYOUT.TABLE} />
+                      <SubjectItem
+                        key={s.enrollmentId}
+                        subject={s}
+                        layout={SUBJECT_ACTION_LAYOUT.TABLE}
+                        onWriteAppeal={openAppealModal}
+                      />
                     ))}
                   </tbody>
                 </table>
@@ -217,13 +282,76 @@ const StudentDashboardPage: React.FC = () => {
 
               <div className="d-sm-none p-2">
                 {subjects.map((s) => (
-                  <SubjectItem key={s.enrollmentId} subject={s} layout={SUBJECT_ACTION_LAYOUT.CARD} />
+                  <SubjectItem
+                    key={s.enrollmentId}
+                    subject={s}
+                    layout={SUBJECT_ACTION_LAYOUT.CARD}
+                    onWriteAppeal={openAppealModal}
+                  />
                 ))}
               </div>
             </>
           )}
         </div>
       </div>
+
+      <Modal
+        open={appealModal !== null}
+        onClose={closeAppealModal}
+        title="Write Appeal"
+        blurBackdrop
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={closeAppealModal}
+              disabled={appealModal?.isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-warning"
+              onClick={handleAppealSubmit}
+              disabled={appealModal?.isSubmitting || !appealModal?.text.trim()}
+            >
+              {appealModal?.isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
+                  Submitting…
+                </>
+              ) : (
+                'Submit appeal'
+              )}
+            </button>
+          </>
+        }
+      >
+        {appealModal && (
+          <>
+            {appealModal.error && (
+              <div className="alert alert-danger py-2">{appealModal.error}</div>
+            )}
+            <label htmlFor="appeal-text" className="form-label">
+              Describe your appeal
+            </label>
+            <textarea
+              id="appeal-text"
+              className="form-control"
+              rows={5}
+              maxLength={APPEAL_MAX_LENGTH}
+              value={appealModal.text}
+              onChange={handleAppealTextChange}
+              disabled={appealModal.isSubmitting}
+              placeholder="Explain why you are appealing this grade…"
+            />
+            <div className={`form-text text-end ${appealCharsLeft < 100 ? 'text-warning' : ''}`}>
+              {appealCharsLeft} characters remaining
+            </div>
+          </>
+        )}
+      </Modal>
     </main>
   );
 };
