@@ -24,25 +24,44 @@ function App() {
 
   useEffect(() => {
     const controller = new AbortController();
+    const signal = controller.signal;
 
-    axiosClient
-      .get<User>(API_ROUTES.ACCOUNT_ME, {
-        signal: controller.signal,
-        ...({ _retry: true } as object),
-      })
-      .then((res) => {
+    const hydrate = async () => {
+      try {
+        const res = await axiosClient.get<User>(API_ROUTES.ACCOUNT_ME, {
+          signal,
+          ...({ _retry: true } as object),
+        });
         setCurrentUser(res.data);
-      })
-      .catch((err) => {
-        if (err?.name !== "CanceledError" && err?.code !== "ERR_CANCELED") {
+      } catch (err: unknown) {
+        const axiosErr = err as { name?: string; code?: string; response?: { status: number } };
+        if (axiosErr?.name === "CanceledError" || axiosErr?.code === "ERR_CANCELED") return;
+
+        if (axiosErr?.response?.status === 401) {
+          try {
+            await axiosClient.post(API_ROUTES.ACCOUNT_REFRESH, null, {
+              signal,
+              ...({ _retry: true } as object),
+            });
+            const res = await axiosClient.get<User>(API_ROUTES.ACCOUNT_ME, {
+              signal,
+              ...({ _retry: true } as object),
+            });
+            setCurrentUser(res.data);
+          } catch {
+            clearCurrentUser();
+          }
+        } else {
           clearCurrentUser();
         }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
+      } finally {
+        if (!signal.aborted) {
           setHydrating(false);
         }
-      });
+      }
+    };
+
+    hydrate();
 
     return () => {
       controller.abort();
