@@ -13,6 +13,8 @@ export const APPEAL_MODAL_INITIAL_STATE = null;
 export const APPEAL_TEXT_REQUIRED_ERROR = 'Appeal text is required.' as const;
 export const APPEAL_SUBMIT_ERROR = 'Failed to submit appeal. Please try again.' as const;
 
+export const CONFIRM_GRADE_MODAL_INITIAL_STATE = null;
+
 export const SUBJECT_ACTION_LAYOUT = {
   TABLE: 'table',
   CARD: 'card',

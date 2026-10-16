@@ -7,6 +7,7 @@ import {
   APPEAL_MODAL_INITIAL_STATE,
   APPEAL_SUBMIT_ERROR,
   APPEAL_TEXT_REQUIRED_ERROR,
+  CONFIRM_GRADE_MODAL_INITIAL_STATE,
   SUBJECT_ACTION_LAYOUT,
   STATUS_BADGE_MAP,
 } from '../constants/constants';
@@ -150,11 +151,15 @@ interface AppealModalState {
   error: string | null;
 }
 
+interface ConfirmGradeModalState {
+  enrollmentId: string;
+  isSubmitting: boolean;
+}
+
 const StudentDashboardPage: React.FC = () => {
   const { data, isLoading, error, refresh } = useStudentDashboard();
   const [appealModal, setAppealModal] = useState<AppealModalState | null>(APPEAL_MODAL_INITIAL_STATE);
-  const [confirmingEnrollmentId, setConfirmingEnrollmentId] = useState<string | null>(null);
-  const [confirmGradeEnrollmentId, setConfirmGradeEnrollmentId] = useState<string | null>(null);
+  const [confirmGradeModal, setConfirmGradeModal] = useState<ConfirmGradeModalState | null>(CONFIRM_GRADE_MODAL_INITIAL_STATE);
 
   const openAppealModal = (enrollmentId: string) => {
     setAppealModal({ enrollmentId, text: '', isSubmitting: false, error: null });
@@ -166,23 +171,23 @@ const StudentDashboardPage: React.FC = () => {
   };
 
   const openConfirmGradeModal = (enrollmentId: string) => {
-    setConfirmGradeEnrollmentId(enrollmentId);
+    setConfirmGradeModal({ enrollmentId, isSubmitting: false });
   };
 
   const closeConfirmGradeModal = () => {
-    if (confirmingEnrollmentId) return;
-    setConfirmGradeEnrollmentId(null);
+    if (confirmGradeModal?.isSubmitting) return;
+    setConfirmGradeModal(CONFIRM_GRADE_MODAL_INITIAL_STATE);
   };
 
   const handleConfirmGrade = async () => {
-    if (!confirmGradeEnrollmentId || confirmingEnrollmentId) return;
-    setConfirmingEnrollmentId(confirmGradeEnrollmentId);
+    if (!confirmGradeModal || confirmGradeModal.isSubmitting) return;
+    setConfirmGradeModal({ ...confirmGradeModal, isSubmitting: true });
     try {
-      await studentConfirmGrade({ enrollmentId: confirmGradeEnrollmentId });
-      setConfirmGradeEnrollmentId(null);
+      await studentConfirmGrade({ enrollmentId: confirmGradeModal.enrollmentId });
+      setConfirmGradeModal(CONFIRM_GRADE_MODAL_INITIAL_STATE);
       refresh();
     } finally {
-      setConfirmingEnrollmentId(null);
+      setConfirmGradeModal((prev) => prev ? { ...prev, isSubmitting: false } : null);
     }
   };
 
@@ -334,7 +339,7 @@ const StudentDashboardPage: React.FC = () => {
                         layout={SUBJECT_ACTION_LAYOUT.TABLE}
                         onWriteAppeal={openAppealModal}
                         onConfirmGrade={openConfirmGradeModal}
-                        confirmingEnrollmentId={confirmingEnrollmentId}
+                        confirmingEnrollmentId={confirmGradeModal?.isSubmitting ? confirmGradeModal.enrollmentId : null}
                       />
                     ))}
                   </tbody>
@@ -349,7 +354,7 @@ const StudentDashboardPage: React.FC = () => {
                     layout={SUBJECT_ACTION_LAYOUT.CARD}
                     onWriteAppeal={openAppealModal}
                     onConfirmGrade={openConfirmGradeModal}
-                    confirmingEnrollmentId={confirmingEnrollmentId}
+                    confirmingEnrollmentId={confirmGradeModal?.isSubmitting ? confirmGradeModal.enrollmentId : null}
                   />
                 ))}
               </div>
@@ -359,7 +364,7 @@ const StudentDashboardPage: React.FC = () => {
       </div>
 
       <Modal
-        open={confirmGradeEnrollmentId !== null}
+        open={confirmGradeModal !== null}
         onClose={closeConfirmGradeModal}
         title="Confirm grade"
         footer={
@@ -368,7 +373,7 @@ const StudentDashboardPage: React.FC = () => {
               type="button"
               className="btn btn-secondary"
               onClick={closeConfirmGradeModal}
-              disabled={!!confirmingEnrollmentId}
+              disabled={confirmGradeModal?.isSubmitting}
             >
               Cancel
             </button>
@@ -376,9 +381,9 @@ const StudentDashboardPage: React.FC = () => {
               type="button"
               className="btn btn-success"
               onClick={handleConfirmGrade}
-              disabled={!!confirmingEnrollmentId}
+              disabled={confirmGradeModal?.isSubmitting}
             >
-              {confirmingEnrollmentId ? (
+              {confirmGradeModal?.isSubmitting ? (
                 <>
                   <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
                   Confirming…
