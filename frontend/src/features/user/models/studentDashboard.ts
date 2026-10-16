@@ -5,8 +5,15 @@ export type SubjectStatus =
   | 'Passed'
   | 'Failed';
 
+export interface StudentProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  indexNumber: string | null;
+}
+
 export interface StudentDashboardSubject {
-  enrollmentId: number;
+  enrollmentId: string;
   subjectName: string;
   professorName: string;
   finalGrade: number | null;
@@ -15,7 +22,7 @@ export interface StudentDashboardSubject {
   canWriteAppeal: boolean;
   canConfirmGrade: boolean;
   confirmationDeadline: string | null;
-  pendingAppealId: number | null;
+  pendingAppealId: string | null;
 }
 
 export interface StudentDashboardStats {
@@ -26,10 +33,7 @@ export interface StudentDashboardStats {
 }
 
 export interface StudentDashboardData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  indexNumber: string | null;
+  profile: StudentProfile;
   stats: StudentDashboardStats;
   subjects: StudentDashboardSubject[];
 }
