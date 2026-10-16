@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./components/ui/Navbar";
 import { registerNavigate } from "./lib/navigation";
-import { useUserStore, type User } from "./store/user/useUserStore";
+import { useUserStore } from "./store/user/useUserStore";
+import type { User } from "./shared/models/User";
 import { APP_ROUTES, API_ROUTES } from "./config/constants";
 import axiosClient from "./shared/api/axiosClient";
 

@@ -1,15 +1,5 @@
 import { create } from "zustand";
-import type { UserRole } from "../../shared/constants/constants";
-
-export interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  indexNumber?: string | null;
-  userRole: UserRole;
-  createdAt?: string;
-}
+import type { User } from "../../shared/models/User";
 
 interface UserState {
   currentUser: User | null;
