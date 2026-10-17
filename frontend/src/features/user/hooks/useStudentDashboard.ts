@@ -8,6 +8,10 @@ import {
   STUDENT_DASHBOARD_INITIAL_ERROR,
   STUDENT_DASHBOARD_INITIAL_REFRESH_KEY,
 } from '../constants/constants';
+import {
+  AXIOS_CANCELED_ERROR_NAME,
+  AXIOS_CANCELED_ERROR_CODE,
+} from '../../../shared/constants/constants';
 
 export function useStudentDashboard(): UseStudentDashboardResult {
   const [data, setData] = useState<StudentDashboardData | null>(STUDENT_DASHBOARD_INITIAL_DATA);
@@ -33,8 +37,8 @@ export function useStudentDashboard(): UseStudentDashboardResult {
       } catch (err: unknown) {
         const axiosErr = err as { name?: string; code?: string };
         if (
-          axiosErr?.name === 'CanceledError' ||
-          axiosErr?.code === 'ERR_CANCELED'
+          axiosErr?.name === AXIOS_CANCELED_ERROR_NAME ||
+          axiosErr?.code === AXIOS_CANCELED_ERROR_CODE
         ) {
           return;
         }
