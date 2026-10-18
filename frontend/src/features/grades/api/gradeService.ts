@@ -11,6 +11,11 @@ export async function studentConfirmGrade(dto: StudentConfirmGradeDto, signal?: 
 
 export interface ProfessorConfirmGradeDto {
   enrollmentId: string;
+  midterm1Points: number;
+  midterm2Points: number;
+  attendancePoints: number;
+  practicalPoints: number;
+  examPoints: number;
 }
 
 export async function professorConfirmGrade(dto: ProfessorConfirmGradeDto, signal?: AbortSignal): Promise<void> {

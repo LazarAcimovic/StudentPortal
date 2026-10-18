@@ -133,7 +133,14 @@ const GradePanel: React.FC<Props> = ({ selectedStudentRow, onGradeChanged }) => 
     setIsConfirming(true);
     setError(null);
     try {
-      await professorConfirmGrade({ enrollmentId: selectedStudentRow.enrollmentId });
+      await professorConfirmGrade({
+        enrollmentId: selectedStudentRow.enrollmentId,
+        midterm1Points: parseField(form.midterm1)!,
+        midterm2Points: parseField(form.midterm2)!,
+        attendancePoints: parseField(form.attendance)!,
+        practicalPoints: parseField(form.practical)!,
+        examPoints: parseField(form.exam)!,
+      });
       setIsDirty(false);
       onGradeChanged();
     } catch {
