@@ -1,14 +1,14 @@
-import axios from 'axios';
-import { API_ROUTES } from '../../config/constants';
-import { clearAuthSession } from '../../lib/auth';
+import axios from "axios";
+import { API_ROUTES } from "../../config/constants";
+import { clearAuthSession } from "../../lib/auth";
 
 let refreshPromise: Promise<void> | null = null;
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api",
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -16,6 +16,14 @@ axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const url = originalRequest?.url ?? "";
+    const authEndpoint =
+      url.includes(API_ROUTES.ACCOUNT_LOGIN) ||
+      url.includes(API_ROUTES.ACCOUNT_REFRESH);
+
+      if(authEndpoint) {
+        return Promise.reject(error);
+      }
 
     if (error.response?.status === 403) {
       clearAuthSession({ redirectToLogin: true });
@@ -47,7 +55,7 @@ axiosClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosClient;
