@@ -1,63 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import type { ProfessorStudentRow } from '../../models/professor/professorDashboard';
+import React, { useEffect, useRef, useState } from 'react';
+import type { FormValues, GradePanelProps } from '../../models/professor/gradePanel';
+import { EMPTY_FORM, FIELDS } from '../../constants/professor/constants';
+import { parseField, validateField, computeFinalGrade } from '../../util/gradeUtils';
 import { getDraft, saveDraft } from '../../../grades/api/gradeDraftService';
 import { professorConfirmGrade } from '../../../grades/api/gradeService';
 
-interface Props {
-  selectedStudentRow: ProfessorStudentRow | null;
-  onGradeChanged: () => void;
-}
-
-interface FormValues {
-  midterm1: string;
-  midterm2: string;
-  attendance: string;
-  practical: string;
-  exam: string;
-}
-
-const EMPTY_FORM: FormValues = {
-  midterm1: '',
-  midterm2: '',
-  attendance: '',
-  practical: '',
-  exam: '',
-};
-
-const FIELDS: { key: keyof FormValues; label: string; max: number }[] = [
-  { key: 'midterm1', label: 'First midterm', max: 30 },
-  { key: 'midterm2', label: 'Second midterm', max: 30 },
-  { key: 'attendance', label: 'Lecture attendance', max: 5 },
-  { key: 'practical', label: 'Practical participation', max: 5 },
-  { key: 'exam', label: 'Exam', max: 30 },
-];
-
-function parseField(value: string): number | null {
-  if (value.trim() === '') return null;
-  const n = parseFloat(value);
-  if (isNaN(n)) return null;
-  return n;
-}
-
-function validateField(value: string, max: number): string | null {
-  const n = parseField(value);
-  if (n === null) return null;
-  if (n < 0) return `Minimum value is 0.`;
-  if (n > max) return `Maximum value is ${max}.`;
-  if ((n * 2) % 1 !== 0) return `Must be a multiple of 0.5.`;
-  return null;
-}
-
-function computeFinalGrade(sum: number): number {
-  if (sum <= 50) return 5;
-  if (sum <= 60) return 6;
-  if (sum <= 70) return 7;
-  if (sum <= 80) return 8;
-  if (sum <= 90) return 9;
-  return 10;
-}
-
-const GradePanel: React.FC<Props> = ({ selectedStudentRow, onGradeChanged }) => {
+const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChanged }) => {
   const [form, setForm] = useState<FormValues>(EMPTY_FORM);
   const [isDirty, setIsDirty] = useState(false);
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
@@ -66,50 +14,44 @@ const GradePanel: React.FC<Props> = ({ selectedStudentRow, onGradeChanged }) => 
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const loadDraft = useCallback(async (enrollmentId: string) => {
+  useEffect(() => {
+    if (!selectedStudentRow) return;
+
+    setForm(EMPTY_FORM);
+    setIsDirty(false);
+    setError(null);
+
+    if (selectedStudentRow.gradeState !== 'NotGraded' && selectedStudentRow.gradeState !== 'Draft') {
+      return;
+    }
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
     setIsLoadingDraft(true);
-    setError(null);
-    try {
-      const draft = await getDraft(enrollmentId, controller.signal);
-      if (draft) {
-        setForm({
-          midterm1: draft.midterm1Points != null ? String(draft.midterm1Points) : '',
-          midterm2: draft.midterm2Points != null ? String(draft.midterm2Points) : '',
-          attendance: draft.attendancePoints != null ? String(draft.attendancePoints) : '',
-          practical: draft.practicalPoints != null ? String(draft.practicalPoints) : '',
-          exam: draft.examPoints != null ? String(draft.examPoints) : '',
-        });
-      } else {
-        setForm(EMPTY_FORM);
-      }
-      setIsDirty(false);
-    } catch (err) {
-      if ((err as { name?: string }).name !== 'CanceledError') {
-        setError('Failed to load draft.');
-      }
-    } finally {
-      setIsLoadingDraft(false);
-    }
-  }, []);
+    getDraft(selectedStudentRow.enrollmentId, controller.signal)
+      .then(draft => {
+        if (draft) {
+          setForm({
+            midterm1: draft.midterm1Points != null ? String(draft.midterm1Points) : '',
+            midterm2: draft.midterm2Points != null ? String(draft.midterm2Points) : '',
+            attendance: draft.attendancePoints != null ? String(draft.attendancePoints) : '',
+            practical: draft.practicalPoints != null ? String(draft.practicalPoints) : '',
+            exam: draft.examPoints != null ? String(draft.examPoints) : '',
+          });
+        }
+        setIsDirty(false);
+      })
+      .catch(err => {
+        if ((err as { name?: string }).name !== 'CanceledError') {
+          setError('Failed to load draft.');
+        }
+      })
+      .finally(() => setIsLoadingDraft(false));
 
-  useEffect(() => {
-    if (!selectedStudentRow) return;
-    if (selectedStudentRow.gradeState === 'NotGraded' || selectedStudentRow.gradeState === 'Draft') {
-      setForm(EMPTY_FORM);
-      setIsDirty(false);
-      setError(null);
-      loadDraft(selectedStudentRow.enrollmentId);
-    } else {
-      setForm(EMPTY_FORM);
-      setIsDirty(false);
-      setError(null);
-    }
     return () => { abortRef.current?.abort(); };
-  }, [selectedStudentRow?.enrollmentId, selectedStudentRow?.gradeState, loadDraft]);
+  }, [selectedStudentRow?.enrollmentId, selectedStudentRow?.gradeState, selectedStudentRow]);
 
   const handleChange = (key: keyof FormValues, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));

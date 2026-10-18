@@ -1,13 +1,8 @@
 import axiosClient from '../../../shared/api/axiosClient';
 import { API_ROUTES } from '../../../config/constants';
+import type { GradeDraftDto } from '../models/gradeDraft';
 
-export interface GradeDraftDto {
-  midterm1Points: number | null;
-  midterm2Points: number | null;
-  attendancePoints: number | null;
-  practicalPoints: number | null;
-  examPoints: number | null;
-}
+export type { GradeDraftDto };
 
 export async function getDraft(enrollmentId: string, signal?: AbortSignal): Promise<GradeDraftDto | null> {
   try {
