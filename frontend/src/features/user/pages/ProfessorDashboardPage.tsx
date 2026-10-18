@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useProfessorDashboard } from '../../grades/hooks/useProfessorDashboard';
-import type { ProfessorSubject, ProfessorStudentRow } from '../../grades/models/professorDashboard';
+import type { ProfessorSubject, ProfessorStudentRow } from '../models/professor/professorDashboard';
 import {
   PROFESSOR_SELECTED_SUBJECT_ID_INITIAL,
   PROFESSOR_SELECTED_STUDENT_ROW_INITIAL,

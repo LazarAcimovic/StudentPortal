@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ProfessorAppealRow } from '../../../grades/models/professorDashboard';
+import type { ProfessorAppealRow } from '../../models/professor/professorDashboard';
 import { APPEAL_STATUS_BADGE } from '../../constants/professor/constants';
 
 interface Props {

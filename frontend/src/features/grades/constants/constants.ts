@@ -1,4 +1,4 @@
-import type { ProfessorDashboardData } from '../models/professorDashboard';
+import type { ProfessorDashboardData } from '../../user/models/professor/professorDashboard';
 
 export const PROFESSOR_DASHBOARD_INITIAL_DATA: ProfessorDashboardData | null = null;
 export const PROFESSOR_DASHBOARD_INITIAL_IS_LOADING = true;

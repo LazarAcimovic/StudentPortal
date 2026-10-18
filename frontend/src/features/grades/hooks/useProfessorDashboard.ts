@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../../../shared/api/axiosClient';
 import { API_ROUTES } from '../../../config/constants';
-import type { ProfessorDashboardData, UseProfessorDashboardResult } from '../models/professorDashboard';
+import type { ProfessorDashboardData, UseProfessorDashboardResult } from '../../user/models/professor/professorDashboard';
 import {
   PROFESSOR_DASHBOARD_INITIAL_DATA,
   PROFESSOR_DASHBOARD_INITIAL_IS_LOADING,

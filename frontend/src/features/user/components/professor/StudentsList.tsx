@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ProfessorSubject, ProfessorStudentRow } from '../../../grades/models/professorDashboard';
+import type { ProfessorSubject, ProfessorStudentRow } from '../../models/professor/professorDashboard';
 
 interface Props {
   selectedSubject: ProfessorSubject | null;

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ProfessorSubject } from '../../../grades/models/professorDashboard';
+import type { ProfessorSubject } from '../../models/professor/professorDashboard';
 
 interface Props {
   subjects: ProfessorSubject[];
