@@ -19,6 +19,31 @@ public class GradeController : ControllerBase
         _gradeService = gradeService;
     }
 
+    [HttpGet("by-enrollment/{enrollmentId:guid}")]
+    [Authorize(Roles = "Professor")]
+    public async Task<ActionResult<GradeDto>> GetByEnrollment(Guid enrollmentId)
+    {
+        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(callerIdStr, out var callerId))
+            return Unauthorized();
+
+        try
+        {
+            var grade = await _gradeService.GetByEnrollmentAsync(enrollmentId, callerId);
+            if (grade == null)
+                return NotFound();
+            return Ok(grade);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ForbiddenAccessException ex)
+        {
+            return StatusCode(403, ex.Message);
+        }
+    }
+
     [HttpPost("confirm")]
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<GradeDto>> Confirm([FromBody] ConfirmGradeDto dto)

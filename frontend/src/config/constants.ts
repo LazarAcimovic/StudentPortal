@@ -18,6 +18,7 @@ export const API_ROUTES = {
   USER: '/User',
   SUBJECT: '/Subject',
   ENROLLMENT: '/Enrollment',
+  GRADE_BY_ENROLLMENT: '/Grade/by-enrollment',
   GRADE_CONFIRM: '/Grade/confirm',
   GRADE_RECONFIRM_EXAM: '/Grade/reconfirm-exam',
   GRADE_STUDENT_CONFIRM: '/Grade/student-confirm',

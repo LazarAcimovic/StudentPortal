@@ -3,15 +3,16 @@ import type { FormValues, GradePanelProps } from '../../models/professor/gradePa
 import { EMPTY_FORM, FIELDS } from '../../constants/professor/constants';
 import { parseField, validateField, computeFinalGrade } from '../../util/gradeUtils';
 import { getDraft, saveDraft } from '../../../grades/api/gradeDraftService';
-import { professorConfirmGrade } from '../../../grades/api/gradeService';
+import { professorConfirmGrade, getGradeByEnrollment, type GradeDto } from '../../../grades/api/gradeService';
 
 const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChanged }) => {
   const [form, setForm] = useState<FormValues>(EMPTY_FORM);
   const [isDirty, setIsDirty] = useState(false);
-  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmedGrade, setConfirmedGrade] = useState<GradeDto | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -20,35 +21,46 @@ const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChan
     setForm(EMPTY_FORM);
     setIsDirty(false);
     setError(null);
-
-    if (selectedStudentRow.gradeState !== 'NotGraded' && selectedStudentRow.gradeState !== 'Draft') {
-      return;
-    }
+    setConfirmedGrade(null);
 
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setIsLoadingDraft(true);
-    getDraft(selectedStudentRow.enrollmentId, controller.signal)
-      .then(draft => {
-        if (draft) {
-          setForm({
-            midterm1: draft.midterm1Points != null ? String(draft.midterm1Points) : '',
-            midterm2: draft.midterm2Points != null ? String(draft.midterm2Points) : '',
-            attendance: draft.attendancePoints != null ? String(draft.attendancePoints) : '',
-            practical: draft.practicalPoints != null ? String(draft.practicalPoints) : '',
-            exam: draft.examPoints != null ? String(draft.examPoints) : '',
-          });
-        }
-        setIsDirty(false);
-      })
-      .catch(err => {
-        if ((err as { name?: string }).name !== 'CanceledError') {
-          setError('Failed to load draft.');
-        }
-      })
-      .finally(() => setIsLoadingDraft(false));
+    const state = selectedStudentRow.gradeState;
+
+    if (state === 'NotGraded' || state === 'Draft') {
+      setIsLoading(true);
+      getDraft(selectedStudentRow.enrollmentId, controller.signal)
+        .then(draft => {
+          if (draft) {
+            setForm({
+              midterm1: draft.midterm1Points != null ? String(draft.midterm1Points) : '',
+              midterm2: draft.midterm2Points != null ? String(draft.midterm2Points) : '',
+              attendance: draft.attendancePoints != null ? String(draft.attendancePoints) : '',
+              practical: draft.practicalPoints != null ? String(draft.practicalPoints) : '',
+              exam: draft.examPoints != null ? String(draft.examPoints) : '',
+            });
+          }
+          setIsDirty(false);
+        })
+        .catch(err => {
+          if ((err as { name?: string }).name !== 'CanceledError') {
+            setError('Failed to load draft.');
+          }
+        })
+        .finally(() => setIsLoading(false));
+    } else if (state === 'Confirmed' || state === 'Finalized') {
+      setIsLoading(true);
+      getGradeByEnrollment(selectedStudentRow.enrollmentId, controller.signal)
+        .then(grade => { setConfirmedGrade(grade); })
+        .catch(err => {
+          if ((err as { name?: string }).name !== 'CanceledError') {
+            setError('Failed to load grade.');
+          }
+        })
+        .finally(() => setIsLoading(false));
+    }
 
     return () => { abortRef.current?.abort(); };
   }, [selectedStudentRow?.enrollmentId, selectedStudentRow?.gradeState, selectedStudentRow]);
@@ -115,9 +127,21 @@ const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChan
     selectedStudentRow?.gradeState === 'NotGraded' ||
     selectedStudentRow?.gradeState === 'Draft';
 
+  const isConfirmedOrFinalized =
+    selectedStudentRow?.gradeState === 'Confirmed' ||
+    selectedStudentRow?.gradeState === 'Finalized';
+
   const title = selectedStudentRow
     ? `Grade for ${selectedStudentRow.firstName} ${selectedStudentRow.lastName}`
     : 'Grade';
+
+  const FIELD_KEYS: (keyof GradeDto)[] = [
+    'midterm1Points',
+    'midterm2Points',
+    'attendancePoints',
+    'practicalPoints',
+    'examPoints',
+  ];
 
   return (
     <div className="col-lg-4">
@@ -128,16 +152,45 @@ const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChan
         <div className="card-body">
           {!selectedStudentRow ? (
             <p className="text-muted mb-0">Select a student to view or enter their grade.</p>
-          ) : isLoadingDraft ? (
+          ) : isLoading ? (
             <div className="text-center py-3">
-              <span className="spinner-border spinner-border-sm" role="status" aria-label="Loading draft" />
+              <span className="spinner-border spinner-border-sm" role="status" aria-label="Loading" />
             </div>
+          ) : isConfirmedOrFinalized ? (
+            confirmedGrade ? (
+              <>
+                {FIELDS.map((field, i) => (
+                  <div className="mb-2" key={field.key}>
+                    <label className="form-label small mb-1">
+                      {field.label}{' '}
+                      <span className="text-muted">(max {field.max})</span>
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control form-control-sm"
+                      value={confirmedGrade[FIELD_KEYS[i]] as number}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+                ))}
+                <div className="d-flex justify-content-between align-items-center mt-3 mb-1 px-1">
+                  <span className="small text-muted">Points scored:</span>
+                  <span className="fw-semibold">
+                    {(FIELD_KEYS.reduce((acc, k) => acc + (confirmedGrade[k] as number), 0)).toFixed(1)}
+                  </span>
+                </div>
+                <div className="alert alert-secondary py-2 mb-0">
+                  <strong>Final grade:</strong> {confirmedGrade.finalGrade}
+                </div>
+              </>
+            ) : (
+              error
+                ? <div className="alert alert-danger py-2 mb-0">{error}</div>
+                : <p className="text-muted mb-0">No grade data.</p>
+            )
           ) : !canEdit ? (
-            <p className="text-muted mb-0">
-              {selectedStudentRow.gradeState === 'Confirmed' || selectedStudentRow.gradeState === 'Finalized'
-                ? `Final grade: ${selectedStudentRow.finalGrade ?? '—'}`
-                : 'Grade pending re-confirmation after accepted appeal.'}
-            </p>
+            <p className="text-muted mb-0">Grade pending re-confirmation after accepted appeal.</p>
           ) : (
             <>
               {error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
