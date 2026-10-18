@@ -3,7 +3,7 @@ import App from '../App';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../features/auth/pages/LoginPage';
 import AdminDashboardPage from '../pages/dashboard/AdminDashboardPage';
-import ProfessorDashboardPage from '../pages/dashboard/ProfessorDashboardPage';
+import ProfessorDashboardPage from '../features/user/pages/ProfessorDashboardPage';
 import StudentDashboardPage from '../features/user/pages/StudentDashboardPage';
 import AuthGuard from './authGuard';
 import { APP_ROUTES } from '../config/constants';

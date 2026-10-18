@@ -10,8 +10,8 @@ import {
   CONFIRM_GRADE_MODAL_INITIAL_STATE,
   SUBJECT_ACTION_LAYOUT,
   STATUS_BADGE_MAP,
-} from '../constants/constants';
-import type { SubjectActionLayout } from '../constants/constants';
+} from '../constants/student/constants';
+import type { SubjectActionLayout } from '../constants/student/constants';
 import Modal from '../../../components/ui/Modal';
 import { submitAppeal } from '../../appeals/api/appealService';
 import { studentConfirmGrade } from '../../grades/api/gradeService';

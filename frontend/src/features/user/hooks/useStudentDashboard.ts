@@ -7,7 +7,7 @@ import {
   STUDENT_DASHBOARD_INITIAL_IS_LOADING,
   STUDENT_DASHBOARD_INITIAL_ERROR,
   STUDENT_DASHBOARD_INITIAL_REFRESH_KEY,
-} from '../constants/constants';
+} from '../constants/student/constants';
 import {
   AXIOS_CANCELED_ERROR_NAME,
   AXIOS_CANCELED_ERROR_CODE,
