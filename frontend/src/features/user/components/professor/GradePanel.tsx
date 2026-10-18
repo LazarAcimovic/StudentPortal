@@ -39,6 +39,15 @@ function parseField(value: string): number | null {
   return n;
 }
 
+function validateField(value: string, max: number): string | null {
+  const n = parseField(value);
+  if (n === null) return null;
+  if (n < 0) return `Minimum value is 0.`;
+  if (n > max) return `Maximum value is ${max}.`;
+  if ((n * 2) % 1 !== 0) return `Must be a multiple of 0.5.`;
+  return null;
+}
+
 function computeFinalGrade(sum: number): number {
   if (sum <= 50) return 5;
   if (sum <= 60) return 6;
@@ -150,8 +159,13 @@ const GradePanel: React.FC<Props> = ({ selectedStudentRow, onGradeChanged }) => 
     }
   };
 
+  const fieldErrors = Object.fromEntries(
+    FIELDS.map(f => [f.key, validateField(form[f.key], f.max)])
+  ) as Record<keyof FormValues, string | null>;
+  const hasFieldErrors = FIELDS.some(f => fieldErrors[f.key] !== null);
+
   const parsedValues = FIELDS.map(f => parseField(form[f.key]));
-  const allFilled = parsedValues.every(v => v !== null);
+  const allFilled = parsedValues.every(v => v !== null) && !hasFieldErrors;
   const sum = allFilled ? parsedValues.reduce((acc, v) => acc! + v!, 0)! : null;
   const finalGrade = sum != null ? computeFinalGrade(sum) : null;
 
@@ -195,13 +209,16 @@ const GradePanel: React.FC<Props> = ({ selectedStudentRow, onGradeChanged }) => 
                     </label>
                     <input
                       type="number"
-                      className="form-control form-control-sm"
+                      className={`form-control form-control-sm${fieldErrors[field.key] ? ' is-invalid' : ''}`}
                       min={0}
                       max={field.max}
                       step={0.5}
                       value={form[field.key]}
                       onChange={e => handleChange(field.key, e.target.value)}
                     />
+                    {fieldErrors[field.key] && (
+                      <div className="invalid-feedback">{fieldErrors[field.key]}</div>
+                    )}
                   </div>
                 ))}
               </div>
