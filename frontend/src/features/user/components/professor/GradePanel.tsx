@@ -3,7 +3,7 @@ import type { FormValues, GradePanelProps } from '../../models/professor/gradePa
 import { EMPTY_FORM, FIELDS } from '../../constants/professor/constants';
 import { parseField, validateField, computeFinalGrade } from '../../util/gradeUtils';
 import { getDraft, saveDraft } from '../../../grades/api/gradeDraftService';
-import { professorConfirmGrade, getGradeByEnrollment, type GradeDto } from '../../../grades/api/gradeService';
+import { professorConfirmGrade, professorReconfirmExam, getGradeByEnrollment, type GradeDto } from '../../../grades/api/gradeService';
 
 const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChanged }) => {
   const [form, setForm] = useState<FormValues>(EMPTY_FORM);
@@ -50,10 +50,15 @@ const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChan
           }
         })
         .finally(() => setIsLoading(false));
-    } else if (state === 'Confirmed' || state === 'Finalized') {
+    } else if (state === 'Confirmed' || state === 'Finalized' || state === 'ReconfirmNeeded') {
       setIsLoading(true);
       getGradeByEnrollment(selectedStudentRow.enrollmentId, controller.signal)
-        .then(grade => { setConfirmedGrade(grade); })
+        .then(grade => {
+          setConfirmedGrade(grade);
+          if (state === 'ReconfirmNeeded' && grade) {
+            setForm(prev => ({ ...prev, exam: String(grade.examPoints) }));
+          }
+        })
         .catch(err => {
           if ((err as { name?: string }).name !== 'CanceledError') {
             setError('Failed to load grade.');
@@ -88,6 +93,26 @@ const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChan
       setError('Failed to save draft. Please try again.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleReconfirm = async () => {
+    if (!selectedStudentRow || !confirmedGrade) return;
+    const examVal = parseField(form.exam);
+    if (examVal === null) return;
+    setIsConfirming(true);
+    setError(null);
+    try {
+      await professorReconfirmExam({
+        enrollmentId: selectedStudentRow.enrollmentId,
+        examPoints: examVal,
+      });
+      setIsDirty(false);
+      onGradeChanged();
+    } catch {
+      setError('Failed to reconfirm grade. Please try again.');
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -130,6 +155,17 @@ const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChan
   const isConfirmedOrFinalized =
     selectedStudentRow?.gradeState === 'Confirmed' ||
     selectedStudentRow?.gradeState === 'Finalized';
+
+  const isReconfirmNeeded = selectedStudentRow?.gradeState === 'ReconfirmNeeded';
+
+  const examFieldError = isReconfirmNeeded ? validateField(form.exam, 30) : null;
+  const reconfirmExamParsed = isReconfirmNeeded ? parseField(form.exam) : null;
+  const reconfirmExamFilled = reconfirmExamParsed !== null && examFieldError === null;
+  const fixedSum = (isReconfirmNeeded && confirmedGrade)
+    ? confirmedGrade.midterm1Points + confirmedGrade.midterm2Points + confirmedGrade.attendancePoints + confirmedGrade.practicalPoints
+    : null;
+  const reconfirmSum = (reconfirmExamFilled && fixedSum != null) ? fixedSum + reconfirmExamParsed! : null;
+  const reconfirmFinalGrade = reconfirmSum != null ? computeFinalGrade(reconfirmSum) : null;
 
   const title = selectedStudentRow
     ? `Grade for ${selectedStudentRow.firstName} ${selectedStudentRow.lastName}`
@@ -189,8 +225,59 @@ const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChan
                 ? <div className="alert alert-danger py-2 mb-0">{error}</div>
                 : <p className="text-muted mb-0">No grade data.</p>
             )
+          ) : isReconfirmNeeded ? (
+            confirmedGrade ? (
+              <>
+                {error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
+                <div className="alert alert-secondary py-2 mb-3 small">
+                  Midterms: {(confirmedGrade.midterm1Points + confirmedGrade.midterm2Points).toFixed(1)}/60
+                  {' • '}
+                  Attendance: {confirmedGrade.attendancePoints.toFixed(1)}/5
+                  {' • '}
+                  Practical: {confirmedGrade.practicalPoints.toFixed(1)}/5
+                </div>
+                <div className="mb-3">
+                  <label className="form-label small mb-1">
+                    Exam <span className="text-muted">(max 30)</span>
+                  </label>
+                  <input
+                    type="number"
+                    className={`form-control form-control-sm${examFieldError ? ' is-invalid' : ''}`}
+                    min={0}
+                    max={30}
+                    step={0.5}
+                    value={form.exam}
+                    onChange={e => handleChange('exam', e.target.value)}
+                  />
+                  {examFieldError && <div className="invalid-feedback">{examFieldError}</div>}
+                </div>
+                {reconfirmSum != null && reconfirmFinalGrade != null && (
+                  <div className="alert alert-info py-2 mb-3">
+                    <strong>Sum:</strong> {reconfirmSum.toFixed(1)} &nbsp;|&nbsp;
+                    <strong>Final grade:</strong> {reconfirmFinalGrade}
+                  </div>
+                )}
+                {reconfirmExamFilled && (
+                  <button
+                    className="btn btn-success btn-sm"
+                    onClick={handleReconfirm}
+                    disabled={isConfirming}
+                  >
+                    {isConfirming ? (
+                      <><span className="spinner-border spinner-border-sm me-1" role="status" />Confirming…</>
+                    ) : (
+                      'Confirm'
+                    )}
+                  </button>
+                )}
+              </>
+            ) : (
+              error
+                ? <div className="alert alert-danger py-2 mb-0">{error}</div>
+                : <p className="text-muted mb-0">No grade data.</p>
+            )
           ) : !canEdit ? (
-            <p className="text-muted mb-0">Grade pending re-confirmation after accepted appeal.</p>
+            <p className="text-muted mb-0">Grade state not editable.</p>
           ) : (
             <>
               {error && <div className="alert alert-danger py-2 mb-3">{error}</div>}

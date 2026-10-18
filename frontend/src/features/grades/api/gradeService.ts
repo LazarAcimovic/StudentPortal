@@ -1,8 +1,8 @@
 import axiosClient from '../../../shared/api/axiosClient';
 import { API_ROUTES } from '../../../config/constants';
-import type { GradeDto, ProfessorConfirmGradeDto, StudentConfirmGradeDto } from '../models/grade';
+import type { GradeDto, ProfessorConfirmGradeDto, StudentConfirmGradeDto, ReconfirmExamDto } from '../models/grade';
 
-export type { GradeDto, ProfessorConfirmGradeDto, StudentConfirmGradeDto };
+export type { GradeDto, ProfessorConfirmGradeDto, StudentConfirmGradeDto, ReconfirmExamDto };
 
 export async function getGradeByEnrollment(enrollmentId: string, signal?: AbortSignal): Promise<GradeDto | null> {
   try {
@@ -24,4 +24,8 @@ export async function studentConfirmGrade(dto: StudentConfirmGradeDto, signal?: 
 
 export async function professorConfirmGrade(dto: ProfessorConfirmGradeDto, signal?: AbortSignal): Promise<void> {
   await axiosClient.post(API_ROUTES.GRADE_CONFIRM, dto, { signal });
+}
+
+export async function professorReconfirmExam(dto: ReconfirmExamDto, signal?: AbortSignal): Promise<void> {
+  await axiosClient.post(API_ROUTES.GRADE_RECONFIRM_EXAM, dto, { signal });
 }

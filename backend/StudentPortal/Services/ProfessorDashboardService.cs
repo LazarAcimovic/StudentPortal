@@ -76,11 +76,11 @@ public class ProfessorDashboardService : IProfessorDashboardService
         if (grade == null)
             return draft != null ? "Draft" : "NotGraded";
 
-        if (grade.Appeals.Any(a => a.Status == AppealStatus.Accepted))
-            return "ReconfirmNeeded";
-
         if (grade.FinalizedAt != null)
             return "Finalized";
+
+        if (grade.Appeals.Any(a => a.Status == AppealStatus.Accepted))
+            return "ReconfirmNeeded";
 
         // Auto-finalize: initial window expired with no appeals
         if (!grade.Appeals.Any() && grade.ConfirmedAt.AddDays(7) < now)

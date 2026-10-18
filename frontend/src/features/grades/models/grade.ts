@@ -24,3 +24,8 @@ export interface ProfessorConfirmGradeDto {
 export interface StudentConfirmGradeDto {
   enrollmentId: string;
 }
+
+export interface ReconfirmExamDto {
+  enrollmentId: string;
+  examPoints: number;
+}
