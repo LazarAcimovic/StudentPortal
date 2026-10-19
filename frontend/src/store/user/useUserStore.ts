@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { User } from "../../shared/models/User";
+import { registerClearCallback } from "../../lib/auth";
 
 interface UserState {
   currentUser: User | null;
@@ -16,3 +17,5 @@ export const useUserStore = create<UserState>((set) => ({
   clearCurrentUser: () => set({ currentUser: null }),
   setHydrating: (hydrating) => set({ isHydrating: hydrating }),
 }));
+
+registerClearCallback(() => useUserStore.getState().clearCurrentUser());

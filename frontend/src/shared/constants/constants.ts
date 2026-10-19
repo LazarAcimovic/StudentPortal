@@ -1,3 +1,5 @@
+import type { ChangePasswordFormState } from '../models/ChangePasswordFormState';
+
 export const USER_ROLES = {
   Student: 0,
   Professor: 1,
@@ -14,3 +16,9 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 export const AXIOS_CANCELED_ERROR_NAME = 'CanceledError';
 export const AXIOS_CANCELED_ERROR_CODE = 'ERR_CANCELED';
+
+export const CHANGE_PASSWORD_INITIAL_FORM: ChangePasswordFormState = {
+  currentPassword: '',
+  newPassword: '',
+  confirmNewPassword: '',
+};

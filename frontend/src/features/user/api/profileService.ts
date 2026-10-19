@@ -29,7 +29,7 @@ export const updateProfile = async (
 };
 
 export const changePassword = async (
-  dto: ChangePasswordFormValues,
+  dto: Pick<ChangePasswordFormValues, 'currentPassword' | 'newPassword'>,
   signal?: AbortSignal
 ): Promise<void> => {
   await axiosClient.post(
