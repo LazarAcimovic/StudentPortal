@@ -11,13 +11,13 @@ const StudentInfoCard: React.FC<Props> = ({ profile }) => (
       <h5 className="mb-0">My Information</h5>
     </div>
     <div className="card-body">
-      <p className="mb-1">
+      <p className="mb-1 text-break">
         <span className="fw-bold">Name:</span> {profile.firstName} {profile.lastName}
       </p>
-      <p className="mb-1">
+      <p className="mb-1 text-break">
         <span className="fw-bold">Email:</span> {profile.email}
       </p>
-      <p className="mb-0">
+      <p className="mb-0 text-break">
         <span className="fw-bold">Index number:</span>{' '}
         {profile.indexNumber ?? '—'}
       </p>
