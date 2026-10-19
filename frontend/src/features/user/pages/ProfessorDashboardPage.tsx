@@ -64,7 +64,7 @@ const ProfessorDashboardPage: React.FC = () => {
         <GradePanel selectedStudentRow={selectedStudentRow} onGradeChanged={refresh} />
       </div>
 
-      <AppealsSection appeals={data?.appeals ?? []} />
+      <AppealsSection appeals={data?.appeals ?? []} onRefresh={refresh} />
     </div>
   );
 };

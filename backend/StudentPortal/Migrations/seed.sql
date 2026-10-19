@@ -13,7 +13,7 @@
 --   Enrollments   30000000-...-00XX  (01-1e, 30 rows)
 --   Grades        40000000-...-00XX  (01-14, 20 rows)
 --   GradeDrafts   50000000-...-00XX  (01-03, 3 rows)
---   Appeals       60000000-...-00XX  (01-08, 8 rows)
+--   Appeals       60000000-...-00XX  (01-09, 9 rows)
 --   RefreshTokens 70000000-...       (none seeded — issued at runtime)
 --
 -- Grade states covered:
@@ -21,7 +21,8 @@
 --   G02, G05, G12, G16            — truly final (7-day window lapsed, no appeals)
 --   G08, G18                      — truly final (appeal denied, undo window expired)
 --   G03, G09, G15                 — inside initial 7-day window (no action yet)
---   G06, G17                      — active pending appeal
+--   G06                           — active pending appeal
+--   G17                           — overdue chain: first appeal overdue, second pending
 --   G11                           — appeal accepted, awaiting professor re-confirm
 --   G14                           — appeal denied, still within 24-h undo window
 --   G19                           — overdue chain: first appeal overdue, second pending
@@ -295,10 +296,12 @@ INSERT INTO "Grades" (
    26,25,5,5,27, 9,
    (NOW() - INTERVAL '2 days'),NULL,NULL,false),
 
-  -- G17  James / Programming Fundamentals — active pending appeal — grade 6 (sum 57)
+  -- G17  James / Programming Fundamentals — overdue chain — grade 6 (sum 57)
+  --   first appeal (A09): SubmittedAt = NOW()-10d  → overdue (went overdue at NOW()-3d)
+  --   second appeal (A05): SubmittedAt = NOW()-2d  → active pending
   ('40000000-0000-0000-0000-000000000011','30000000-0000-0000-0000-000000000011',
    16,14,4,3,20, 6,
-   (NOW() - INTERVAL '6 days'),NULL,NULL,false),
+   (NOW() - INTERVAL '17 days'),NULL,NULL,false),
 
   -- G19  Emma / Computer Architecture — overdue chain — grade 7 (sum 63)
   --   first appeal (A07): SubmittedAt = NOW()-10d  → overdue (went overdue at NOW()-3d)
@@ -331,7 +334,8 @@ INSERT INTO "GradeDrafts" (
 -- A02  G08 (Jessica/SoftEng)          — Denied, undo window long expired
 -- A03  G11 (Daniel/WebDev)            — Accepted, professor must re-confirm exam
 -- A04  G14 (Olivia/DistSys)           — Denied, within 24-h undo window
--- A05  G17 (James/ProgFund)           — active Pending (submitted 4 days ago)
+-- A05  G17 (James/ProgFund) — chain 2  — active Pending (second appeal, 2 days ago)
+-- A09  G17 (James/ProgFund) — chain 1  — Pending stored, goes Overdue on read (submitted 10d ago)
 -- A06  G18 (James/OpSys)              — Denied, undo window long expired
 -- A07  G19 (Emma/CompArch) — chain 1  — Pending stored, goes Overdue on read (submitted 10d ago)
 -- A08  G19 (Emma/CompArch) — chain 2  — active Pending (second appeal, 2 days ago)
@@ -358,10 +362,16 @@ INSERT INTO "Appeals" (
    'The grading rubric was not applied consistently. My distributed transaction implementation was correct and should be worth full points.',
    (NOW() - INTERVAL '5 days'),'Denied',(NOW() - INTERVAL '6 hours')),
 
-  -- A05 active pending on G17
+  -- A09 first appeal on G17 — stored as Pending, computed Overdue on read
+  --   SubmittedAt = NOW()-10d; goes Overdue at NOW()-10d+7d = NOW()-3d
+  ('60000000-0000-0000-0000-000000000009','40000000-0000-0000-0000-000000000011',
+   'I think the grading was unfair. My assignment was complete and working correctly.',
+   (NOW() - INTERVAL '10 days'),'Pending',NULL),
+
+  -- A05 second appeal on G17 — active Pending (fresh window after A09 went Overdue)
   ('60000000-0000-0000-0000-000000000005','40000000-0000-0000-0000-000000000011',
-   'I think there was a mistake in checking my assignment. I submitted everything on time and the logic was working correctly.',
-   (NOW() - INTERVAL '4 days'),'Pending',NULL),
+   'Since my first appeal was not reviewed within the deadline, I am submitting a new appeal. The logic in my assignment was correct and the grade should be higher.',
+   (NOW() - INTERVAL '2 days'),'Pending',NULL),
 
   -- A06 denied (undo expired) on G18
   ('60000000-0000-0000-0000-000000000006','40000000-0000-0000-0000-000000000012',

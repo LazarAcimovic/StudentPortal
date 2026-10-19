@@ -46,3 +46,8 @@ export interface UseProfessorDashboardResult {
   error: string | null;
   refresh: () => void;
 }
+
+export interface AppealsSectionProps {
+  appeals: ProfessorAppealRow[];
+  onRefresh: () => void;
+}
