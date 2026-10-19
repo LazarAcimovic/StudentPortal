@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 import Navbar from "./components/ui/Navbar";
 import { registerNavigate } from "./lib/navigation";
 import { useUserStore } from "./store/user/useUserStore";
@@ -93,6 +94,7 @@ function App() {
     <>
       <Navbar />
       <Outlet />
+      <ToastContainer position="top-right" autoClose={4000} />
     </>
   );
 }
