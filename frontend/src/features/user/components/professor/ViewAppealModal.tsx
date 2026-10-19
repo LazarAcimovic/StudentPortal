@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import Modal from '../../../../components/ui/Modal';
 import type { ViewAppealModalProps } from '../../models/professor/professorDashboard';
 import { acceptAppeal, denyAppeal, undoDenyAppeal } from '../../../appeals/api/appealService';
@@ -91,6 +92,7 @@ const ViewAppealModal: React.FC<ViewAppealModalProps> = ({ appeal, allAppeals, o
     setError(null);
     try {
       await undoDenyAppeal(appeal.appealId);
+      toast.success("Denial undone.");
       handleClose();
       onActionDone();
     } catch {

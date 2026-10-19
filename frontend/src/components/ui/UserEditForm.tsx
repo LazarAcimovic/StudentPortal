@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
 import type { User } from '../../models/UserModel';
 import { USER_ROLES } from '../../shared/constants/constants';
@@ -126,6 +127,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
         if (showEmail) payload.Email = form.email;
 
         await axiosClient.put(API_ROUTES.ACCOUNT_PROFILE, payload);
+        toast.success("Profile saved successfully.");
         onSaved({
           ...user,
           firstName: form.firstName,
@@ -146,6 +148,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
           `${API_ROUTES.USER}/${user.id}`,
           payload
         );
+        toast.success("Changes saved.");
         onSaved(response.data);
       }
     } catch {

@@ -46,6 +46,7 @@ const StudentDashboardPage: React.FC = () => {
     try {
       await studentConfirmGrade({ enrollmentId: confirmGradeModal.enrollmentId });
       setConfirmGradeModal(CONFIRM_GRADE_MODAL_INITIAL_STATE);
+      toast.success("Grade confirmed.");
       refresh();
     } finally {
       setConfirmGradeModal(prev => (prev ? { ...prev, isSubmitting: false } : null));
@@ -71,8 +72,10 @@ const StudentDashboardPage: React.FC = () => {
     try {
       await submitAppeal({ enrollmentId: appealModal.enrollmentId, text });
       setAppealModal(APPEAL_MODAL_INITIAL_STATE);
+      toast.success("Appeal submitted successfully.");
       refresh();
     } catch {
+      toast.error("Failed to submit appeal. Please try again.");
       setAppealModal(prev =>
         prev ? { ...prev, isSubmitting: false, error: APPEAL_SUBMIT_ERROR } : null
       );
