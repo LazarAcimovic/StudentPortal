@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../store/user/useUserStore";
 import { USER_ROLES } from "../../shared/constants/constants";
 import { APP_ROUTES } from "../../config/constants";
@@ -67,21 +67,28 @@ const Navbar: React.FC = () => {
             </ul>
             <ul className="navbar-nav">
               {currentUser ? (
-                <>
-                  <li className="nav-item">
-                    <span className="nav-link">
-                      Welcome, {currentUser.firstName}
-                    </span>
-                  </li>
-                  <li className="nav-item">
-                    <button
-                      className="btn btn-outline-light"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </button>
-                  </li>
-                </>
+                <li className="nav-item dropdown">
+                  <button
+                    className="btn btn-outline-light dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    Welcome, {currentUser.firstName}
+                  </button>
+                  <ul className="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <Link className="dropdown-item" to={APP_ROUTES.PROFILE}>
+                        My Profile
+                      </Link>
+                    </li>
+                    <li><hr className="dropdown-divider" /></li>
+                    <li>
+                      <button className="dropdown-item" onClick={handleLogout}>
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                </li>
               ) : (
                 <li className="nav-item">
                   <NavLink
