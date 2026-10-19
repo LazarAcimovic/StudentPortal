@@ -29,7 +29,9 @@ const MyProfilePage: React.FC = () => {
         if (err?.code === AXIOS_CANCELED_ERROR_CODE) return;
         setError('Failed to load profile. Please try again.');
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
 
     return () => controller.abort();
   }, []);
