@@ -6,5 +6,11 @@ export const USER_ROLES = {
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
+export const ROLE_LABELS: Record<UserRole, string> = {
+  [USER_ROLES.Student]: 'Student',
+  [USER_ROLES.Professor]: 'Professor',
+  [USER_ROLES.Admin]: 'Admin',
+};
+
 export const AXIOS_CANCELED_ERROR_NAME = 'CanceledError';
 export const AXIOS_CANCELED_ERROR_CODE = 'ERR_CANCELED';

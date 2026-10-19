@@ -5,6 +5,7 @@ import LoginPage from '../features/auth/pages/LoginPage';
 import AdminDashboardPage from '../features/user/pages/AdminDashboardPage';
 import ProfessorDashboardPage from '../features/user/pages/ProfessorDashboardPage';
 import StudentDashboardPage from '../features/user/pages/StudentDashboardPage';
+import MyProfilePage from '../features/user/pages/MyProfilePage';
 import AuthGuard from './authGuard';
 import { APP_ROUTES } from '../config/constants';
 
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
           {
             path: APP_ROUTES.STUDENT_DASHBOARD.slice(1),
             element: <StudentDashboardPage />,
+          },
+          {
+            path: APP_ROUTES.PROFILE.slice(1),
+            element: <MyProfilePage />,
           },
         ],
       },
