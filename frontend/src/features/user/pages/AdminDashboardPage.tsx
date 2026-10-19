@@ -1,34 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { useUserStore } from "../../store/user/useUserStore";
-import { USER_ROLES } from "../../shared/constants/constants";
+﻿import React, { useState, useEffect } from "react";
+import { useUserStore } from "../../../store/user/useUserStore";
+import { USER_ROLES } from "../../../shared/constants/constants";
 
-import { createEnrollment } from "../../services/api/enrollmentService";
-import { getAllUsers } from "../../services/api/userService";
-import { updateUser } from "../../services/api/userService";
-import { getAllSubjects } from "../../services/api/subjectService";
-import { createSubject } from "../../services/api/subjectService";
-import { updateSubject } from "../../services/api/subjectService";
-import { getAllEnrollments } from "../../services/api/enrollmentService";
-import { addUser } from "../../services/api/userService";
-import { deleteUser } from "../../services/api/userService";
-import type { User, CreateUser, UpdateUser } from "../../models/UserModel";
+import { createEnrollment } from "../../../services/api/enrollmentService";
+import { getAllUsers } from "../../../services/api/userService";
+import { updateUser } from "../../../services/api/userService";
+import { getAllSubjects } from "../../../services/api/subjectService";
+import { createSubject } from "../../../services/api/subjectService";
+import { updateSubject } from "../../../services/api/subjectService";
+import { getAllEnrollments } from "../../../services/api/enrollmentService";
+import { addUser } from "../../../services/api/userService";
+import { deleteUser } from "../../../services/api/userService";
+import type { User, CreateUser, UpdateUser } from "../../../models/UserModel";
 import type {
   Subject,
   CreateSubject,
   UpdateSubject,
-} from "../../models/SubjectModel";
+} from "../../../models/SubjectModel";
 import type {
   Enrollment,
   CreateEnrollment,
-} from "../../models/EnrollmentModel";
-import UsersTable from "../../components/admin/UsersTable";
-import UserEditForm from "../../components/admin/UserEditForm";
-import UserCreateForm from "../../components/admin/UserCreateForm";
-import SubjectsTable from "../../components/admin/SubjectsTable";
-import SubjectEditForm from "../../components/admin/SubjectEditForm";
-import SubjectCreateForm from "../../components/admin/SubjectCreateForm";
-import EnrollmentsTable from "../../components/admin/EnrollmentsTable";
-import EnrollmentCreateForm from "../../components/admin/EnrollmentCreateForm";
+} from "../../../models/EnrollmentModel";
+import UsersTable from "../components/admin/UsersTable";
+import UserEditForm from "../components/admin/UserEditForm";
+import UserCreateForm from "../components/admin/UserCreateForm";
+import SubjectsTable from "../components/admin/SubjectsTable";
+import SubjectEditForm from "../components/admin/SubjectEditForm";
+import SubjectCreateForm from "../components/admin/SubjectCreateForm";
+import EnrollmentsTable from "../components/admin/EnrollmentsTable";
+import EnrollmentCreateForm from "../components/admin/EnrollmentCreateForm";
 
 const AdminDashboardPage: React.FC = () => {
   const { currentUser } = useUserStore();
@@ -43,9 +43,6 @@ const AdminDashboardPage: React.FC = () => {
   const [isCreatingEnrollment, setIsCreatingEnrollment] =
     useState<boolean>(false);
   useEffect(() => {
-    // setUsers([...MOCK_STUDENTS, ...MOCK_PROFESSORS]);
-    // setSubjects(MOCK_SUBJECTS);
-    // setEnrollments(MOCK_ENROLLMENTS);
     const fetchUsers = async () => {
       const usersData = await getAllUsers();
       if (usersData) {
@@ -82,7 +79,6 @@ const AdminDashboardPage: React.FC = () => {
     );
   }
   const handleCreateUser = async (newUser: CreateUser) => {
-    // Pozivamo backend funkciju umesto mock logike
     const createdUser = await addUser(newUser);
 
     if (createdUser) {
@@ -160,7 +156,7 @@ const AdminDashboardPage: React.FC = () => {
   const handleDeleteEnrollment = (enrollmentId: number) => {
     setEnrollments(
       enrollments.map((e) =>
-        e.Id === enrollmentId ? { ...e, IsDeleted: true } : e
+        e.id === enrollmentId ? { ...e, isDeleted: true } : e
       )
     );
     console.log("Deleted enrollment with ID:", enrollmentId);
@@ -279,7 +275,7 @@ const AdminDashboardPage: React.FC = () => {
   return (
     <div className="container mt-4">
       <h2>Admin Dashboard</h2>
-      <h4 className="mb-4">Welcome, {user.firstName}!</h4>
+      <h4 className="mb-4">Welcome, {currentUser.firstName}!</h4>
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
           <button

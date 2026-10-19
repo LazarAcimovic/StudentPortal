@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import type { Subject, UpdateSubject } from "../../models/SubjectModel";
-import type { User } from "../../models/UserModel";
-import { USER_ROLES } from "../../shared/constants/constants";
+﻿import React, { useState } from "react";
+import type { Subject, UpdateSubject } from "../../../../models/SubjectModel";
+import type { User } from "../../../../models/UserModel";
+import { USER_ROLES } from "../../../../shared/constants/constants";
 
 interface SubjectEditFormProps {
   subject: Subject;

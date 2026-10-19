@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../features/auth/pages/LoginPage';
-import AdminDashboardPage from '../pages/dashboard/AdminDashboardPage';
+import AdminDashboardPage from '../features/user/pages/AdminDashboardPage';
 import ProfessorDashboardPage from '../features/user/pages/ProfessorDashboardPage';
 import StudentDashboardPage from '../features/user/pages/StudentDashboardPage';
 import AuthGuard from './authGuard';

@@ -1,36 +1,44 @@
-import React, { useState } from "react";
-import type { CreateUser } from "../../models/UserModel";
-import { USER_ROLES } from "../../shared/constants/constants";
+﻿import React, { useState } from "react";
+import type { User, UpdateUser } from "../../../../models/UserModel";
+import { USER_ROLES } from "../../../../shared/constants/constants";
 
-interface UserCreateFormProps {
-  onSave: (newUser: CreateUser) => void;
+interface UserEditFormProps {
+  user: User;
+  onSave: (updatedUser: UpdateUser) => void;
   onCancel: () => void;
 }
 
-const UserCreateForm: React.FC<UserCreateFormProps> = ({
+const UserEditForm: React.FC<UserEditFormProps> = ({
+  user,
   onSave,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState<CreateUser>({
-    FirstName: "",
-    LastName: "",
-    Email: "",
-    Password: "",
-    UserRole: USER_ROLES.Student,
-    IndexNumber: "",
+  const [formData, setFormData] = useState<UpdateUser>({
+    Id: user.id,
+    FirstName: user.firstName,
+    LastName: user.lastName,
+    Email: user.email,
+    UserRole: user.userRole,
+    IsDeleted: user.isDeleted,
   });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    if (e.target instanceof HTMLSelectElement) {
+    const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: (e.target as HTMLInputElement).checked,
+      }));
+    } else if (e.target instanceof HTMLSelectElement) {
       setFormData((prev) => ({
         ...prev,
         [name]: Number(value),
-        ...(Number(value) === USER_ROLES.Professor && { IndexNumber: undefined }),
       }));
     } else {
+      // Ostali inputi (text, email, password)
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
@@ -43,7 +51,9 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
   return (
     <div className="card my-4">
       <div className="card-header">
-        <h5>Create New User</h5>
+        <h5>
+          Edit User: {user.firstName} {user.lastName}
+        </h5>
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit}>
@@ -56,7 +66,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               className="form-control"
               id="firstName"
               name="FirstName"
-              value={formData.FirstName}
+              value={formData.FirstName || ""}
               onChange={handleChange}
               required
             />
@@ -70,7 +80,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               className="form-control"
               id="lastName"
               name="LastName"
-              value={formData.LastName}
+              value={formData.LastName || ""}
               onChange={handleChange}
               required
             />
@@ -84,21 +94,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               className="form-control"
               id="email"
               name="Email"
-              value={formData.Email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label htmlFor="password" className="form-label">
-              Password
-            </label>
-            <input
-              type="password"
-              className="form-control"
-              id="password"
-              name="Password"
-              value={formData.Password}
+              value={formData.Email || ""}
               onChange={handleChange}
               required
             />
@@ -119,23 +115,19 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               <option value={USER_ROLES.Professor}>Professor</option>
             </select>
           </div>
-
-          {formData.UserRole === USER_ROLES.Student && (
-            <div className="mb-3">
-              <label htmlFor="indexNumber" className="form-label">
-                Index Number
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="indexNumber"
-                name="IndexNumber"
-                value={formData.IndexNumber || ""}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          )}
+          <div className="mb-3 form-check">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              id="isDeleted"
+              name="IsDeleted"
+              checked={formData.IsDeleted || false}
+              onChange={handleChange}
+            />
+            <label className="form-check-label" htmlFor="isDeleted">
+              Deleted (inactive)
+            </label>
+          </div>
           <div className="d-flex justify-content-end">
             <button
               type="button"
@@ -145,7 +137,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Create
+              Save Changes
             </button>
           </div>
         </form>
@@ -154,4 +146,4 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
   );
 };
 
-export default UserCreateForm;
+export default UserEditForm;

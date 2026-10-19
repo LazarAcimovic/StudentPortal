@@ -1,6 +1,6 @@
-import React from "react";
-import type { User } from "../../models/UserModel";
-import { USER_ROLES } from "../../shared/constants/constants";
+﻿import React from "react";
+import type { User } from "../../../../models/UserModel";
+import { USER_ROLES } from "../../../../shared/constants/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
@@ -69,7 +69,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
                   onClick={() => onDeleteUser(user.id)}
                   disabled={user.isDeleted}
                 >
-                  <FontAwesomeIcon icon={faTrash} /> Obriši
+                  <FontAwesomeIcon icon={faTrash} /> ObriÅ¡i
                 </button> */}
               </td>
             </tr>

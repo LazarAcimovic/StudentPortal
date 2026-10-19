@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import type {
   CreateEnrollment,
   Enrollment,
-} from "../../models/EnrollmentModel";
-import type { User } from "../../models/UserModel";
-import type { Subject } from "../../models/SubjectModel";
+} from "../../../../models/EnrollmentModel";
+import type { User } from "../../../../models/UserModel";
+import type { Subject } from "../../../../models/SubjectModel";
 
 interface EnrollmentCreateFormProps {
   students: User[];

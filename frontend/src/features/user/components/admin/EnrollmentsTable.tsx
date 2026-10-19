@@ -1,5 +1,5 @@
-import React from "react";
-import type { Enrollment } from "../../models/EnrollmentModel";
+﻿import React from "react";
+import type { Enrollment } from "../../../../models/EnrollmentModel";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTrash,

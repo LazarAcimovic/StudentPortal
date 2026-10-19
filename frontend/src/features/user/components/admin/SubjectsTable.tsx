@@ -1,5 +1,5 @@
-import React from "react";
-import type { Subject } from "../../models/SubjectModel";
+﻿import React from "react";
+import type { Subject } from "../../../../models/SubjectModel";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
