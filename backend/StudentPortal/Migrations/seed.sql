@@ -18,8 +18,8 @@
 --
 -- Grade states covered:
 --   G01, G04, G07, G10, G13, G20  — truly final (student confirmed)
---   G02, G05, G12, G16            — truly final (7-day window lapsed, no appeals)
---   G08, G18                      — truly final (appeal denied, undo window expired)
+--   G02, G12, G16                 — truly final (7-day window lapsed, no appeals)
+--   G05, G08, G18                 — truly final (appeal denied, undo window expired)
 --   G03, G09, G15                 — inside initial 7-day window (no action yet)
 --   G06                           — active pending appeal
 --   G17                           — overdue chain: first appeal overdue, second pending
@@ -214,10 +214,10 @@ INSERT INTO "Grades" (
    28,28,5,5,29, 10,
    '2026-09-10T11:00:00+00','2026-09-11T09:00:00+00','2026-09-11T09:00:00+00',false),
 
-  -- G05  David / Data Structures — 7-day lapse — grade 6 (sum 55)
+  -- G05  David / Data Structures — appeal denied, undo window expired — grade 6 (sum 55)
   ('40000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000005',
    15,13,3.5,3.5,20, 6,
-   '2026-07-15T08:00:00+00',NULL,NULL,false),
+   '2026-07-15T08:00:00+00',NULL,'2026-07-25T10:00:00+00',false),
 
   -- G07  Jessica / Linear Algebra — student confirmed — grade 9 (sum 82)
   ('40000000-0000-0000-0000-000000000007','30000000-0000-0000-0000-000000000007',
@@ -339,6 +339,7 @@ INSERT INTO "GradeDrafts" (
 -- A06  G18 (James/OpSys)              — Denied, undo window long expired
 -- A07  G19 (Emma/CompArch) — chain 1  — Pending stored, goes Overdue on read (submitted 10d ago)
 -- A08  G19 (Emma/CompArch) — chain 2  — active Pending (second appeal, 2 days ago)
+-- A10  G05 (David/DataStructures)     — Denied, undo window long expired (Test 4)
 INSERT INTO "Appeals" (
   "Id","GradeId","Text","SubmittedAt","Status","ReviewedAt"
 ) VALUES
@@ -387,6 +388,11 @@ INSERT INTO "Appeals" (
   -- A08 second appeal on G19 — active Pending (fresh window after first went Overdue)
   ('60000000-0000-0000-0000-000000000008','40000000-0000-0000-0000-000000000013',
    'Since my first appeal was not reviewed within the deadline, I am submitting a new appeal. The grading was incorrect.',
-   (NOW() - INTERVAL '2 days'),'Pending',NULL);
+   (NOW() - INTERVAL '2 days'),'Pending',NULL),
+
+  -- A10 denied (undo expired) on G05 — David / Data Structures
+  ('60000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000005',
+   'I believe my exam was graded incorrectly. Several of my answers were partially correct and deserved more credit.',
+   '2026-07-18T08:00:00+00','Denied','2026-07-25T10:00:00+00');
 
 COMMIT;

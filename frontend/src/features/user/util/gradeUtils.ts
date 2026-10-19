@@ -1,3 +1,12 @@
+export function formatCountdown(deadline: string): string {
+  const msLeft = new Date(deadline).getTime() - Date.now();
+  if (msLeft <= 0) return 'Expired';
+  const totalMinutes = Math.floor(msLeft / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${minutes}m`;
+}
+
 export function parseField(value: string): number | null {
   if (value.trim() === '') return null;
   const n = parseFloat(value);

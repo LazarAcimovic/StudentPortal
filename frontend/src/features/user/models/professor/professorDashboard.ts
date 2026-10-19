@@ -51,3 +51,11 @@ export interface AppealsSectionProps {
   appeals: ProfessorAppealRow[];
   onRefresh: () => void;
 }
+
+export interface ViewAppealModalProps {
+  appeal: ProfessorAppealRow | null;
+  allAppeals: ProfessorAppealRow[];
+  open: boolean;
+  onClose: () => void;
+  onActionDone: () => void;
+}

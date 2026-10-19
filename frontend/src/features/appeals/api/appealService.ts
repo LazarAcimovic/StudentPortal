@@ -16,3 +16,8 @@ export async function denyAppeal(appealId: string, signal?: AbortSignal): Promis
   const res = await axiosClient.post<AppealDto>(`${API_ROUTES.APPEAL}/${appealId}/deny`, {}, { signal });
   return res.data;
 }
+
+export async function undoDenyAppeal(appealId: string, signal?: AbortSignal): Promise<AppealDto> {
+  const res = await axiosClient.post<AppealDto>(`${API_ROUTES.APPEAL}/${appealId}/undo-deny`, {}, { signal });
+  return res.data;
+}

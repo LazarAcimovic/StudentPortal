@@ -1,20 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ProfessorAppealRow, AppealsSectionProps } from '../../models/professor/professorDashboard';
 import { APPEAL_STATUS_BADGE } from '../../constants/professor/constants';
 import ViewAppealModal from './ViewAppealModal';
+import { undoDenyAppeal } from '../../../appeals/api/appealService';
+import { formatCountdown } from '../../util/gradeUtils';
+
+function useCountdown(deadline: string | null): string {
+  const [label, setLabel] = useState('');
+
+  useEffect(() => {
+    if (!deadline) { setLabel(''); return; }
+
+    const compute = () => setLabel(formatCountdown(deadline));
+
+    compute();
+    const id = setInterval(compute, 30000);
+    return () => clearInterval(id);
+  }, [deadline]);
+
+  return label;
+}
+
+function UndoButton({
+  appeal,
+  onUndoDone,
+}: {
+  appeal: ProfessorAppealRow;
+  onUndoDone: () => void;
+}) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const countdown = useCountdown(appeal.undoDenyDeadline);
+
+  const handleUndo = async () => {
+    setIsSubmitting(true);
+    try {
+      await undoDenyAppeal(appeal.appealId);
+      onUndoDone();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="d-flex align-items-center gap-1 flex-wrap justify-content-end">
+      <span className="text-muted small">{countdown}</span>
+      <button
+        className="btn btn-outline-warning btn-sm"
+        onClick={handleUndo}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? <span className="spinner-border spinner-border-sm me-1" role="status" /> : null}
+        Undo
+      </button>
+    </div>
+  );
+}
 
 function AppealItem({
   appeal,
   layout,
   onViewClick,
+  onUndoDone,
 }: {
   appeal: ProfessorAppealRow;
   layout: 'table' | 'card';
   onViewClick: (appeal: ProfessorAppealRow) => void;
+  onUndoDone: () => void;
 }) {
   const statusBadge = APPEAL_STATUS_BADGE[appeal.status] ?? (
     <span className="badge bg-secondary">{appeal.status}</span>
   );
+
+  const canUndo = appeal.status === 'Denied' && appeal.canUndoDeny;
 
   if (layout === 'table') {
     return (
@@ -26,12 +83,17 @@ function AppealItem({
         <td>{new Date(appeal.submittedAt).toLocaleDateString()}</td>
         <td>{statusBadge}</td>
         <td className="text-end">
-          <button
-            className="btn btn-outline-primary btn-sm"
-            onClick={() => onViewClick(appeal)}
-          >
-            View appeal
-          </button>
+          <div className="d-flex align-items-center justify-content-end gap-2 flex-wrap">
+            {canUndo && (
+              <UndoButton appeal={appeal} onUndoDone={onUndoDone} />
+            )}
+            <button
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => onViewClick(appeal)}
+            >
+              View appeal
+            </button>
+          </div>
         </td>
       </tr>
     );
@@ -48,12 +110,17 @@ function AppealItem({
         <div className="text-muted small mb-2">
           {new Date(appeal.submittedAt).toLocaleDateString()}
         </div>
-        <button
-          className="btn btn-outline-primary btn-sm w-100"
-          onClick={() => onViewClick(appeal)}
-        >
-          View appeal
-        </button>
+        <div className="d-flex flex-column gap-2">
+          {canUndo && (
+            <UndoButton appeal={appeal} onUndoDone={onUndoDone} />
+          )}
+          <button
+            className="btn btn-outline-primary btn-sm w-100"
+            onClick={() => onViewClick(appeal)}
+          >
+            View appeal
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -91,6 +158,7 @@ const AppealsSection: React.FC<AppealsSectionProps> = ({ appeals, onRefresh }) =
                         appeal={appeal}
                         layout="table"
                         onViewClick={setSelectedAppeal}
+                        onUndoDone={onRefresh}
                       />
                     ))}
                   </tbody>
@@ -104,6 +172,7 @@ const AppealsSection: React.FC<AppealsSectionProps> = ({ appeals, onRefresh }) =
                     appeal={appeal}
                     layout="card"
                     onViewClick={setSelectedAppeal}
+                    onUndoDone={onRefresh}
                   />
                 ))}
               </div>
