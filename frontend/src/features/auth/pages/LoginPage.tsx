@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../../store/user/useUserStore";
 import { USER_ROLES } from "../../../shared/constants/constants";
 import { EyeIcon, EyeSlashIcon } from "../../../shared/constants/icons";
@@ -23,7 +23,13 @@ const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(LOGIN_INITIAL_IS_SUBMITTING);
 
   const navigate = useNavigate();
-  const { setCurrentUser } = useUserStore();
+  const { currentUser, setCurrentUser } = useUserStore();
+
+  if (currentUser) {
+    if (currentUser.userRole === USER_ROLES.Admin) return <Navigate to={APP_ROUTES.ADMIN_DASHBOARD} replace />;
+    if (currentUser.userRole === USER_ROLES.Professor) return <Navigate to={APP_ROUTES.PROFESSOR_DASHBOARD} replace />;
+    return <Navigate to={APP_ROUTES.STUDENT_DASHBOARD} replace />;
+  }
 
   const parseResult = loginSchema.safeParse(values);
   const fieldErrors = parseResult.success ? {} : parseResult.error.flatten().fieldErrors;
