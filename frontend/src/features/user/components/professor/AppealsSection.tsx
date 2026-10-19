@@ -88,7 +88,7 @@ function AppealItem({
               <UndoButton appeal={appeal} onUndoDone={onUndoDone} />
             )}
             <button
-              className="btn btn-outline-primary btn-sm"
+              className="btn btn-outline-primary btn-sm text-nowrap"
               onClick={() => onViewClick(appeal)}
             >
               View appeal
