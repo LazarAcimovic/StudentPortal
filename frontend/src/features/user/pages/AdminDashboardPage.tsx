@@ -4,14 +4,13 @@ import { USER_ROLES } from "../../../shared/constants/constants";
 
 import { createEnrollment } from "../../../services/api/enrollmentService";
 import { getAllUsers } from "../../../services/api/userService";
-import { updateUser } from "../../../services/api/userService";
 import { getAllSubjects } from "../../../services/api/subjectService";
 import { createSubject } from "../../../services/api/subjectService";
 import { updateSubject } from "../../../services/api/subjectService";
 import { getAllEnrollments } from "../../../services/api/enrollmentService";
 import { addUser } from "../../../services/api/userService";
 import { deleteUser } from "../../../services/api/userService";
-import type { User, CreateUser, UpdateUser } from "../../../models/UserModel";
+import type { User, CreateUser } from "../../../models/UserModel";
 import type {
   Subject,
   CreateSubject,
@@ -23,7 +22,7 @@ import type {
 } from "../../../models/EnrollmentModel";
 import Modal from "../../../components/ui/Modal";
 import UsersTable from "../components/admin/UsersTable";
-import UserEditForm from "../components/admin/UserEditForm";
+import UserEditForm from "../../../components/ui/UserEditForm";
 import UserCreateForm from "../components/admin/UserCreateForm";
 import SubjectsTable from "../components/admin/SubjectsTable";
 import SubjectEditForm from "../components/admin/SubjectEditForm";
@@ -92,18 +91,9 @@ const AdminDashboardPage: React.FC = () => {
       );
     }
   };
-  const handleUpdateUser = async (updatedUser: UpdateUser) => {
-    const updatedUserData = await updateUser(updatedUser);
-
-    if (updatedUserData) {
-      setUsers(
-        users.map((u) => (u.id === updatedUserData.id ? updatedUserData : u))
-      );
-      setEditingUser(null);
-      console.log("Updated user:", updatedUserData);
-    } else {
-      alert("Failed to update user.");
-    }
+  const handleUserSaved = (updatedUser: User) => {
+    setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+    setEditingUser(null);
   };
   const handleDeleteUser = async (userId: number) => {
     const isSuccess = await deleteUser(userId);
@@ -203,10 +193,10 @@ const AdminDashboardPage: React.FC = () => {
             >
               {editingUser && (
                 <UserEditForm
-                  user={editingUser}
                   scope="admin"
                   callerRole={currentUser.userRole}
-                  onSave={handleUpdateUser}
+                  user={editingUser}
+                  onSaved={handleUserSaved}
                   onCancel={() => setEditingUser(null)}
                 />
               )}
