@@ -3,6 +3,7 @@ import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../store/user/useUserStore";
 import { USER_ROLES } from "../../shared/constants/constants";
 import { APP_ROUTES } from "../../config/constants";
+import { toast } from "react-toastify";
 import { logout } from "../../features/auth/api/authService";
 
 const Navbar: React.FC = () => {
@@ -14,6 +15,7 @@ const Navbar: React.FC = () => {
       await logout();
     } finally {
       clearCurrentUser();
+      toast.success("You have been logged out.");
       navigate(APP_ROUTES.AUTH_LOGIN);
     }
   };

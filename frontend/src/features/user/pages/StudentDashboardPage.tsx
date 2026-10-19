@@ -8,6 +8,7 @@ import {
 } from '../constants/student/constants';
 import type { AppealModalState } from '../../appeals/models/appealModal';
 import type { ConfirmGradeModalState } from '../../grades/models/confirmGradeModal';
+import { toast } from 'react-toastify';
 import { submitAppeal } from '../../appeals/api/appealService';
 import { studentConfirmGrade } from '../../grades/api/gradeService';
 import StudentInfoCard from '../components/student/StudentInfoCard';
