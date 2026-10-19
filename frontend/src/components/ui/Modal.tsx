@@ -90,7 +90,7 @@ export default function Modal({
         </div>
       </div>
 
-      <div className="modal-backdrop show" />
+      <div className="modal-backdrop show" style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }} />
     </>,
     modalRoot
   );

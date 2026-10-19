@@ -27,4 +27,5 @@ export interface UpdateUser {
   UserRole: UserRole;
   Email: string;
   IsDeleted: boolean;
+  IndexNumber?: string;
 }

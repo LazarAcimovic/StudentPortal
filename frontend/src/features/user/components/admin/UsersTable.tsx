@@ -4,21 +4,22 @@ import { USER_ROLES } from "../../../../shared/constants/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
-  faTrash,
   faBan,
   faCheckCircle,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface UsersTableProps {
   users: User[];
+  currentUserId: number;
   onDeleteUser: (userId: number) => void;
-  onStartEdit: (user: User) => void; // Dodat novi prop
+  onStartEdit: (user: User) => void;
 }
 
 const UsersTable: React.FC<UsersTableProps> = ({
   users,
+  currentUserId,
   onDeleteUser,
-  onStartEdit, // Dodat u destrukturiranju
+  onStartEdit,
 }) => {
   return (
     <div className="table-responsive">
@@ -42,9 +43,9 @@ const UsersTable: React.FC<UsersTableProps> = ({
               <td>{user.lastName}</td>
               <td>{user.email}</td>
               <td>
-                {user.userRole === USER_ROLES.Student ? "Student" : ""}
-                {user.userRole === USER_ROLES.Professor ? "Professor" : ""}
-                {user.userRole === USER_ROLES.Admin ? "Admin" : ""}
+                {user.userRole === USER_ROLES.Student && "Student"}
+                {user.userRole === USER_ROLES.Professor && "Professor"}
+                {user.userRole === USER_ROLES.Admin && "Admin"}
               </td>
               <td>
                 {user.isDeleted ? (
@@ -58,19 +59,14 @@ const UsersTable: React.FC<UsersTableProps> = ({
                 )}
               </td>
               <td>
-                <button
-                  className="btn btn-warning btn-sm me-2"
-                  onClick={() => onStartEdit(user)}
-                >
-                  <FontAwesomeIcon icon={faEdit} /> Edit
-                </button>
-                {/* <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => onDeleteUser(user.id)}
-                  disabled={user.isDeleted}
-                >
-                  <FontAwesomeIcon icon={faTrash} /> ObriÅ¡i
-                </button> */}
+                {user.id !== currentUserId && (
+                  <button
+                    className="btn btn-warning btn-sm"
+                    onClick={() => onStartEdit(user)}
+                  >
+                    <FontAwesomeIcon icon={faEdit} /> Edit
+                  </button>
+                )}
               </td>
             </tr>
           ))}

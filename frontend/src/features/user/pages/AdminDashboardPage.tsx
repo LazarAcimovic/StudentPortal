@@ -21,6 +21,7 @@ import type {
   Enrollment,
   CreateEnrollment,
 } from "../../../models/EnrollmentModel";
+import Modal from "../../../components/ui/Modal";
 import UsersTable from "../components/admin/UsersTable";
 import UserEditForm from "../components/admin/UserEditForm";
 import UserCreateForm from "../components/admin/UserCreateForm";
@@ -172,12 +173,6 @@ const AdminDashboardPage: React.FC = () => {
                 onSave={handleCreateUser}
                 onCancel={() => setIsCreatingUser(false)}
               />
-            ) : editingUser ? (
-              <UserEditForm
-                user={editingUser}
-                onSave={handleUpdateUser}
-                onCancel={() => setEditingUser(null)}
-              />
             ) : (
               <>
                 <div className="d-flex justify-content-end mb-3">
@@ -190,11 +185,32 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
                 <UsersTable
                   users={users}
+                  currentUserId={currentUser.id}
                   onDeleteUser={handleDeleteUser}
                   onStartEdit={(userToEdit) => setEditingUser(userToEdit)}
                 />
               </>
             )}
+            <Modal
+              open={editingUser !== null}
+              onClose={() => setEditingUser(null)}
+              blurBackdrop
+              title={
+                editingUser
+                  ? `Edit User: ${editingUser.firstName} ${editingUser.lastName}`
+                  : "Edit User"
+              }
+            >
+              {editingUser && (
+                <UserEditForm
+                  user={editingUser}
+                  scope="admin"
+                  callerRole={currentUser.userRole}
+                  onSave={handleUpdateUser}
+                  onCancel={() => setEditingUser(null)}
+                />
+              )}
+            </Modal>
           </>
         );
       case "subjects":
