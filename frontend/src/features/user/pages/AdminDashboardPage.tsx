@@ -2,14 +2,9 @@
 import { useUserStore } from "../../../store/user/useUserStore";
 import { USER_ROLES } from "../../../shared/constants/constants";
 
-import { createEnrollment } from "../../../services/api/enrollmentService";
-import { getAllUsers } from "../../../services/api/userService";
-import { getAllSubjects } from "../../../services/api/subjectService";
-import { createSubject } from "../../../services/api/subjectService";
-import { updateSubject } from "../../../services/api/subjectService";
-import { getAllEnrollments } from "../../../services/api/enrollmentService";
-import { addUser } from "../../../services/api/userService";
-import { deleteUser } from "../../../services/api/userService";
+import { createEnrollment, getAllEnrollments } from "../../subjects/api/enrollmentService";
+import { getAllUsers, addUser, deleteUser } from "../api/userService";
+import { getAllSubjects, createSubject, updateSubject } from "../../subjects/api/subjectService";
 import type { User, CreateUser } from "../../../models/UserModel";
 import type {
   Subject,

@@ -1,8 +1,8 @@
-import type { CreateUser, User, UpdateUser } from "../../models/UserModel";
-import { MOCK_STUDENTS } from "../data/studentMock";
-import { USER_ROLES } from "../../shared/constants/constants";
-import apiClient from "../../shared/api/axiosClient";
-import { API_ROUTES } from "../../config/constants";
+import type { CreateUser, User, UpdateUser } from "../../../models/UserModel";
+import { USER_ROLES } from "../../../shared/constants/constants";
+import apiClient from "../../../shared/api/axiosClient";
+import { API_ROUTES } from "../../../config/constants";
+import { MOCK_STUDENTS } from "../../../services/data/studentMock";
 
 export const getAllUsers = async (): Promise<User[] | null> => {
   try {
@@ -14,7 +14,6 @@ export const getAllUsers = async (): Promise<User[] | null> => {
   }
 };
 
-// Funkcija za kreiranje novog korisnika na backendu
 export const addUser = async (userData: CreateUser): Promise<User | null> => {
   try {
     const response = await apiClient.post<User>(API_ROUTES.USER, userData);
@@ -48,14 +47,13 @@ export const updateUser = async (
   }
 };
 
-
 export const deleteUser = async (userId: number): Promise<boolean> => {
   try {
     await apiClient.delete(`${API_ROUTES.USER}/${userId}`);
-    return true; 
+    return true;
   } catch (error) {
     console.error("Error deleting user:", error);
-    return false; 
+    return false;
   }
 };
 
@@ -82,14 +80,7 @@ export const createStudent = (newUser: CreateUser): User | Error => {
     CreatedAt: new Date(),
   };
 
-  // const student1: User ={
-  //   ...newUser,
-  //   Id: newUserId,
-  //   IsDeleted: false,
-  //   CreatedAt: new Date(),
-  // }
-
-  MOCK_STUDENTS.push(student); // Dodajemo novog studenta u mock niz
+  MOCK_STUDENTS.push(student);
 
   return student;
 };

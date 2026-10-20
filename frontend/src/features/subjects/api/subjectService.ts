@@ -1,10 +1,10 @@
-import apiClient from "../../shared/api/axiosClient";
+import apiClient from "../../../shared/api/axiosClient";
 import type {
   Subject,
   CreateSubject,
   UpdateSubject,
-} from "../../models/SubjectModel";
-import { API_ROUTES } from "../../config/constants";
+} from "../../../models/SubjectModel";
+import { API_ROUTES } from "../../../config/constants";
 
 export const getAllSubjects = async (): Promise<Subject[] | null> => {
   try {

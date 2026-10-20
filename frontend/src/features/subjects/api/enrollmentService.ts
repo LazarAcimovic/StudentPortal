@@ -1,9 +1,9 @@
-import apiClient from "../../shared/api/axiosClient";
+import apiClient from "../../../shared/api/axiosClient";
 import type {
   Enrollment,
   CreateEnrollment,
-} from "../../models/EnrollmentModel";
-import { API_ROUTES } from "../../config/constants";
+} from "../../../models/EnrollmentModel";
+import { API_ROUTES } from "../../../config/constants";
 
 export const getAllEnrollments = async (): Promise<Enrollment[] | null> => {
   try {
@@ -35,15 +35,3 @@ export const createEnrollment = async (
     return null;
   }
 };
-
-// export const deleteEnrollment = async (
-//   enrollmentId: number
-// ): Promise<boolean> => {
-//   try {
-//     await apiClient.delete(`/enrollment/${enrollmentId}`);
-//     return true;
-//   } catch (error) {
-//     console.error(`Error deleting enrollment with ID ${enrollmentId}:`, error);
-//     return false;
-//   }
-// };
