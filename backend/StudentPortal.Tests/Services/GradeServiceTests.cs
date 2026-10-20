@@ -12,7 +12,7 @@ public class GradeServiceTests
     private readonly IGradeDraftRepository _draftRepo = Substitute.For<IGradeDraftRepository>();
     private readonly IEnrollmentRepository _enrollmentRepo = Substitute.For<IEnrollmentRepository>();
 
-    private GradeService CreateSut() => new(_gradeRepo, _draftRepo, _enrollmentRepo);
+    private GradeService CreateSut() => new(_gradeRepo, _draftRepo, _enrollmentRepo, TimeProvider.System);
 
     private static Enrollment MakeEnrollment(Guid enrollmentId, Guid professorId, Guid? studentId = null)
     {

@@ -10,7 +10,7 @@ public class StudentDashboardServiceTests
     private readonly IUserRepository _userRepo = Substitute.For<IUserRepository>();
     private readonly IEnrollmentRepository _enrollRepo = Substitute.For<IEnrollmentRepository>();
 
-    private StudentDashboardService CreateSut() => new(_userRepo, _enrollRepo);
+    private StudentDashboardService CreateSut() => new(_userRepo, _enrollRepo, TimeProvider.System);
 
     private static User MakeStudent() => new()
     {

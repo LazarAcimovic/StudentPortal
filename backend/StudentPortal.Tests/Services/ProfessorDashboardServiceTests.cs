@@ -1,4 +1,4 @@
-using StudentPortal.Interfaces;
+﻿using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
 using StudentPortal.Models.Enums;
 using StudentPortal.Services;
@@ -10,7 +10,7 @@ public class ProfessorDashboardServiceTests
     private readonly IEnrollmentRepository _enrollRepo = Substitute.For<IEnrollmentRepository>();
     private readonly IAppealRepository _appealRepo = Substitute.For<IAppealRepository>();
 
-    private ProfessorDashboardService CreateSut() => new(_enrollRepo, _appealRepo);
+    private ProfessorDashboardService CreateSut() => new(_enrollRepo, _appealRepo, TimeProvider.System);
 
     private static Subject MakeSubject(string name = "Databases", int ects = 6) => new()
     {
@@ -49,7 +49,7 @@ public class ProfessorDashboardServiceTests
             MakeEnrollment(subjA, student2),
             MakeEnrollment(subjB, student2),
         });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal>());
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
 
         var sut = CreateSut();
 
@@ -71,7 +71,7 @@ public class ProfessorDashboardServiceTests
         {
             MakeEnrollment(subject, MakeStudent()),
         });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal>());
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
 
         var sut = CreateSut();
 
@@ -88,7 +88,7 @@ public class ProfessorDashboardServiceTests
         var enrollment = MakeEnrollment(subject, MakeStudent(),
             draft: new GradeDraft { Id = Guid.NewGuid(), Midterm1Points = 10 });
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal>());
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
 
         var sut = CreateSut();
 
@@ -100,7 +100,7 @@ public class ProfessorDashboardServiceTests
     [Fact]
     public async Task GetDashboardAsync_ReconfirmNeeded_WhenAnAcceptedAppealIsOpen()
     {
-        // PRD §4.3: after Accept, the professor must re-confirm the exam.
+        // PRD Â§4.3: after Accept, the professor must re-confirm the exam.
         var profId = Guid.NewGuid();
         var subject = MakeSubject();
         var grade = new Grade
@@ -113,7 +113,7 @@ public class ProfessorDashboardServiceTests
         };
         var enrollment = MakeEnrollment(subject, MakeStudent(), grade);
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal>());
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
 
         var sut = CreateSut();
 
@@ -136,7 +136,7 @@ public class ProfessorDashboardServiceTests
         };
         var enrollment = MakeEnrollment(subject, MakeStudent(), grade);
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal>());
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
 
         var sut = CreateSut();
 
@@ -148,7 +148,7 @@ public class ProfessorDashboardServiceTests
     [Fact]
     public async Task GetDashboardAsync_Finalized_WhenInitialWindowLapsedWithoutAppeal()
     {
-        // PRD §4.7 case 2: auto-finalize after 7 days of silence on the initial window.
+        // PRD Â§4.7 case 2: auto-finalize after 7 days of silence on the initial window.
         var profId = Guid.NewGuid();
         var subject = MakeSubject();
         var grade = new Grade
@@ -160,7 +160,7 @@ public class ProfessorDashboardServiceTests
         };
         var enrollment = MakeEnrollment(subject, MakeStudent(), grade);
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal>());
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
 
         var sut = CreateSut();
 
@@ -192,7 +192,7 @@ public class ProfessorDashboardServiceTests
             Text = "please re-check",
         };
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment>());
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal> { appeal });
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal> { appeal });
 
         var sut = CreateSut();
 
@@ -206,7 +206,7 @@ public class ProfessorDashboardServiceTests
     [Fact]
     public async Task GetDashboardAsync_AppealRow_PendingPastSevenDaysReportsOverdue()
     {
-        // PRD §4.5: overdue is projected on read.
+        // PRD Â§4.5: overdue is projected on read.
         var profId = Guid.NewGuid();
         var subject = MakeSubject();
         var student = MakeStudent();
@@ -228,7 +228,7 @@ public class ProfessorDashboardServiceTests
             Text = "...",
         };
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment>());
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal> { appeal });
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal> { appeal });
 
         var sut = CreateSut();
 
@@ -240,7 +240,7 @@ public class ProfessorDashboardServiceTests
     [Fact]
     public async Task GetDashboardAsync_AppealRow_DeniedInsideUndoWindow_ReportsCanUndoDeny()
     {
-        // PRD §4.4: 24h undo window after deny.
+        // PRD Â§4.4: 24h undo window after deny.
         var profId = Guid.NewGuid();
         var subject = MakeSubject();
         var student = MakeStudent();
@@ -263,7 +263,7 @@ public class ProfessorDashboardServiceTests
             Text = "...",
         };
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment>());
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal> { appeal });
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal> { appeal });
 
         var sut = CreateSut();
 
@@ -299,7 +299,7 @@ public class ProfessorDashboardServiceTests
             Text = "...",
         };
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment>());
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal> { appeal });
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal> { appeal });
 
         var sut = CreateSut();
 
@@ -325,7 +325,7 @@ public class ProfessorDashboardServiceTests
         };
         var enrollment = MakeEnrollment(subject, MakeStudent(), grade);
         _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId).Returns(new List<Appeal>());
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
 
         var sut = CreateSut();
 
@@ -334,3 +334,4 @@ public class ProfessorDashboardServiceTests
         Assert.True(dto.Subjects[0].Students[0].HasActiveAppeal);
     }
 }
+

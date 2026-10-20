@@ -13,7 +13,7 @@ public class AppealServiceTests
     private readonly IGradeRepository _gradeRepo = Substitute.For<IGradeRepository>();
     private readonly IEnrollmentRepository _enrollmentRepo = Substitute.For<IEnrollmentRepository>();
 
-    private AppealService CreateSut() => new(_appealRepo, _gradeRepo, _enrollmentRepo);
+    private AppealService CreateSut() => new(_appealRepo, _gradeRepo, _enrollmentRepo, TimeProvider.System);
 
     private static Enrollment MakeEnrollment(Guid studentId, Guid professorId)
     {

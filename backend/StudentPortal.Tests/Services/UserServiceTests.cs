@@ -12,10 +12,11 @@ namespace StudentPortal.Tests.Services;
 public class UserServiceTests
 {
     private readonly IUserRepository _userRepo = Substitute.For<IUserRepository>();
+    private readonly IRefreshTokenRepository _refreshTokenRepo = Substitute.For<IRefreshTokenRepository>();
     // Use the real AutoMapper profile so DTO mappings behave as they would in production.
     private readonly IMapper _mapper = TestMapper.Create();
 
-    private UserService CreateSut() => new(_userRepo, _mapper);
+    private UserService CreateSut() => new(_userRepo, _refreshTokenRepo, _mapper);
 
     private static User MakeUser(RoleEnum role = RoleEnum.Student, string email = "jane@example.com")
     {
