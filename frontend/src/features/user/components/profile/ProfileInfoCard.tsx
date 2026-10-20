@@ -11,31 +11,31 @@ const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({ user }) => (
   <div className="card mb-4">
     <div className="card-header fw-semibold">Your Info</div>
     <ul className="list-group list-group-flush">
-      <li className="list-group-item d-flex justify-content-between">
+      <li className="list-group-item d-flex justify-content-between gap-3 flex-wrap">
         <span className="text-muted">First Name</span>
-        <span>{user.firstName}</span>
+        <span className="text-break text-end">{user.firstName}</span>
       </li>
-      <li className="list-group-item d-flex justify-content-between">
+      <li className="list-group-item d-flex justify-content-between gap-3 flex-wrap">
         <span className="text-muted">Last Name</span>
-        <span>{user.lastName}</span>
+        <span className="text-break text-end">{user.lastName}</span>
       </li>
-      <li className="list-group-item d-flex justify-content-between">
+      <li className="list-group-item d-flex justify-content-between gap-3 flex-wrap">
         <span className="text-muted">Email</span>
-        <span>{user.email}</span>
+        <span className="text-break text-end">{user.email}</span>
       </li>
       {user.userRole === USER_ROLES.Student && (
-        <li className="list-group-item d-flex justify-content-between">
+        <li className="list-group-item d-flex justify-content-between gap-3 flex-wrap">
           <span className="text-muted">Index Number</span>
-          <span>{user.indexNumber ?? '—'}</span>
+          <span className="text-break text-end">{user.indexNumber ?? '—'}</span>
         </li>
       )}
-      <li className="list-group-item d-flex justify-content-between">
+      <li className="list-group-item d-flex justify-content-between gap-3 flex-wrap">
         <span className="text-muted">Role</span>
-        <span>{ROLE_LABELS[user.userRole] ?? '—'}</span>
+        <span className="text-break text-end">{ROLE_LABELS[user.userRole] ?? '—'}</span>
       </li>
-      <li className="list-group-item d-flex justify-content-between">
+      <li className="list-group-item d-flex justify-content-between gap-3 flex-wrap">
         <span className="text-muted">Member since</span>
-        <span>{formatDate(user.createdAt)}</span>
+        <span className="text-break text-end">{formatDate(user.createdAt)}</span>
       </li>
     </ul>
   </div>
