@@ -12,11 +12,13 @@ namespace StudentPortal.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository, IMapper mapper)
+    public UserService(IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, IMapper mapper)
     {
         _userRepository = userRepository;
+        _refreshTokenRepository = refreshTokenRepository;
         _mapper = mapper;
     }
 
@@ -123,7 +125,7 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
 
         user.UserPassword = PasswordHashHandler.HashPassword(dto.NewPassword);
         await _userRepository.UpdateUserAsync(user);
-        // TODO Task 6: call IRefreshTokenRepository.RevokeAllForUserAsync(callerId) here
+        await _refreshTokenRepository.RevokeAllForUserAsync(callerId);
     }
 
     public async Task<IEnumerable<StudentSubjectGradesDto>> GetStudentSubjectsAndGradesAsync(Guid studentId)

@@ -52,6 +52,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<StudentPortalApiContext>(options =>
     options.UseNpgsql(connectionString));
 
+// System clock as the default TimeProvider; tests swap in FakeTimeProvider.
+builder.Services.AddSingleton(TimeProvider.System);
+
 // Registracija AutoMappera
 
 // Registracija repozitorija za Dependency Injection
@@ -172,3 +175,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

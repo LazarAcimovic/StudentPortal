@@ -11,15 +11,18 @@ public class GradeService : IGradeService
     private readonly IGradeRepository _gradeRepository;
     private readonly IGradeDraftRepository _draftRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
+    private readonly TimeProvider _timeProvider;
 
     public GradeService(
         IGradeRepository gradeRepository,
         IGradeDraftRepository draftRepository,
-        IEnrollmentRepository enrollmentRepository)
+        IEnrollmentRepository enrollmentRepository,
+        TimeProvider timeProvider)
     {
         _gradeRepository = gradeRepository;
         _draftRepository = draftRepository;
         _enrollmentRepository = enrollmentRepository;
+        _timeProvider = timeProvider;
     }
 
     public async Task<GradeDto?> GetByEnrollmentAsync(Guid enrollmentId, Guid callerProfId)
@@ -50,8 +53,8 @@ public class GradeService : IGradeService
             PracticalPoints = practicalPoints,
             ExamPoints = examPoints,
             FinalGrade = ComputeFinalGrade(sum),
-            ConfirmedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            ConfirmedAt = _timeProvider.GetUtcNow().UtcDateTime,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime
         };
 
         await _gradeRepository.AddGradeAsync(grade);
@@ -83,8 +86,9 @@ public class GradeService : IGradeService
 
         grade.ExamPoints = examPoints;
         grade.FinalGrade = ComputeFinalGrade(sum);
-        grade.ConfirmedAt = DateTime.UtcNow;
-        grade.FinalizedAt = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        grade.ConfirmedAt = now;
+        grade.FinalizedAt = now;
 
         await _gradeRepository.UpdateGradeAsync(grade);
 
@@ -112,8 +116,9 @@ public class GradeService : IGradeService
         if (hasPendingAppeal)
             throw new InvalidOperationException("Cannot confirm while an appeal is pending.");
 
-        grade.StudentConfirmedAt = DateTime.UtcNow;
-        grade.FinalizedAt = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        grade.StudentConfirmedAt = now;
+        grade.FinalizedAt = now;
 
         await _gradeRepository.UpdateGradeAsync(grade);
 

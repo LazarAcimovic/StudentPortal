@@ -9,11 +9,13 @@ public class StudentDashboardService : IStudentDashboardService
 {
     private readonly IUserRepository _userRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
+    private readonly TimeProvider _timeProvider;
 
-    public StudentDashboardService(IUserRepository userRepository, IEnrollmentRepository enrollmentRepository)
+    public StudentDashboardService(IUserRepository userRepository, IEnrollmentRepository enrollmentRepository, TimeProvider timeProvider)
     {
         _userRepository = userRepository;
         _enrollmentRepository = enrollmentRepository;
+        _timeProvider = timeProvider;
     }
 
     public async Task<StudentDashboardDto> GetDashboardAsync(Guid studentId)
@@ -23,7 +25,7 @@ public class StudentDashboardService : IStudentDashboardService
             throw new KeyNotFoundException("Student not found.");
 
         var enrollments = (await _enrollmentRepository.GetStudentEnrollmentsForDashboardAsync(studentId)).ToList();
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
 
         var subjectRows = enrollments.Select(e => BuildSubjectRow(e, now)).ToList();
 

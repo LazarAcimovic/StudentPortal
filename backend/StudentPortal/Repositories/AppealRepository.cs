@@ -59,9 +59,9 @@ public class AppealRepository : IAppealRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Appeal>> GetAppealsByProfessorIdForDashboardAsync(Guid professorId)
+    public async Task<IEnumerable<Appeal>> GetAppealsByProfessorIdForDashboardAsync(Guid professorId, DateTime now)
     {
-        var undoCutoff = DateTime.UtcNow.AddHours(-24);
+        var undoCutoff = now.AddHours(-24);
         return await _context.Appeals
             .Include(a => a.Grade)
                 .ThenInclude(g => g.Enrollment)

@@ -9,11 +9,13 @@ public class GradeDraftService : IGradeDraftService
 {
     private readonly IGradeDraftRepository _draftRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
+    private readonly TimeProvider _timeProvider;
 
-    public GradeDraftService(IGradeDraftRepository draftRepository, IEnrollmentRepository enrollmentRepository)
+    public GradeDraftService(IGradeDraftRepository draftRepository, IEnrollmentRepository enrollmentRepository, TimeProvider timeProvider)
     {
         _draftRepository = draftRepository;
         _enrollmentRepository = enrollmentRepository;
+        _timeProvider = timeProvider;
     }
 
     public async Task<GradeDraftDto?> GetDraftAsync(Guid enrollmentId, Guid callerProfId)
@@ -44,7 +46,7 @@ public class GradeDraftService : IGradeDraftService
                 AttendancePoints = attendancePoints,
                 PracticalPoints = practicalPoints,
                 ExamPoints = examPoints,
-                LastEditedAt = DateTime.UtcNow
+                LastEditedAt = _timeProvider.GetUtcNow().UtcDateTime
             };
             await _draftRepository.AddAsync(draft);
             return MapToDto(draft);
@@ -56,7 +58,7 @@ public class GradeDraftService : IGradeDraftService
             existing.AttendancePoints = attendancePoints;
             existing.PracticalPoints = practicalPoints;
             existing.ExamPoints = examPoints;
-            existing.LastEditedAt = DateTime.UtcNow;
+            existing.LastEditedAt = _timeProvider.GetUtcNow().UtcDateTime;
             await _draftRepository.UpdateAsync(existing);
             return MapToDto(existing);
         }

@@ -11,15 +11,18 @@ public class AppealService : IAppealService
     private readonly IAppealRepository _appealRepository;
     private readonly IGradeRepository _gradeRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
+    private readonly TimeProvider _timeProvider;
 
     public AppealService(
         IAppealRepository appealRepository,
         IGradeRepository gradeRepository,
-        IEnrollmentRepository enrollmentRepository)
+        IEnrollmentRepository enrollmentRepository,
+        TimeProvider timeProvider)
     {
         _appealRepository = appealRepository;
         _gradeRepository = gradeRepository;
         _enrollmentRepository = enrollmentRepository;
+        _timeProvider = timeProvider;
     }
 
     public async Task<AppealDto> SubmitAsync(Guid callerStudentId, SubmitAppealDto dto)
@@ -38,7 +41,7 @@ public class AppealService : IAppealService
         if (grade.FinalizedAt != null)
             throw new InvalidOperationException("This grade is already finalized.");
 
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
         var appeals = await _appealRepository.GetByGradeIdAsync(grade.Id);
 
         var activePending = appeals.FirstOrDefault(a =>
@@ -91,7 +94,7 @@ public class AppealService : IAppealService
     public async Task<IEnumerable<AppealDto>> GetPendingForProfessorAsync(Guid callerProfId)
     {
         var appeals = await _appealRepository.GetPendingByProfessorIdAsync(callerProfId);
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
         return appeals.Select(a => MapToDto(a, now)).ToList();
     }
 
@@ -108,7 +111,7 @@ public class AppealService : IAppealService
         if (!appeals.Any())
             throw new KeyNotFoundException("No appeals found for this grade.");
 
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
         return appeals.Select(a => MapToDto(a, now)).ToList();
     }
 
@@ -120,7 +123,7 @@ public class AppealService : IAppealService
 
         VerifyProfessorOwnsAppeal(appeal, callerProfId);
 
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
         if (appeal.Status != AppealStatus.Pending || appeal.SubmittedAt.AddDays(7) < now)
             throw new InvalidOperationException("Cannot accept an overdue or non-pending appeal.");
 
@@ -139,7 +142,7 @@ public class AppealService : IAppealService
 
         VerifyProfessorOwnsAppeal(appeal, callerProfId);
 
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
         if (appeal.Status != AppealStatus.Pending || appeal.SubmittedAt.AddDays(7) < now)
             throw new InvalidOperationException("Cannot deny an overdue or non-pending appeal.");
 
@@ -168,7 +171,8 @@ public class AppealService : IAppealService
         if (appeal.Status != AppealStatus.Denied)
             throw new InvalidOperationException("Only a denied appeal can be undone.");
 
-        if (appeal.ReviewedAt == null || DateTime.UtcNow > appeal.ReviewedAt.Value.AddHours(24))
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        if (appeal.ReviewedAt == null || now >= appeal.ReviewedAt.Value.AddHours(24))
             throw new InvalidOperationException("The 24-hour undo window has expired.");
 
         appeal.Status = AppealStatus.Pending;
@@ -182,7 +186,7 @@ public class AppealService : IAppealService
             await _gradeRepository.UpdateGradeAsync(grade);
         }
 
-        return MapToDto(appeal, DateTime.UtcNow);
+        return MapToDto(appeal, now);
     }
 
     private static void VerifyProfessorOwnsAppeal(Appeal appeal, Guid callerProfId)
@@ -191,9 +195,9 @@ public class AppealService : IAppealService
             throw new ForbiddenAccessException("You do not teach the subject for this appeal.");
     }
 
-    private static AppealDto MapToDto(Appeal appeal, DateTime? now = null)
+    private AppealDto MapToDto(Appeal appeal, DateTime? now = null)
     {
-        var computedStatus = ComputeStatus(appeal, now ?? DateTime.UtcNow);
+        var computedStatus = ComputeStatus(appeal, now ?? _timeProvider.GetUtcNow().UtcDateTime);
         return new AppealDto
         {
             Id = appeal.Id,

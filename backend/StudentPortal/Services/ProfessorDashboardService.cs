@@ -9,21 +9,23 @@ public class ProfessorDashboardService : IProfessorDashboardService
 {
     private readonly IEnrollmentRepository _enrollmentRepository;
     private readonly IAppealRepository _appealRepository;
+    private readonly TimeProvider _timeProvider;
 
     public ProfessorDashboardService(
         IEnrollmentRepository enrollmentRepository,
-        IAppealRepository appealRepository)
+        IAppealRepository appealRepository,
+        TimeProvider timeProvider)
     {
         _enrollmentRepository = enrollmentRepository;
         _appealRepository = appealRepository;
+        _timeProvider = timeProvider;
     }
 
     public async Task<ProfessorDashboardDto> GetDashboardAsync(Guid professorId)
     {
         var enrollments = (await _enrollmentRepository.GetEnrollmentsForProfessorDashboardAsync(professorId)).ToList();
-        var appeals = (await _appealRepository.GetAppealsByProfessorIdForDashboardAsync(professorId)).ToList();
-
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        var appeals = (await _appealRepository.GetAppealsByProfessorIdForDashboardAsync(professorId, now)).ToList();
 
         var subjects = enrollments
             .GroupBy(e => e.Subject.Id)

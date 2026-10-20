@@ -9,5 +9,5 @@ public interface IAppealRepository
     Task<IEnumerable<Appeal>> GetPendingByProfessorIdAsync(Guid professorId);
     Task<Appeal> AddAsync(Appeal appeal);
     Task UpdateAsync(Appeal appeal);
-    Task<IEnumerable<Appeal>> GetAppealsByProfessorIdForDashboardAsync(Guid professorId);
+    Task<IEnumerable<Appeal>> GetAppealsByProfessorIdForDashboardAsync(Guid professorId, DateTime now);
 }
