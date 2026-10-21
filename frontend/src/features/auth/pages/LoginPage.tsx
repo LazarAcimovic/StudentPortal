@@ -6,7 +6,6 @@ import { EyeIcon, EyeSlashIcon } from "../../../shared/constants/icons";
 import { login } from "../api/authService";
 import { loginSchema } from "../models/schemas/loginSchema";
 import type { LoginFormValues } from "../models/schemas/loginSchema";
-import { toast } from "react-toastify";
 import { APP_ROUTES } from "../../../config/constants";
 import {
   LOGIN_INITIAL_VALUES,
@@ -66,7 +65,6 @@ const LoginPage: React.FC = () => {
       }
     } catch {
       setServerError("Invalid email or password");
-      toast.error("Invalid email or password");
     } finally {
       setIsSubmitting(false);
     }
