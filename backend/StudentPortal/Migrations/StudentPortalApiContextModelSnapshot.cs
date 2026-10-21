@@ -262,6 +262,13 @@ namespace StudentPortal.Migrations
                     b.Property<Guid>("ProfessorId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("SubjectCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("SubjectName")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");

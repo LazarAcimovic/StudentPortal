@@ -9,6 +9,8 @@ public class Subject
 
     public string SubjectName { get; set; }
 
+    public string SubjectCode { get; set; } = string.Empty;
+
     public int ECTS { get; set; }
 
     public Guid ProfessorId { get; set; }
