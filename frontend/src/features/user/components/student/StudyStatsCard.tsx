@@ -15,7 +15,7 @@ const StudyStatsCard: React.FC<Props> = ({ stats }) => (
         <div className="col-12 col-sm-6 col-md-3">
           <div className="p-3 border rounded text-center">
             <div className="text-muted small mb-1">Average Grade</div>
-            <h2 className="fw-bold text-success mb-0">{stats.averageGrade.toFixed(1)}</h2>
+            <h2 className="fw-bold text-success mb-0">{stats.averageGrade.toFixed(2)}</h2>
           </div>
         </div>
         <div className="col-12 col-sm-6 col-md-3">
