@@ -1775,6 +1775,450 @@ If a test fails because the fixture or helper is wrong (test defect), fix the te
 
 ---
 
+### Task 22d — End-to-end tests (Playwright, Chromium, real backend + real frontend + Dockerized Postgres)
+
+# Task: Create a High-Quality End-to-End Test Suite
+
+Your task is to create a reliable, maintainable **end-to-end (e2e) test suite** that drives the real SPA in a real Chromium browser against the real ASP.NET Core backend talking to a real Postgres database (brought up via Docker Compose, isolated from the developer's local Postgres). The suite covers the critical user journeys end-to-end — the paths a human would walk through the product.
+
+Follow the testing best practices described in:
+
+- https://playwright.dev/docs/best-practices
+- https://playwright.dev/docs/test-fixtures
+- https://playwright.dev/docs/test-auth
+- https://playwright.dev/docs/test-webserver
+- https://milanjovanovic.tech/blog/unit-testing-best-practices-dotnet (universal AAA / naming / isolation / determinism principles — apply to Playwright)
+
+## 0. Non-negotiable rule — PRD is the source of truth
+
+**All tests MUST be derived from the PRD, Tech.md, DB.md, and UI.md — never from the current implementation's behaviour.**
+
+* The implementation may contain bugs or contradict the PRD. Tests exist to catch exactly that.
+* If a test's expected outcome and the implementation disagree, the **test wins** by default; the discrepancy is reported as a suspected production defect per §10.
+* Do not weaken an assertion, skip a test, or change an expected result to match what the code currently does.
+* If a PRD requirement is ambiguous, incomplete, or contradictory, document the ambiguity in the strategy phase (§11 step 4) and stop for direction. Do not invent a rule.
+* Inspecting the implementation is allowed only to understand *how to invoke* each flow (route names, button labels, API URLs, DOM structure), never to decide *what the expected behaviour is*.
+
+## 1. Analyze the Requirements First
+
+1. Read the PRD (§2 actors, §3 grading model, §4 appeal flow, §5 screens, §6 security, §7 seeding), `docs/Tech.md`, `docs/DB.md`, and `docs/UI.md`.
+2. Extract every **cross-page, cross-role, cross-tier critical user journey** that a human actually walks through — login, change password, admin creates a user, professor grades a student, student appeals, professor reviews, dashboards update accordingly. These are flows that span the SPA + API + database and therefore cannot be fully verified by Task 22a (backend-only), 22b (frontend-unit), or 22c (frontend-integration).
+3. Produce a concise requirements traceability matrix mapping each covered PRD rule to its planned e2e test. Present it in the strategy phase for review before implementation.
+
+## 2. Scope: Critical User Journeys Only
+
+**E2E tests exclusively. No pure unit tests (Task 22), no backend integration tests (22a), no frontend unit tests (22b), no frontend integration tests (22c), no load/performance/security-scanning tests.** Each test:
+
+* Runs in a real **Chromium** browser via Playwright. Firefox and WebKit are **out of scope** for this task — Chromium is the single engine the project supports for e2e.
+* Launches the real backend (`dotnet run`) and real frontend (`vite`) via Playwright's `webServer` config.
+* Hits a real Postgres database brought up by `docker compose` from `e2e/docker-compose.yml` on port **5433** (never the developer's local 5432).
+* Uses the real auth stack — real cookies set by the server, real JWT, real refresh rotation, real `axiosClient` silent-refresh interceptor.
+* Asserts observable UI behaviour (what the user sees and can click), not implementation details.
+
+**Target size: ~15–25 tests total.** This is deliberately small. E2E tests are expensive (slow, flaky under load, hard to debug). The suite covers only the critical journeys — the paths that must work for the product to be shippable. Granular coverage of validation rules, matrices, and edge cases lives in 22a/22b/22c.
+
+Covered journeys (the "must work" list):
+
+### 2.1 Auth journeys
+
+* **Login happy path**: open `/login`, type seeded student's email + password, click `Login`, land on `/student-dashboard` with the greeting rendering the correct first name. Same for professor and admin seeded users (parameterised).
+* **Login unhappy path**: wrong password → generic error toast ("Invalid email or password"), stays on `/login`, no cookies set.
+* **Login as soft-deleted user**: same generic error, same cookie behaviour.
+* **Change password + sign-out-everywhere**: authenticated student navigates to `/profile/change-password`, submits valid current + new password, is redirected to `/login` with the success toast visible, and attempting any protected request from the previous session fails.
+
+### 2.2 Grading journey (the central product loop)
+
+* **Full grading loop — student confirms**: professor opens dashboard, selects a subject, selects a student, enters 5 point values, clicks **Save draft**, re-opens the student (draft pre-fills), clicks **Confirm**. The student logs in, sees the grade on their dashboard with the correct Status badge (🟡 Awaiting confirmation), clicks **Confirm grade**, the row flips to 🟢 Passed / 🔴 Failed and Earned ECTS updates by the subject's ECTS value when the final grade ≥ 6.
+* **Full grading loop — student appeals, professor accepts, professor re-confirms**: professor confirms a grade; student submits an appeal (text max 1000 chars) via the Write-appeal Modal; professor opens the Appeals section, clicks **View appeal**, clicks **Accept**; the grading panel re-opens with the four non-exam fields collapsed to a one-line summary and the exam input editable; professor edits exam, clicks **Confirm**; the student dashboard flips to the new final grade (truly final immediately — no new 7-day window).
+* **Full grading loop — student appeals, professor denies**: professor confirms a grade; student submits an appeal; professor opens the appeal, clicks **Deny**, confirms the sub-step; the student dashboard shows the final grade with the 🔴 Appeal denied badge; ECTS counts (if passing).
+
+### 2.3 Appeal time-boundary journeys (using the test-only clock-advance endpoint)
+
+* **Appeal goes Overdue (prof forgets)**: student submits an appeal; test advances the clock by 7 days + 1 second via `POST /api/__test__/advance-clock`; professor's Appeals section shows the appeal as Overdue; **Accept** and **Deny** buttons are not rendered on the row; student's dashboard shows **Write appeal** again (fresh 7-day window).
+* **24h deny-undo window**: professor denies an appeal; the row shows the **Undo** button with a positive countdown; test advances by 23h 59m — Undo still visible; advance by 2 more minutes (crossing 24h) — Undo gone and the row no longer offers it.
+* **Day-8 auto-finalize of the initial window**: student does nothing after the grade is confirmed; test advances 7 days + 1 second; the student's dashboard shows the grade as truly final (status flipped to Passed / Failed, no action buttons), per PRD §4.6 Q28.
+
+### 2.4 Admin journey
+
+* **Admin creates a user**: admin opens `/admin-dashboard` Users tab, clicks **Create New User**, fills the form with role=Student (IndexNumber field appears), submits; the new user appears in the table and can log in on a second browser context using the password admin set.
+* **Admin edits another user**: admin edits a seeded student's first name; the change persists after reload. Admin's own row has no Edit button rendered (PRD §5.3).
+* **Admin cannot soft-delete self through the UI**: admin's own row never exposes an Edit button, confirming the client-side gate (PRD §5.3).
+
+### 2.5 Dashboard journeys
+
+* **Student dashboard renders real seeded data**: logged-in student sees My Information with their actual seeded first/last name, email, index number; Study Statistics tiles bind to the backend-computed values (Average Grade two decimals, Passed Exams, Non-passed Exams, Earned ECTS per §4.7); subjects table lists their seeded enrollments.
+* **Professor dashboard renders real seeded data**: logged-in professor sees their subjects (ProfessorId == self), the enrolled students on subject click, and an Appeals section populated with any seeded Pending + Overdue appeals (and nothing from other professors).
+
+**Out of scope for 22d (because 22a/22b/22c already cover them):**
+
+* Zod validation permutations (covered in 22b/22c).
+* Point-field range + step validation `[Theory]` (covered in 22a and 22b).
+* Final-grade bucket mapping `[Theory]` (covered in 22a and 22b).
+* All non-happy status matrix combinations beyond the ones listed above (covered in 22c).
+* Responsive breakpoint collapse (covered in 22c).
+* Accessibility assertions (covered in 22c).
+* Silent-refresh interceptor single-flight serialization (covered in 22b and 22c).
+* Role-based 401/403 matrix across every endpoint (covered in 22a).
+
+## 3. Project Layout — root `e2e/` folder
+
+The e2e suite lives in a brand-new folder at the repository root, **outside** `frontend/` and `backend/`. It has its own `package.json`, its own `node_modules`, and its own `tsconfig.json`.
+
+```
+e2e/
+├── docker-compose.yml           # postgres:17 on port 5433, named volume for data
+├── playwright.config.ts         # Chromium project, webServer config, globalSetup, globalTeardown
+├── package.json                 # @playwright/test, pg, dotenv — no runtime app deps
+├── tsconfig.json                # ES2022, strict, moduleResolution: bundler
+├── .env.e2e.example             # committed — ENABLE_TEST_ENDPOINTS=true, E2E_DB_* keys with placeholders
+├── README.md                    # how to run the suite, prerequisites, how auth storageState works
+├── global-setup.ts              # waits for Postgres container, runs EF migrations, loads seed.sql, signs in each role once and saves storageState files
+├── global-teardown.ts           # stops the backend/frontend child processes cleanly
+├── fixtures/
+│   ├── test.ts                  # extends Playwright `test` with per-test DB reset + re-seed + per-role contexts
+│   ├── db.ts                    # pg client wrapper: `resetAndReseed()`, `backdateAppealSubmittedAt(id, timestamp)`, `backdateGradeConfirmedAt(id, timestamp)`, `backdateAppealReviewedAt(id, timestamp)`
+│   └── api.ts                   # Sender-pattern API helpers: `apiLogin(role)`, `apiConfirmGrade(cookie, enrollmentId, points)`, `apiSubmitAppeal(cookie, gradeId, text)` — used only for setup inside tests, never as the thing under test
+├── storage/                     # gitignored — populated by global-setup
+│   ├── admin.json               # Playwright storageState for seeded admin
+│   ├── professor-a.json
+│   └── student-1.json
+├── helpers/
+│   ├── seedUsers.ts             # typed constants mirroring seed.sql (Admin, ProfessorA..D, Student1..10, Password123!)
+│   └── clock.ts                 # thin wrapper around `POST /api/__test__/advance-clock` with typed args
+└── tests/
+    ├── auth/
+    │   ├── login.spec.ts           # UI login (does NOT use storageState — the whole point is to test the login screen)
+    │   └── change-password.spec.ts # sign-out-everywhere journey
+    ├── grading/
+    │   ├── full-loop-student-confirms.spec.ts
+    │   ├── full-loop-student-appeals-prof-accepts.spec.ts
+    │   └── full-loop-student-appeals-prof-denies.spec.ts
+    ├── appeals/
+    │   ├── appeal-goes-overdue.spec.ts
+    │   ├── deny-undo-24h-boundary.spec.ts
+    │   └── auto-finalize-day-8.spec.ts
+    ├── admin/
+    │   ├── create-user.spec.ts
+    │   └── edit-user-and-self-row.spec.ts
+    └── dashboards/
+        ├── student-dashboard-renders-seeded-data.spec.ts
+        └── professor-dashboard-renders-seeded-data.spec.ts
+```
+
+Gitignore additions (`.gitignore` at repo root):
+
+```
+e2e/node_modules
+e2e/.env.e2e
+e2e/storage/
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/
+```
+
+**Not committed:**
+* `e2e/.env.e2e` (holds the actual env values for the local run).
+* `e2e/storage/*.json` (regenerated on every suite run by `global-setup.ts` — fresh signed-in sessions every run).
+* `e2e/node_modules/` and all Playwright caches.
+* Any Playwright report artifacts.
+
+**Committed:**
+* `e2e/.env.e2e.example` (documents the keys with placeholders; the dev value `ENABLE_TEST_ENDPOINTS=true` is safe to show in an example file — it is not a secret).
+
+## 4. Fixture and Database Reset Strategy — reset + re-seed between every test
+
+**Strongest isolation, slowest wall-clock.** Chosen deliberately: e2e tests must not depend on execution order, residual rows from a previous test, or shared mutable state.
+
+`e2e/fixtures/test.ts` extends Playwright's `test`:
+
+```ts
+import { test as base } from '@playwright/test';
+import { resetAndReseed } from './db';
+
+export const test = base.extend<{ freshDb: void }>({
+  freshDb: [async ({}, use) => {
+    await resetAndReseed();
+    await use();
+  }, { auto: true }],
+});
+
+export { expect } from '@playwright/test';
+```
+
+Every test file imports `test` from `e2e/fixtures/test.ts`, not from `@playwright/test`. The `auto: true` fixture runs before every test, calls `resetAndReseed()`, and the test starts from the full seeded baseline.
+
+`resetAndReseed()`:
+
+1. Open a pg client against the Dockerized Postgres (`localhost:5433`).
+2. `TRUNCATE` every table in dependency-safe order, or run `Respawner`-equivalent SQL.
+3. Execute `backend/StudentPortal/Migrations/seed.sql` against the test DB.
+4. Reset the TimeProvider via `POST /api/__test__/reset-clock` so each test starts at the pinned baseline moment.
+
+**Rules:**
+
+* No test asserts on data from a previous test.
+* No test modifies `seed.sql`.
+* The baseline seed (per PRD §7) is the only shared starting point.
+* Any state beyond the seed is created in-test via (preferred, Sender pattern) real API calls as a seeded user, or (fallback) direct DB writes through `e2e/fixtures/db.ts` for backdating timestamps.
+* No test runs `node_modules`-level cleanup — all cleanup is DB truncation + re-seed.
+
+Expected per-test overhead: ~5–10 seconds for truncate + seed + clock-reset. For ~20 tests, suite wall-clock sits around 3–5 minutes on a developer laptop. Acceptable for a project of this size.
+
+## 5. Authentication in Tests — `storageState` per role (except `login.spec.ts`)
+
+Tests do NOT sign in through the Login screen unless they are explicitly testing the Login screen. The default is Playwright's `storageState` pattern:
+
+* `global-setup.ts` signs in once per seeded role (admin, professor A, student 1) by hitting `POST /api/Account/Login` with a `request` context, and saves the resulting cookies to `e2e/storage/<role>.json`.
+* Each test file sets `test.use({ storageState: 'e2e/storage/student-1.json' })` (or admin / professor-a) at the top. Every page in the test opens already-authenticated — the browser context starts with `sp_access` + `sp_refresh` cookies pre-loaded.
+* `tests/auth/login.spec.ts` is the exception: it uses `test.use({ storageState: { cookies: [], origins: [] } })` so the browser starts anonymous, then drives the real `/login` UI to verify the Login screen itself.
+
+Why this is still real e2e:
+* Every test still runs the real UI in a real Chromium against the real backend.
+* `storageState` only skips the *repeated login step* that would otherwise cost ~2 seconds × 20 tests = 40 seconds of pure form-filling.
+* The login UI is still exercised by `login.spec.ts` (success + wrong password + soft-deleted user).
+
+Seeded users and shared password constants live in `e2e/helpers/seedUsers.ts`, mirroring the seed data per PRD §7. Shared password: `Password123!`.
+
+## 6. Time Control — two mechanisms, both backed by the backend's injected TimeProvider
+
+Playwright itself cannot control the backend's clock. We solve this with two coordinated primitives in the backend, both gated behind `ENABLE_TEST_ENDPOINTS=true` so they never ship to production.
+
+### 6.1 TimeProvider swap (test-mode wiring in `Program.cs`)
+
+When the backend boots with `ENABLE_TEST_ENDPOINTS=true`, `Program.cs` registers `FakeTimeProvider` as the singleton `TimeProvider` instead of `TimeProvider.System`:
+
+```csharp
+if (builder.Configuration.GetValue<bool>("EnableTestEndpoints")) {
+    var fake = new FakeTimeProvider(startDateTime: DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
+    builder.Services.AddSingleton<TimeProvider>(fake);
+    // test-only endpoints are also mapped — see §6.2
+} else {
+    builder.Services.AddSingleton(TimeProvider.System);
+}
+```
+
+In production the flag is never set, so `TimeProvider.System` is the only registration path and no test endpoints exist in the route table.
+
+### 6.2 Test-only `/api/__test__/*` endpoints
+
+Mapped only when the flag is on:
+
+* `POST /api/__test__/advance-clock` — body `{ "seconds": 604801 }` (7 days + 1 s). Calls `_fakeTimeProvider.Advance(TimeSpan.FromSeconds(dto.seconds))`.
+* `POST /api/__test__/reset-clock` — resets the fake clock to the baseline `2026-01-01T00:00:00Z`.
+* `POST /api/__test__/reset-db` — alternative to the pg-client reset path, in case any test needs it mid-run.
+
+**Four-layer production safety guard** (all four MUST be implemented together):
+
+1. **Endpoint registration gate** — the test endpoints are mapped only inside the `if (EnableTestEndpoints)` branch. In production the routes simply do not exist (HTTP 404).
+2. **FakeTimeProvider gate** — the FakeTimeProvider singleton is registered only inside the same branch. In production `TimeProvider.System` is registered, so even if a test endpoint were somehow routed, there would be no fake clock to advance.
+3. **Fail-fast startup guard** — `Program.cs` throws on boot if `EnableTestEndpoints == true` AND `builder.Environment.IsProduction()`. The app refuses to start on Render even if someone accidentally sets the env var.
+4. **Kestrel localhost-only filter** — the test endpoints are additionally restricted to accept requests only from the loopback interface (`127.0.0.1` / `::1`) via a middleware or endpoint convention. Any non-loopback request to `/api/__test__/*` returns 404 regardless of the flag.
+
+Env-var hygiene:
+
+* `e2e/.env.e2e` (gitignored) holds `ENABLE_TEST_ENDPOINTS=true` and the test DB connection string. Playwright's `webServer` config reads this file via `dotenv/config` and passes the values as `env` to the spawned backend process.
+* `e2e/.env.e2e.example` (committed) documents the keys with placeholders. Developers run `cp e2e/.env.e2e.example e2e/.env.e2e` before the first suite run.
+* `.env.e2e` is **never** copied to any other environment. Render's env config does not contain this variable.
+
+### 6.3 Required boundary coverage at e2e layer (narrow — exhaustive boundaries live in 22a)
+
+| Boundary | Covered journey | How |
+|---|---|---|
+| Student initial 7-day window → auto-finalize on day 8 | `auto-finalize-day-8.spec.ts` | advance-clock by 7 days + 1 s, reload dashboard, assert status flip + ECTS |
+| Professor 7-day review window → appeal becomes Overdue | `appeal-goes-overdue.spec.ts` | advance-clock by 7 days + 1 s, reload professor dashboard, assert Overdue row with no Accept/Deny |
+| 24h deny-undo window | `deny-undo-24h-boundary.spec.ts` | advance-clock by 23h 59m (before — Undo visible) then + 2 min (after — Undo gone) |
+
+Exact-second boundaries (6d 23h 59m, 7d 00m 00s, 7d 00m 01s) are **not** re-tested at e2e layer — Task 22a already covers them with sub-second precision. The e2e boundary coverage is "before vs after" at a 1-minute resolution to prove the two primitives (TimeProvider swap + advance-clock endpoint) are correctly wired.
+
+### 6.4 No wall-clock sleeps
+
+No `await page.waitForTimeout(N)` for time-sensitive behaviour. Any wait that is not explicitly a UI-animation debounce (and bounded to under 500 ms) fails code review. Use `expect(locator).toBeVisible()` with Playwright's web-first retrying assertions, which auto-wait on the UI without hardcoding a delay.
+
+## 7. Test Design Rules
+
+For every journey, cover:
+
+* **Happy path** — the user walks the flow, every step succeeds, the final observable state is correct.
+* **One critical unhappy path per journey** — login wrong password, change-password wrong current password, deny-undo past 24h. Validation-permutation testing stays in 22b/22c.
+* **One critical edge case per journey where cheap** — admin's own row has no Edit button, 1000-char appeal accepted, Appeals section lists only Pending + Overdue (not Denied-inside-undo).
+* **No duplication of 22a/22b/22c coverage.** If a rule is already covered by an integration or unit test, do not re-cover it here. The e2e suite's purpose is cross-tier integration confidence, not comprehensive matrix coverage.
+
+**One logical journey per test.** Descriptive names following `describe('<Journey>', () => test('when X then Y', ...))`. No `.only`, no `.skip`, no `test.fixme` committed. Playwright web-first assertions throughout (`await expect(locator).toBeVisible()`, `.toHaveText()`, `.toHaveURL()`).
+
+**Role selection in locators:**
+
+* Prefer `page.getByRole('button', { name: /confirm grade/i })`.
+* Prefer `page.getByLabel(/current password/i)`.
+* Prefer `page.getByText(/awaiting confirmation/i)`.
+* `data-testid` only as a last resort for elements with no accessible name.
+
+## 8. Anti-Patterns to Avoid
+
+* `page.waitForTimeout(ms)` for anything other than a bounded UI debounce.
+* Hardcoded wall-clock sleeps in time-sensitive journeys — use the advance-clock endpoint.
+* Running without the Dockerized test DB — never point the suite at the developer's local Postgres on 5432.
+* Hitting production endpoints, external services, or any URL not controlled by this repo.
+* Running tests against a shared browser context (`test.use({ storageState: ... })` creates per-test contexts automatically — do not disable this).
+* Reusing a test's rows into the next test ("just reseed what I need") — the per-test reset is a hard contract.
+* Setting cookies by hand to simulate auth — `global-setup.ts` is the only place that mints them.
+* Minting JWTs by hand or installing a test AuthenticationHandler at the e2e layer.
+* Asserting on specific CSS class names, computed styles, or React component names.
+* Snapshot tests of entire page HTML.
+* Writing cross-test fixtures that depend on each other (`test1` creates a user, `test2` grades them). Each test is self-contained.
+* Testing Serbian strings — the project is English-only after Task 0.
+* Committing `.env.e2e`, `storage/*.json`, or Playwright report artifacts.
+* **Writing a test against what the UI does rather than what the PRD says.** Biggest anti-pattern — see §0.
+
+## 9. Subtasks (each gets its own local commit)
+
+- **22d.1** Scaffold the `e2e/` project.
+  - Create `e2e/package.json` (deps: `@playwright/test`, `pg`, `dotenv`; scripts: `test`, `test:headed`, `test:ui`, `docker:up`, `docker:down`).
+  - Create `e2e/tsconfig.json` (strict, ES2022, bundler resolution).
+  - Create `e2e/playwright.config.ts` with: single Chromium project, `use.baseURL`, `use.trace: 'retain-on-failure'`, `use.screenshot: 'only-on-failure'`, `use.video: 'retain-on-failure'`, `globalSetup`, `globalTeardown`, `webServer` entries for backend and frontend, env piped from `.env.e2e` via `dotenv/config`, `workers: 1` (the single Dockerized DB + fake clock cannot be shared across parallel workers).
+  - Create `e2e/docker-compose.yml` for `postgres:17` on port **5433**, named volume `studentportal-e2e-pg`, `POSTGRES_DB=StudentPortal`, `POSTGRES_USER=postgres`, `POSTGRES_PASSWORD=postgres`, healthcheck.
+  - Create `e2e/.env.e2e.example` with keys: `ENABLE_TEST_ENDPOINTS=true`, `E2E_DB_HOST=localhost`, `E2E_DB_PORT=5433`, `E2E_DB_NAME=StudentPortal`, `E2E_DB_USER=postgres`, `E2E_DB_PASSWORD=postgres`, `E2E_BASE_URL=http://localhost:5173`.
+  - Update root `.gitignore`: add `e2e/node_modules`, `e2e/.env.e2e`, `e2e/storage/`, `e2e/test-results/`, `e2e/playwright-report/`, `e2e/blob-report/`.
+  - **You:** run `cd e2e && npm install && npx playwright install chromium` once before the first suite run.
+  - Commit: `test(e2e): scaffold Playwright project with Chromium, Docker Compose, and dotenv wiring`
+
+- **22d.2** Backend: test-mode wiring and `/api/__test__/*` endpoints with the four-layer safety guard.
+  - In `Program.cs`: read `EnableTestEndpoints` from configuration; if `true`, (a) register `FakeTimeProvider` as the `TimeProvider` singleton with baseline `2026-01-01T00:00:00Z`, (b) map the test endpoints, (c) apply the loopback-only middleware/convention to the `/api/__test__/*` route group.
+  - Add the fail-fast guard in `Program.cs` after the configuration has been read but before `app.Run()`, using exactly this shape:
+
+    ```csharp
+    if (enableTestEndpoints &&
+        app.Environment.IsProduction())
+    {
+        throw new InvalidOperationException(
+            "Test endpoints cannot be enabled in Production.");
+    }
+    ```
+
+    The local `enableTestEndpoints` boolean is the value read from `builder.Configuration.GetValue<bool>("EnableTestEndpoints")`. The exception type (`InvalidOperationException`) and the message string (`"Test endpoints cannot be enabled in Production."`) are fixed — do not vary either.
+  - Create `Controllers/TestController.cs` (or minimal-API endpoint group) with `POST /api/__test__/advance-clock`, `POST /api/__test__/reset-clock`, `POST /api/__test__/reset-db`. Each action is `[Authorize]`-free (loopback filter is the gate) and returns `204`.
+  - **This is a pre-approved production code change for Task 22d, analogous to 22a's TimeProvider injection.** No other production code change is permitted without explicit approval.
+  - Verify Task 22a's integration tests still pass (they override TimeProvider via `WebApplicationFactory` DI, not via this env var, so they are unaffected).
+  - Commit: `feat(backend): test-mode TimeProvider swap and /api/__test__ endpoints with production safety guard`
+
+- **22d.3** Fixtures, helpers, and global setup.
+  - Create `e2e/fixtures/db.ts` with a `pg` client, `resetAndReseed()`, and the backdating helpers listed in §3.
+  - Create `e2e/fixtures/api.ts` with Sender-pattern helpers (`apiLogin`, `apiConfirmGrade`, `apiSubmitAppeal`, `apiConfirmDraft` for setup inside tests).
+  - Create `e2e/fixtures/test.ts` extending Playwright `test` with the `freshDb` auto-fixture.
+  - Create `e2e/helpers/seedUsers.ts` with typed constants for every seeded user (per PRD §7).
+  - Create `e2e/helpers/clock.ts` with `advanceClock(seconds)` and `resetClock()` wrappers.
+  - Create `e2e/global-setup.ts`: wait for Postgres container healthcheck, run EF migrations against the test DB (invoke `dotnet ef database update` with `ConnectionStrings__DefaultConnection` pointed at the container), load `seed.sql`, sign in each role via `POST /api/Account/Login` using Playwright's `request` context, save storageState files to `e2e/storage/*.json`.
+  - Create `e2e/global-teardown.ts`: close pg clients, let `webServer` clean up on its own.
+  - Add a smoke spec `e2e/tests/smoke.spec.ts` that opens `/` and asserts the hero heading — proves the whole stack boots end-to-end.
+  - Commit: `test(e2e): fixtures, helpers, global setup with storageState, and smoke test`
+
+- **22d.4** Auth journey tests.
+  - `tests/auth/login.spec.ts` (anonymous storageState): login happy path for each of the three roles (parameterised), wrong password → generic error toast, soft-deleted user login → same generic error.
+  - `tests/auth/change-password.spec.ts` (student storageState): navigate to `/profile/change-password`, submit correct current + valid new, land on `/login` with the success toast, previous session's cookies no longer refresh.
+  - Commit: `test(e2e): auth journey — login and change-password sign-out-everywhere`
+
+- **22d.5** Grading loop journey tests.
+  - `tests/grading/full-loop-student-confirms.spec.ts`: professor grades → saves draft → re-opens (draft pre-fills) → confirms → student logs in via second context → sees 🟡 Awaiting confirmation → clicks Confirm grade → row flips to 🟢 Passed / 🔴 Failed → Earned ECTS tile updates.
+  - `tests/grading/full-loop-student-appeals-prof-accepts.spec.ts`: professor confirms → student submits appeal (1000-char text accepted) → professor sees Appeals section row → clicks View appeal → clicks Accept → grading panel re-opens with the 4-field summary + editable exam → professor edits exam + Confirms → student dashboard shows the new final grade as truly final.
+  - `tests/grading/full-loop-student-appeals-prof-denies.spec.ts`: professor confirms → student submits appeal → professor clicks Deny (confirm sub-step) → student dashboard shows final grade + 🔴 Appeal denied badge → ECTS counts when passing.
+  - Commit: `test(e2e): grading loop journeys — student-confirm, prof-accept, prof-deny`
+
+- **22d.6** Appeal time-boundary journey tests (using the advance-clock endpoint).
+  - `tests/appeals/appeal-goes-overdue.spec.ts`: student submits appeal → advance-clock 7d + 1s → professor dashboard shows the row as Overdue, no Accept/Deny buttons → student dashboard shows **Write appeal** again (fresh window per PRD §4.5).
+  - `tests/appeals/deny-undo-24h-boundary.spec.ts`: professor denies → row shows Undo + countdown → advance 23h 59m → Undo still visible → advance 2 more minutes → Undo gone.
+  - `tests/appeals/auto-finalize-day-8.spec.ts`: professor confirms, student does nothing, advance 7d + 1s → student dashboard flips to Truly final → ECTS counts when passing (PRD §4.6 Q28).
+  - Commit: `test(e2e): appeal time-boundary journeys with test-only clock-advance endpoint`
+
+- **22d.7** Admin journey tests.
+  - `tests/admin/create-user.spec.ts`: admin creates a new Student (IndexNumber field appears), submits, row appears in table; second browser context signs in with the new credentials and lands on `/student-dashboard`.
+  - `tests/admin/edit-user-and-self-row.spec.ts`: admin edits another student's FirstName and verifies persistence after reload; admin's own row has no Edit button (PRD §5.3 — client-side gate).
+  - Commit: `test(e2e): admin journey — create user and self-row protection`
+
+- **22d.8** Dashboard journey tests.
+  - `tests/dashboards/student-dashboard-renders-seeded-data.spec.ts`: student logs in via storageState → My Information card shows the seeded name/email/index → Study Statistics tiles bind to backend values with the exact formatting (Average Grade two decimals) → subjects table has one row per seeded enrollment.
+  - `tests/dashboards/professor-dashboard-renders-seeded-data.spec.ts`: professor logs in via storageState → My Subjects list contains only their own subjects → clicking a subject populates the students column → Appeals section lists seeded Pending + Overdue appeals and nothing else (no Denied-inside-undo, no other professor's appeals).
+  - Commit: `test(e2e): dashboard journeys — student and professor seeded-data binding`
+
+- **22d.9** README + run the full suite + deliver the inline report.
+  - Create `e2e/README.md` covering: prerequisites (Docker Desktop running, Node 20+, .NET 8 SDK), one-time setup (`cp .env.e2e.example .env.e2e`, `npm install`, `npx playwright install chromium`), the run command (see end-of-task), how storageState works, how to add a new test, the four-layer production safety guard summary, and the "PRD is source of truth" rule.
+  - Run the full suite with `npx playwright test` from `e2e/` against a clean checkout and the running Docker Postgres container.
+  - **Actually run it** — do not claim a pass that was not observed. If a test cannot run (Docker missing, port 5433 occupied, backend fails to boot, migration fails), report it as **blocked** with the reason.
+  - **Deliver the report inline in chat** (no `REPORT.md` file is created — this is explicit per the human's instruction). The report contains:
+    1. **Summary line** — `Total: N | Passed: X | Failed: Y | Blocked: Z | Duration: T`.
+    2. **Per-area breakdown** — counts for Auth / Grading / Appeals / Admin / Dashboards.
+    3. **Failed tests** — for each failure:
+       - Fully qualified test name (`describe > test`).
+       - PRD section + rule the test verifies.
+       - Expected result per the PRD.
+       - Actual result + the Playwright failure message / trace excerpt.
+       - Classification: **production defect** (code violates PRD), **test defect** (test is wrong), **environment problem**, or **ambiguous requirement**.
+       - Likely root cause (hypothesis vs confirmed).
+       - **Proposed fix** — concrete, ordered steps naming the files + methods expected to change. For production defects, the fix proposal lives in chat; **no production code is modified yet** (§0 + §10 rule).
+    4. **Blocked tests** — name + reason.
+    5. **PRD requirements covered vs uncovered** — a short list of any PRD rule the e2e suite could not verify at this layer, with the reason.
+    6. **Discrepancies between PRD and current implementation** — a short list, each pointing at the failing test(s) that exposed it.
+  - After delivering the report, **stop and wait for explicit approval** before touching any production code outside the pre-approved 22d.2 test-mode wiring. On approval, apply only the approved fixes, rerun the affected tests, and append a short follow-up report with the new numbers.
+  - Commit (README + any test file touch-ups, no production code): `test(e2e): add README, run full suite, and report baseline results`
+
+## 10. Reporting and Stop-Before-Fixing-Production Rule
+
+After the suite is implemented and executed, report inline (no `REPORT.md` file):
+
+* Framework, package versions, test count.
+* Pass / fail / blocked counts (actually measured — do not claim a pass you did not observe).
+* PRD requirement(s) each failing test maps to.
+* Whether a failure indicates a production defect, a test defect, an environment problem, or an ambiguous requirement.
+* A concrete, ordered remediation plan.
+
+**Do not modify production code to make a test pass, with one exception:** the test-mode wiring in 22d.2 (TimeProvider swap, `/api/__test__/*` endpoints, four-layer safety guard) is the only pre-approved production-code change for this task. Any other production fix requires explicit approval first. See §0 — the test wins over the implementation by default.
+
+## 11. Execution Order
+
+1. Read PRD, Tech.md, DB.md, UI.md.
+2. Build the requirements traceability matrix (PRD rule → planned journey).
+3. Inspect existing frontend routes, backend controllers, `seed.sql`, and the TimeProvider wiring from 22a.2 (to learn how to invoke the system — not to decide expected behaviour, which comes from the PRD per §0).
+4. Present the strategy, the traceability matrix, and any ambiguities for review.
+5. Implement subtasks 22d.1 → 22d.9 in order, each in its own commit.
+6. Run the full suite (22d.9) and deliver the inline report per §10.
+7. If anything fails: stop, report inline, wait for approval before any production fix outside 22d.2.
+
+**Start with steps 1–4. Do not modify any files until you have presented the strategy and matrix for my review.**
+
+## 12. How to run the e2e suite yourself
+
+One-time setup (first run only):
+
+```bash
+cd e2e
+cp .env.e2e.example .env.e2e
+npm install
+npx playwright install chromium
+```
+
+Every run — start the Dockerized Postgres container first, then the suite:
+
+```bash
+cd e2e
+docker compose up -d
+npx playwright test
+docker compose down
+```
+
+Useful variants:
+
+```bash
+npx playwright test --headed                       # watch Chromium drive the UI
+npx playwright test --ui                           # Playwright's interactive runner
+npx playwright test tests/grading                  # one folder
+npx playwright test tests/auth/login.spec.ts       # one file
+npx playwright test -g "appeal goes overdue"       # match by test name
+npx playwright show-report                         # open the HTML report from the last run
+```
+
+The suite expects the test DB on `localhost:5433` and will refuse to run against the developer's local Postgres on `5432`. If port 5433 is already in use, stop the conflicting container (`docker ps`) before running.
+
+
+---
+
 ### Task 23 — README update
 
 - **23.1** Update root `README.md` with: project description, local setup (`dotnet user-secrets` steps, `psql seed.sql`, `npm install`, dev proxy), tech stack, and deployment notes for Render (env vars list, cookie `Secure` requirement, HTTPS redirect).
