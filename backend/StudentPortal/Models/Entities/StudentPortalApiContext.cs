@@ -26,6 +26,10 @@ public partial class StudentPortalApiContext : DbContext
 
     public virtual DbSet<Appeal> Appeals { get; set; }
 
+    public virtual DbSet<Escalation> Escalations { get; set; }
+
+    public virtual DbSet<EscalationAssignment> EscalationAssignments { get; set; }
+
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public virtual DbSet<Subject> Subjects { get; set; }
@@ -85,6 +89,11 @@ public partial class StudentPortalApiContext : DbContext
             entity.HasOne(d => d.Enrollment).WithOne(p => p.Grade)
                 .HasForeignKey<Grade>(d => d.EnrollmentId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.AssignedProfessor).WithMany()
+                .HasForeignKey(d => d.AssignedProfessorId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<GradeDraft>(entity =>
@@ -143,6 +152,40 @@ public partial class StudentPortalApiContext : DbContext
             entity.HasOne(d => d.Grade).WithMany(p => p.Appeals)
                 .HasForeignKey(d => d.GradeId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Escalation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => e.GradeId).IsUnique();
+
+            var escalationReasonConverter = new EnumToStringConverter<EscalationReason>();
+            entity.Property(e => e.Reason)
+                .HasConversion(escalationReasonConverter)
+                .HasMaxLength(32)
+                .IsRequired();
+
+            entity.HasOne(d => d.Grade).WithOne(p => p.Escalation)
+                .HasForeignKey<Escalation>(d => d.GradeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EscalationAssignment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(d => d.Escalation).WithMany(p => p.Assignments)
+                .HasForeignKey(d => d.EscalationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.AssignedProfessor).WithMany()
+                .HasForeignKey(d => d.AssignedProfessorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.AssignedByAdmin).WithMany()
+                .HasForeignKey(d => d.AssignedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>

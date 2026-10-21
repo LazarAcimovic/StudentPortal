@@ -86,10 +86,70 @@ namespace StudentPortal.Migrations
                     b.ToTable("Enrollments");
                 });
 
+            modelBuilder.Entity("StudentPortal.Models.Entities.Escalation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GradeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeId")
+                        .IsUnique();
+
+                    b.ToTable("Escalations");
+                });
+
+            modelBuilder.Entity("StudentPortal.Models.Entities.EscalationAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AssignedByAdminId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AssignedProfessorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EscalationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("SupersededAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedByAdminId");
+
+                    b.HasIndex("AssignedProfessorId");
+
+                    b.HasIndex("EscalationId");
+
+                    b.ToTable("EscalationAssignments");
+                });
+
             modelBuilder.Entity("StudentPortal.Models.Entities.Grade", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssignedProfessorId")
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("AttendancePoints")
@@ -131,6 +191,8 @@ namespace StudentPortal.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AssignedProfessorId");
 
                     b.HasIndex("EnrollmentId")
                         .IsUnique();
@@ -356,13 +418,58 @@ namespace StudentPortal.Migrations
                     b.Navigation("Subject");
                 });
 
+            modelBuilder.Entity("StudentPortal.Models.Entities.Escalation", b =>
+                {
+                    b.HasOne("StudentPortal.Models.Entities.Grade", "Grade")
+                        .WithOne("Escalation")
+                        .HasForeignKey("StudentPortal.Models.Entities.Escalation", "GradeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Grade");
+                });
+
+            modelBuilder.Entity("StudentPortal.Models.Entities.EscalationAssignment", b =>
+                {
+                    b.HasOne("StudentPortal.Models.Entities.User", "AssignedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("AssignedByAdminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StudentPortal.Models.Entities.User", "AssignedProfessor")
+                        .WithMany()
+                        .HasForeignKey("AssignedProfessorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StudentPortal.Models.Entities.Escalation", "Escalation")
+                        .WithMany("Assignments")
+                        .HasForeignKey("EscalationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignedByAdmin");
+
+                    b.Navigation("AssignedProfessor");
+
+                    b.Navigation("Escalation");
+                });
+
             modelBuilder.Entity("StudentPortal.Models.Entities.Grade", b =>
                 {
+                    b.HasOne("StudentPortal.Models.Entities.User", "AssignedProfessor")
+                        .WithMany()
+                        .HasForeignKey("AssignedProfessorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("StudentPortal.Models.Entities.Enrollment", "Enrollment")
                         .WithOne("Grade")
                         .HasForeignKey("StudentPortal.Models.Entities.Grade", "EnrollmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AssignedProfessor");
 
                     b.Navigation("Enrollment");
                 });
@@ -406,9 +513,16 @@ namespace StudentPortal.Migrations
                     b.Navigation("GradeDraft");
                 });
 
+            modelBuilder.Entity("StudentPortal.Models.Entities.Escalation", b =>
+                {
+                    b.Navigation("Assignments");
+                });
+
             modelBuilder.Entity("StudentPortal.Models.Entities.Grade", b =>
                 {
                     b.Navigation("Appeals");
+
+                    b.Navigation("Escalation");
                 });
 
             modelBuilder.Entity("StudentPortal.Models.Entities.Subject", b =>

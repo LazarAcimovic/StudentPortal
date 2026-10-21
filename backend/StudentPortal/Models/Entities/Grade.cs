@@ -31,7 +31,13 @@ public class Grade
 
     public bool IsDeleted { get; set; }
 
+    public Guid? AssignedProfessorId { get; set; }
+
     public virtual Enrollment Enrollment { get; set; }
 
     public virtual ICollection<Appeal> Appeals { get; set; } = new List<Appeal>();
+
+    public virtual User AssignedProfessor { get; set; }
+
+    public virtual Escalation Escalation { get; set; }
 }
