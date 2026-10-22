@@ -4,9 +4,9 @@
     {
         public Guid Id { get; set; }
         public string SubjectName { get; set; }
+        public string SubjectCode { get; set; }
         public int ECTS { get; set; }
         public Guid ProfessorId { get; set; }
-
         public bool IsDeleted { get; set; }
     }
 }
