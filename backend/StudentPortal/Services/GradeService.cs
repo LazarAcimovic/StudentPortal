@@ -27,9 +27,17 @@ public class GradeService : IGradeService
 
     public async Task<GradeDto?> GetByEnrollmentAsync(Guid enrollmentId, Guid callerProfId)
     {
-        await VerifyOwnershipAsync(enrollmentId, callerProfId);
+        var enrollment = await _enrollmentRepository.GetEnrollmentByIdAsync(enrollmentId);
+        if (enrollment == null)
+            throw new KeyNotFoundException($"Enrollment {enrollmentId} not found.");
 
         var grade = await _gradeRepository.GetByEnrollmentIdAsync(enrollmentId);
+
+        var isSubjectProfessor = enrollment.Subject.ProfessorId == callerProfId;
+        var isAssignedProfessor = grade?.AssignedProfessorId == callerProfId;
+        if (!isSubjectProfessor && !isAssignedProfessor)
+            throw new ForbiddenAccessException("You do not have access to this enrollment.");
+
         return grade == null ? null : MapToDto(grade);
     }
 
@@ -69,11 +77,15 @@ public class GradeService : IGradeService
 
     public async Task<GradeDto> ReconfirmExamAsync(Guid enrollmentId, Guid callerProfId, decimal examPoints)
     {
-        await VerifyOwnershipAsync(enrollmentId, callerProfId);
+        var enrollment = await _enrollmentRepository.GetEnrollmentByIdAsync(enrollmentId);
+        if (enrollment == null)
+            throw new KeyNotFoundException($"Enrollment {enrollmentId} not found.");
 
         var grade = await _gradeRepository.GetByEnrollmentIdAsync(enrollmentId);
         if (grade == null)
             throw new KeyNotFoundException("No confirmed grade exists for this enrollment.");
+
+        VerifyWriteOwnership(grade, enrollment.Subject.ProfessorId, callerProfId);
 
         var acceptedAppeal = grade.Appeals
             .FirstOrDefault(a => a.Status == AppealStatus.Accepted);
@@ -134,6 +146,20 @@ public class GradeService : IGradeService
 
         if (enrollment.Subject.ProfessorId != callerProfId)
             throw new ForbiddenAccessException("You do not teach the subject for this enrollment.");
+    }
+
+    private static void VerifyWriteOwnership(Grade grade, Guid subjectProfessorId, Guid callerProfId)
+    {
+        if (grade.AssignedProfessorId == null)
+        {
+            if (subjectProfessorId != callerProfId)
+                throw new ForbiddenAccessException("You do not teach the subject for this enrollment.");
+        }
+        else
+        {
+            if (grade.AssignedProfessorId != callerProfId)
+                throw new ForbiddenAccessException("This grade has been assigned to another professor.");
+        }
     }
 
     private static int ComputeFinalGrade(decimal sum)

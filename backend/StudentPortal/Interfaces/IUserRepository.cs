@@ -13,5 +13,6 @@ namespace StudentPortal.Interfaces
         Task DeleteUserAsync(Guid id);
 
         Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(Guid studentId);
+        Task<IEnumerable<User>> GetProfessorsBySubjectCodeAsync(string subjectCode, Guid excludeProfessorId);
     }
 }

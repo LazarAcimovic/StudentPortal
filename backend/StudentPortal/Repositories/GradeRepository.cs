@@ -109,4 +109,33 @@ public class GradeRepository : IGradeRepository
         }
         return false;
     }
+
+    public async Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync()
+    {
+        return await _context.Grades
+            .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Student)
+            .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Subject)
+                    .ThenInclude(s => s.Professor)
+            .Include(g => g.Appeals)
+            .Include(g => g.Escalation)
+                .ThenInclude(e => e.Assignments)
+                    .ThenInclude(a => a.AssignedProfessor)
+            .Include(g => g.Escalation)
+                .ThenInclude(e => e.Assignments)
+                    .ThenInclude(a => a.AssignedByAdmin)
+            .ToListAsync();
+    }
+
+    public async Task<Grade?> GetByIdWithEscalationDetailsAsync(Guid id)
+    {
+        return await _context.Grades
+            .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Subject)
+            .Include(g => g.Appeals)
+            .Include(g => g.Escalation)
+                .ThenInclude(e => e.Assignments)
+            .FirstOrDefaultAsync(g => g.Id == id);
+    }
 }

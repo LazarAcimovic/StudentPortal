@@ -64,5 +64,15 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<User>> GetProfessorsBySubjectCodeAsync(string subjectCode, Guid excludeProfessorId)
+    {
+        return await _context.Users
+            .Where(u => !u.IsDeleted
+                && u.Subjects.Any(s => s.SubjectCode == subjectCode)
+                && u.Id != excludeProfessorId)
+            .AsNoTracking()
+            .ToListAsync();
+    }
 }
 

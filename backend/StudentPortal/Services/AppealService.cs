@@ -104,8 +104,10 @@ public class AppealService : IAppealService
         if (grade == null)
             throw new KeyNotFoundException("Grade not found.");
 
-        if (grade.Enrollment.Subject.ProfessorId != callerProfId)
-            throw new ForbiddenAccessException("You do not teach the subject for this grade.");
+        var isSubjectProfessor = grade.Enrollment.Subject.ProfessorId == callerProfId;
+        var isAssignedProfessor = grade.AssignedProfessorId == callerProfId;
+        if (!isSubjectProfessor && !isAssignedProfessor)
+            throw new ForbiddenAccessException("You do not have access to this grade.");
 
         var appeals = await _appealRepository.GetByGradeIdAsync(gradeId);
         if (!appeals.Any())
@@ -121,10 +123,13 @@ public class AppealService : IAppealService
         if (appeal == null)
             throw new KeyNotFoundException("Appeal not found.");
 
-        VerifyProfessorOwnsAppeal(appeal, callerProfId);
+        VerifyProfessorWriteAccess(appeal, callerProfId);
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;
-        if (appeal.Status != AppealStatus.Pending || appeal.SubmittedAt.AddDays(7) < now)
+        var isAssignedProfessor = appeal.Grade?.AssignedProfessorId == callerProfId;
+        var isOverdue = appeal.SubmittedAt.AddDays(7) < now;
+
+        if (appeal.Status != AppealStatus.Pending || (isOverdue && !isAssignedProfessor))
             throw new InvalidOperationException("Cannot accept an overdue or non-pending appeal.");
 
         appeal.Status = AppealStatus.Accepted;
@@ -140,10 +145,13 @@ public class AppealService : IAppealService
         if (appeal == null)
             throw new KeyNotFoundException("Appeal not found.");
 
-        VerifyProfessorOwnsAppeal(appeal, callerProfId);
+        VerifyProfessorWriteAccess(appeal, callerProfId);
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;
-        if (appeal.Status != AppealStatus.Pending || appeal.SubmittedAt.AddDays(7) < now)
+        var isAssignedProfessor = appeal.Grade?.AssignedProfessorId == callerProfId;
+        var isOverdue = appeal.SubmittedAt.AddDays(7) < now;
+
+        if (appeal.Status != AppealStatus.Pending || (isOverdue && !isAssignedProfessor))
             throw new InvalidOperationException("Cannot deny an overdue or non-pending appeal.");
 
         appeal.Status = AppealStatus.Denied;
@@ -166,7 +174,7 @@ public class AppealService : IAppealService
         if (appeal == null)
             throw new KeyNotFoundException("Appeal not found.");
 
-        VerifyProfessorOwnsAppeal(appeal, callerProfId);
+        VerifyProfessorWriteAccess(appeal, callerProfId);
 
         if (appeal.Status != AppealStatus.Denied)
             throw new InvalidOperationException("Only a denied appeal can be undone.");
@@ -189,10 +197,21 @@ public class AppealService : IAppealService
         return MapToDto(appeal, now);
     }
 
-    private static void VerifyProfessorOwnsAppeal(Appeal appeal, Guid callerProfId)
+    private static void VerifyProfessorWriteAccess(Appeal appeal, Guid callerProfId)
     {
-        if (appeal.Grade?.Enrollment?.Subject?.ProfessorId != callerProfId)
-            throw new ForbiddenAccessException("You do not teach the subject for this appeal.");
+        var subjectProfessorId = appeal.Grade?.Enrollment?.Subject?.ProfessorId;
+        var assignedProfessorId = appeal.Grade?.AssignedProfessorId;
+
+        if (assignedProfessorId == null)
+        {
+            if (subjectProfessorId != callerProfId)
+                throw new ForbiddenAccessException("You do not teach the subject for this appeal.");
+        }
+        else
+        {
+            if (assignedProfessorId != callerProfId)
+                throw new ForbiddenAccessException("This grade has been assigned to another professor.");
+        }
     }
 
     private AppealDto MapToDto(Appeal appeal, DateTime? now = null)
