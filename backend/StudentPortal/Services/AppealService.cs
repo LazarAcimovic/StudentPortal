@@ -12,17 +12,20 @@ public class AppealService : IAppealService
     private readonly IGradeRepository _gradeRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
     private readonly TimeProvider _timeProvider;
+    private readonly IEscalationService _escalationService;
 
     public AppealService(
         IAppealRepository appealRepository,
         IGradeRepository gradeRepository,
         IEnrollmentRepository enrollmentRepository,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IEscalationService escalationService)
     {
         _appealRepository = appealRepository;
         _gradeRepository = gradeRepository;
         _enrollmentRepository = enrollmentRepository;
         _timeProvider = timeProvider;
+        _escalationService = escalationService;
     }
 
     public async Task<AppealDto> SubmitAsync(Guid callerStudentId, SubmitAppealDto dto)
@@ -163,6 +166,7 @@ public class AppealService : IAppealService
         {
             grade.FinalizedAt = now;
             await _gradeRepository.UpdateGradeAsync(grade);
+            await _escalationService.CloseIfEscalatedAsync(grade.Id, now);
         }
 
         return MapToDto(appeal, now);

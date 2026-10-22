@@ -12,17 +12,20 @@ public class GradeService : IGradeService
     private readonly IGradeDraftRepository _draftRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
     private readonly TimeProvider _timeProvider;
+    private readonly IEscalationService _escalationService;
 
     public GradeService(
         IGradeRepository gradeRepository,
         IGradeDraftRepository draftRepository,
         IEnrollmentRepository enrollmentRepository,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IEscalationService escalationService)
     {
         _gradeRepository = gradeRepository;
         _draftRepository = draftRepository;
         _enrollmentRepository = enrollmentRepository;
         _timeProvider = timeProvider;
+        _escalationService = escalationService;
     }
 
     public async Task<GradeDto?> GetByEnrollmentAsync(Guid enrollmentId, Guid callerProfId)
@@ -103,6 +106,7 @@ public class GradeService : IGradeService
         grade.FinalizedAt = now;
 
         await _gradeRepository.UpdateGradeAsync(grade);
+        await _escalationService.CloseIfEscalatedAsync(grade.Id, now);
 
         var saved = await _gradeRepository.GetByEnrollmentIdAsync(enrollmentId);
         return MapToDto(saved!);
