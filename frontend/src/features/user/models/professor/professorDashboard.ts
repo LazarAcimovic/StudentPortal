@@ -35,9 +35,38 @@ export interface ProfessorAppealRow {
   undoDenyDeadline: string | null;
 }
 
+export type EscalationReason = 'AcceptedUnresolved' | 'ChainExhausted';
+
+export interface AssignedCaseAppeal {
+  id: string;
+  gradeId: string;
+  enrollmentId: string;
+  text: string;
+  submittedAt: string;
+  status: string;
+  reviewedAt: string | null;
+}
+
+export interface AssignedCase {
+  enrollmentId: string;
+  gradeId: string;
+  subjectName: string;
+  studentFirstName: string;
+  studentLastName: string;
+  midterm1Points: number;
+  midterm2Points: number;
+  attendancePoints: number;
+  practicalPoints: number;
+  examPoints: number;
+  finalGrade: number;
+  reason: EscalationReason;
+  appeals: AssignedCaseAppeal[];
+}
+
 export interface ProfessorDashboardData {
   subjects: ProfessorSubject[];
   appeals: ProfessorAppealRow[];
+  assignedCases: AssignedCase[];
 }
 
 export interface UseProfessorDashboardResult {

@@ -9,8 +9,9 @@ public class ProfessorDashboardServiceTests
 {
     private readonly IEnrollmentRepository _enrollRepo = Substitute.For<IEnrollmentRepository>();
     private readonly IAppealRepository _appealRepo = Substitute.For<IAppealRepository>();
+    private readonly IGradeRepository _gradeRepo = Substitute.For<IGradeRepository>();
 
-    private ProfessorDashboardService CreateSut() => new(_enrollRepo, _appealRepo, TimeProvider.System);
+    private ProfessorDashboardService CreateSut() => new(_enrollRepo, _appealRepo, _gradeRepo, TimeProvider.System);
 
     private static Subject MakeSubject(string name = "Databases", int ects = 6) => new()
     {

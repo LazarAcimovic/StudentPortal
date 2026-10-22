@@ -11,8 +11,9 @@ public class GradeServiceTests
     private readonly IGradeRepository _gradeRepo = Substitute.For<IGradeRepository>();
     private readonly IGradeDraftRepository _draftRepo = Substitute.For<IGradeDraftRepository>();
     private readonly IEnrollmentRepository _enrollmentRepo = Substitute.For<IEnrollmentRepository>();
+    private readonly IEscalationService _escalationService = Substitute.For<IEscalationService>();
 
-    private GradeService CreateSut() => new(_gradeRepo, _draftRepo, _enrollmentRepo, TimeProvider.System);
+    private GradeService CreateSut() => new(_gradeRepo, _draftRepo, _enrollmentRepo, TimeProvider.System, _escalationService);
 
     private static Enrollment MakeEnrollment(Guid enrollmentId, Guid professorId, Guid? studentId = null)
     {
@@ -250,7 +251,9 @@ public class GradeServiceTests
         var ownerProfId = Guid.NewGuid();
         var strangerProfId = Guid.NewGuid();
         var enrollment = MakeEnrollment(Guid.NewGuid(), ownerProfId);
+        var grade = MakeConfirmedGrade(enrollment.Id, enrollment);
         _enrollmentRepo.GetEnrollmentByIdAsync(enrollment.Id).Returns(enrollment);
+        _gradeRepo.GetByEnrollmentIdAsync(enrollment.Id).Returns(grade);
 
         var sut = CreateSut();
 
