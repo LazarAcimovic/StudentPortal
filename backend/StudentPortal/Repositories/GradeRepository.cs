@@ -138,4 +138,17 @@ public class GradeRepository : IGradeRepository
                 .ThenInclude(e => e.Assignments)
             .FirstOrDefaultAsync(g => g.Id == id);
     }
+
+    public async Task<IEnumerable<Grade>> GetAssignedCasesAsync(Guid professorId)
+    {
+        return await _context.Grades
+            .Where(g => g.AssignedProfessorId == professorId && g.FinalizedAt == null)
+            .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Student)
+            .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Subject)
+            .Include(g => g.Appeals)
+            .Include(g => g.Escalation)
+            .ToListAsync();
+    }
 }

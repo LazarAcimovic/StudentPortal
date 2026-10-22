@@ -15,4 +15,5 @@ public interface IGradeRepository
     Task<IEnumerable<Grade>> GetGradesByStudentAndSubjectAsync(Guid studentId, Guid subjectId);
     Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync();
     Task<Grade?> GetByIdWithEscalationDetailsAsync(Guid id);
+    Task<IEnumerable<Grade>> GetAssignedCasesAsync(Guid professorId);
 }

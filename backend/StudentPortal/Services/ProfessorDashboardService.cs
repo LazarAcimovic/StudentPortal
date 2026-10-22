@@ -9,15 +9,18 @@ public class ProfessorDashboardService : IProfessorDashboardService
 {
     private readonly IEnrollmentRepository _enrollmentRepository;
     private readonly IAppealRepository _appealRepository;
+    private readonly IGradeRepository _gradeRepository;
     private readonly TimeProvider _timeProvider;
 
     public ProfessorDashboardService(
         IEnrollmentRepository enrollmentRepository,
         IAppealRepository appealRepository,
+        IGradeRepository gradeRepository,
         TimeProvider timeProvider)
     {
         _enrollmentRepository = enrollmentRepository;
         _appealRepository = appealRepository;
+        _gradeRepository = gradeRepository;
         _timeProvider = timeProvider;
     }
 
@@ -26,6 +29,7 @@ public class ProfessorDashboardService : IProfessorDashboardService
         var enrollments = (await _enrollmentRepository.GetEnrollmentsForProfessorDashboardAsync(professorId)).ToList();
         var now = _timeProvider.GetUtcNow().UtcDateTime;
         var appeals = (await _appealRepository.GetAppealsByProfessorIdForDashboardAsync(professorId, now)).ToList();
+        var assignedGrades = (await _gradeRepository.GetAssignedCasesAsync(professorId)).ToList();
 
         var subjects = enrollments
             .GroupBy(e => e.Subject.Id)
@@ -44,11 +48,13 @@ public class ProfessorDashboardService : IProfessorDashboardService
             .ToList();
 
         var appealRows = appeals.Select(a => BuildAppealRow(a, now)).ToList();
+        var assignedCases = assignedGrades.Select(g => BuildAssignedCaseRow(g, now)).ToList();
 
         return new ProfessorDashboardDto
         {
             Subjects = subjects,
             Appeals = appealRows,
+            AssignedCases = assignedCases,
         };
     }
 
@@ -89,6 +95,50 @@ public class ProfessorDashboardService : IProfessorDashboardService
             return "Finalized";
 
         return "Confirmed";
+    }
+
+    private static AssignedCaseDto BuildAssignedCaseRow(Grade grade, DateTime now)
+    {
+        var enrollment = grade.Enrollment;
+        var reason = grade.Escalation?.Reason switch
+        {
+            EscalationReason.AcceptedUnresolved => "Accepted appeal — awaiting re-grade",
+            EscalationReason.ChainExhausted => "Two overdue appeals — awaiting review",
+            _ => "Escalated",
+        };
+
+        var appealDtos = grade.Appeals
+            .OrderBy(a => a.SubmittedAt)
+            .Select(a => new AppealDto
+            {
+                Id = a.Id,
+                GradeId = a.GradeId,
+                EnrollmentId = enrollment.Id,
+                Text = a.Text,
+                SubmittedAt = a.SubmittedAt,
+                Status = a.Status == AppealStatus.Pending && a.SubmittedAt.AddDays(7) < now
+                    ? "Overdue"
+                    : a.Status.ToString(),
+                ReviewedAt = a.ReviewedAt,
+            })
+            .ToList();
+
+        return new AssignedCaseDto
+        {
+            EnrollmentId = enrollment.Id,
+            GradeId = grade.Id,
+            SubjectName = enrollment.Subject.SubjectName,
+            StudentFirstName = enrollment.Student.FirstName,
+            StudentLastName = enrollment.Student.LastName,
+            Midterm1Points = grade.Midterm1Points,
+            Midterm2Points = grade.Midterm2Points,
+            AttendancePoints = grade.AttendancePoints,
+            PracticalPoints = grade.PracticalPoints,
+            ExamPoints = grade.ExamPoints,
+            FinalGrade = grade.FinalGrade,
+            Reason = reason,
+            Appeals = appealDtos,
+        };
     }
 
     private static ProfessorAppealRowDto BuildAppealRow(Appeal appeal, DateTime now)

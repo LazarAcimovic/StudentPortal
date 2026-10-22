@@ -4,6 +4,24 @@ public class ProfessorDashboardDto
 {
     public List<ProfessorSubjectDto> Subjects { get; set; } = new();
     public List<ProfessorAppealRowDto> Appeals { get; set; } = new();
+    public List<AssignedCaseDto> AssignedCases { get; set; } = new();
+}
+
+public class AssignedCaseDto
+{
+    public Guid EnrollmentId { get; set; }
+    public Guid GradeId { get; set; }
+    public string SubjectName { get; set; } = null!;
+    public string StudentFirstName { get; set; } = null!;
+    public string StudentLastName { get; set; } = null!;
+    public decimal Midterm1Points { get; set; }
+    public decimal Midterm2Points { get; set; }
+    public decimal AttendancePoints { get; set; }
+    public decimal PracticalPoints { get; set; }
+    public decimal ExamPoints { get; set; }
+    public int FinalGrade { get; set; }
+    public string Reason { get; set; } = null!;
+    public List<AppealDto> Appeals { get; set; } = new();
 }
 
 public class ProfessorSubjectDto
