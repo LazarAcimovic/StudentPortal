@@ -4,6 +4,29 @@
 
 ---
 
+## Table of contents
+
+> Agents: do not Read this file whole. Use the Read tool's offset/limit with the ranges below. If you edit this file and line counts change, update this table in the same commit.
+
+| Section | Title | Lines |
+|---|---|---|
+| 1 | Visual foundation | 30–44 |
+| 2 | Layout patterns | 45–169 |
+| 3 | Navbar | 170–180 |
+| 4 | Home page | 181–190 |
+| 5 | Login page | 191–201 |
+| 6 | Student dashboard | 202–253 |
+| 7 | Professor dashboard | 254–318 |
+| 8 | Admin dashboard | 319–365 |
+| 9 | My Profile page | 366–393 |
+| 10 | Change password page | 394–437 |
+| 11 | Reusable primitives | 438–547 |
+| 12 | Responsiveness | 548–587 |
+| 13 | Copy conventions | 588–598 |
+| 14 | Accessibility baseline | 599–606 |
+
+---
+
 ## 1. Visual foundation
 
 - **Framework:** Bootstrap 5 (`bootstrap@5.3.8` is already in `frontend/package.json`). All layout, typography, spacing, cards, forms, alerts, modals and tables use existing Bootstrap classes. **Do not** introduce Tailwind, shadcn, radix, lucide-react, or `cn()` helpers.

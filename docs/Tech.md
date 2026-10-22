@@ -4,6 +4,21 @@
 
 ---
 
+## Table of contents
+
+> Agents: do not Read this file whole. Use the Read tool's offset/limit with the ranges below. If you edit this file and line counts change, update this table in the same commit.
+
+| Section | Title | Lines |
+|---|---|---|
+| 1 | Stack snapshot | 22–69 |
+| 2 | Backend architecture | 70–158 |
+| 3 | Frontend architecture | 159–457 |
+| 4 | Database tooling | 458–466 |
+| 5 | Deployment (Render — scaffolding only) | 467–477 |
+| 6 | What's intentionally simple | 478–486 |
+
+---
+
 ## 1. Stack snapshot
 
 ### Backend — already installed (`StudentPortal.csproj`)

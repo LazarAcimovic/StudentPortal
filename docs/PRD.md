@@ -4,6 +4,25 @@
 
 ---
 
+## Table of contents
+
+> Agents: do not Read this file whole. Use the Read tool's offset/limit with the ranges below. If you edit this file and line counts change, update this table in the same commit.
+
+| Section | Title | Lines |
+|---|---|---|
+| 1 | One-line summary | 26–31 |
+| 2 | Actors and what each one can do | 32–69 |
+| 3 | The grading model | 70–110 |
+| 4 | The appeal flow | 111–189 |
+| 5 | Screen inventory | 190–293 |
+| 6 | Security requirements | 294–317 |
+| 7 | Data seeding | 318–337 |
+| 8 | Deployment target | 338–342 |
+| 9 | Implementation task list (pointer only) | 343–349 |
+| 10 | Out of scope | 350–365 |
+
+---
+
 ## 1. One-line summary
 
 StudentPortal is an internal web app for a university faculty where **Admins** manage users / subjects / enrollments, **Professors** enter grades for the students enrolled in their subjects, and **Students** see their grades and can either accept them or appeal within a bounded window.
