@@ -37,4 +37,5 @@ public class SubjectRowDto
     public bool CanConfirmGrade { get; set; }
     public DateTime? ConfirmationDeadline { get; set; }
     public Guid? PendingAppealId { get; set; }
+    public bool IsEscalated { get; set; }
 }

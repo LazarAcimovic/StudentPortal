@@ -98,8 +98,29 @@ public class StudentDashboardService : IStudentDashboardService
             return row;
         }
 
-        // Accepted appeal awaiting re-confirm
+        // Scenario A escalation: accepted appeal but professor didn't re-grade within 7 days
         var acceptedAppeal = appeals.FirstOrDefault(a => a.Status == AppealStatus.Accepted);
+        if (acceptedAppeal != null && grade.FinalizedAt == null
+            && acceptedAppeal.ReviewedAt.HasValue
+            && acceptedAppeal.ReviewedAt.Value.AddDays(7) < now)
+        {
+            row.Status = "Under admin review";
+            row.IsEscalated = true;
+            return row;
+        }
+
+        // Scenario B escalation: 2+ overdue pending appeals (chain exhausted)
+        var allOverdueAppeals = appeals
+            .Where(a => a.Status == AppealStatus.Pending && a.SubmittedAt.AddDays(7) < now)
+            .ToList();
+        if (allOverdueAppeals.Count >= 2 && grade.FinalizedAt == null)
+        {
+            row.Status = "Under admin review";
+            row.IsEscalated = true;
+            return row;
+        }
+
+        // Accepted appeal awaiting re-confirm (within 7 days)
         if (acceptedAppeal != null)
         {
             row.Status = "Appeal pending";
@@ -108,8 +129,7 @@ public class StudentDashboardService : IStudentDashboardService
         }
 
         // Overdue appeals
-        var overdueAppeals = appeals
-            .Where(a => a.Status == AppealStatus.Pending && a.SubmittedAt.AddDays(7) < now)
+        var overdueAppeals = allOverdueAppeals
             .OrderByDescending(a => a.SubmittedAt)
             .ToList();
 
