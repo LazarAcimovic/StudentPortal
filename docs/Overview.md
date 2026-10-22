@@ -30,7 +30,7 @@ Use this to decide which doc(s) to load. Each listed doc with a Table of Content
 | Frontend architecture (routing, state, folder layout, forms, testing) | `docs/Tech.md` section 3 | — |
 | UI (screens, copy, modals, forms, responsiveness) | `docs/UI.md` | `docs/PRD.md` section 5 (screen inventory) |
 | Database schema, migrations, seed data | `docs/DB.md` | `docs/PRD.md` section 7 (data seeding) |
-| Open implementation tasks | `docs/tasks/active.md` | — |
+| Open implementation tasks | `docs/tasks/active/index.md` (then the specific task file) | — |
 | Archived (completed) tasks | `docs/tasks/done/YYYY-MM.md` | — |
 | Refactor plans | `docs/refactors/<name>.md` | — |
 
@@ -38,7 +38,7 @@ Concept → where its rules live:
 
 - Grading model (point fields, final-grade mapping, draft lifecycle) → PRD section 3
 - Appeal flow (7-day window, overdue, undo-deny, accept re-confirm) → PRD section 4
-- Escalation workflow (when professor fails to act, admin reassignment) → `tasks/active.md` Task 23
+- Escalation workflow (when professor fails to act, admin reassignment) → `tasks/active/task-23-escalation.md`
 - Screen inventory (what each dashboard shows) → PRD section 5
 - Security, auth, DTOs, cookies → PRD section 6 + Tech.md section 2
 - Data seeding → PRD section 7 + DB.md section 4
@@ -57,7 +57,7 @@ Concept → where its rules live:
 - **Appeal cycle** — one submit → review → outcome sequence. A fresh grade allows one appeal; a second is allowed only after the first went Overdue.
 - **Earned ECTS** — ECTS counted toward the student total. A subject's ECTS counts only when the grade is truly final AND the final grade is ≥ 6.
 - **Soft-delete** — the `IsDeleted` flag on `Users`. Soft-deleted users cannot log in.
-- **Escalation** — when a professor fails to act on an accepted appeal (Scenario A) or leaves two consecutive overdue appeals (Scenario B), the case escalates to the admin, who re-assigns it to another eligible professor. See `tasks/active.md` Task 23.
+- **Escalation** — when a professor fails to act on an accepted appeal (Scenario A) or leaves two consecutive overdue appeals (Scenario B), the case escalates to the admin, who re-assigns it to another eligible professor. See `tasks/active/task-23-escalation.md`.
 - **Eligible professor (for escalation)** — a professor who teaches another subject with the same `SubjectCode` as the escalated subject, excluding the original professor.
 
 ---

@@ -342,8 +342,8 @@ Production target is Render. Both backend and frontend. CORS allow-list and all 
 
 ## 9. Implementation task list
 
-Open tasks live in `docs/tasks/active.md`.
-Completed tasks are archived in `docs/tasks/done/`.
+Open tasks live as individual files in `docs/tasks/active/` — start from `docs/tasks/active/index.md`.
+Completed tasks are archived by month in `docs/tasks/done/`.
 
 ---
 

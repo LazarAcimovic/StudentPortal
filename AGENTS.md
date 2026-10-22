@@ -47,9 +47,13 @@ These files have a Table of Contents at the top listing section line ranges. **N
 
 ## 4. Tasks
 
-- Open work lives in `docs/tasks/active.md`. Read this when starting an implementation task.
+- Open work lives as **one file per task** in `docs/tasks/active/`. Start by reading `docs/tasks/active/index.md` (one row per open task), then read only the specific task file you are working on (e.g. `docs/tasks/active/task-23-escalation.md`). Do not load other task files — they are other teammates' concerns.
 - Completed work is archived by month in `docs/tasks/done/YYYY-MM.md`, trimmed to id + commit message. Do not load these unless the user asks about historical work.
-- When a task is fully complete, move its entry (parent task + nested subtasks) from `active.md` to the current month's done file, trimming to id + commit message following the existing format.
+- When a task is fully complete:
+  1. Append a trimmed entry (parent task line + nested subtasks as id + commit message, following the existing format) to the current month's `docs/tasks/done/YYYY-MM.md`. Create the file if the month has none yet.
+  2. Delete the task file from `docs/tasks/active/`.
+  3. Remove its row from `docs/tasks/active/index.md`.
+  All three happen in the same commit.
 
 ---
 
