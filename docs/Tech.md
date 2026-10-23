@@ -11,11 +11,11 @@
 | Section | Title | Lines |
 |---|---|---|
 | 1 | Stack snapshot | 22–69 |
-| 2 | Backend architecture | 70–158 |
-| 3 | Frontend architecture | 159–457 |
-| 4 | Database tooling | 458–466 |
-| 5 | Deployment (Render — scaffolding only) | 467–477 |
-| 6 | What's intentionally simple | 478–486 |
+| 2 | Backend architecture | 70–183 |
+| 3 | Frontend architecture | 184–513 |
+| 4 | Database tooling | 514–522 |
+| 5 | Deployment (Render — scaffolding only) | 523–533 |
+| 6 | What's intentionally simple | 534–542 |
 
 ---
 
@@ -153,6 +153,31 @@ Replace every `catch (Exception ex) { return StatusCode(500, $"Internal server e
 
 - Local dev: `dotnet user-secrets` (`JwtConfig:Key`, `ConnectionStrings:DefaultConnection`).
 - Production (Render): environment variables `JwtConfig__Key`, `ConnectionStrings__DefaultConnection`. ASP.NET's config system reads double-underscore env vars automatically; nothing extra needed. `appsettings.json` holds only non-secret values. Program.cs fails fast at startup if any required value is missing.
+
+### 2.9 Testing
+
+Two sibling test projects in `backend/`:
+
+- **`backend/StudentPortal.Tests/`** — unit tests. xUnit + NSubstitute + FluentAssertions. Organized by `Services/<ServiceName>Tests.cs`. No DB, no HTTP, mocked repositories. One `CreateSut()` method per test class; private `MakeX()` helpers build domain objects.
+- **`backend/StudentPortal.IntegrationTests/`** — integration tests. xUnit + Testcontainers (`postgres:17` pinned, never `latest`) + Respawn + `Microsoft.AspNetCore.Mvc.Testing` + `Microsoft.Extensions.TimeProvider.Testing` + FluentAssertions. Organized by domain folders: `Tests/Auth/`, `Tests/Grading/`, `Tests/Appeals/`, `Tests/Dashboards/`.
+
+**Unit test conventions.** AAA structure. Names: `MethodName_Scenario_ExpectedResult` or `When_X_Then_Y`. One logical behavior per test. Mock only external collaborators of the unit under test — never the business logic being tested. `[Theory]` + `[InlineData]` for parameterized cases (final-grade mapping buckets, point-field validation).
+
+**Integration test conventions.**
+
+- One Postgres container per suite via `[CollectionDefinition("Integration")]` + `[Collection("Integration")]`. `IntegrationTestFixture : IAsyncLifetime` starts the container, builds `WebApplicationFactory<Program>`, applies EF migrations, builds a Respawner.
+- Reset between **every** test: Respawn truncates all tables, then `seed.sql` replays. `IntegrationTestBase.InitializeAsync` runs this.
+- Expose `Program` so `WebApplicationFactory<Program>` compiles: `public partial class Program { }` at the end of `Program.cs`.
+- Auth helpers: `CreateAuthenticatedClientAsync(email, password)` POSTs to `/api/Account/Login` through the real pipeline; `HandleCookies = true` means `sp_access` and `sp_refresh` ride on every subsequent request. `CreateAnonymousClient()` for 401 tests. Never mint JWTs by hand; never install a test `AuthenticationHandler`.
+- `SeedUsers` constants hold the seeded auth cast (admin, professors, students, shared password `Password123!`).
+
+**Seed vs in-test data.** `seed.sql` provides the auth cast and realistic shape. Tests MUST NOT depend on any specific seeded Grade / GradeDraft / Appeal row or its timestamps. Per-test state is produced either (a) through real API calls as an authenticated user ("Sender" pattern — preferred when an endpoint exists), or (b) through DbContext builder helpers on the base class (`SeedAppealAtAsync`, `SeedGradeConfirmedAtAsync`, `SeedDeniedAppealAtAsync`) for backdated timestamps and states the API cannot produce. No time-sensitive row ever lives in `seed.sql`.
+
+**Time control.** Services that read "now" inject `System.TimeProvider` (.NET 8). `Program.cs` registers `TimeProvider.System`. The fixture overrides with `FakeTimeProvider` via `s.Replace(ServiceDescriptor.Singleton<TimeProvider>(FakeTime))`. Advance with `FakeTime.Advance(TimeSpan.FromDays(7).Add(TimeSpan.FromSeconds(1)))` to land on boundaries exactly. Every time-dependent rule is tested at three points: immediately before, exactly at, immediately after the deadline.
+
+**Anti-patterns.** Hardcoded ports, unpinned image tags, `postgres:latest`, shared container with no reset, mocking the database, EF InMemory, infrastructure code inside test bodies, hand-minted JWTs, wall-clock sleeps (`Thread.Sleep`, `await Task.Delay`) in time-dependent tests.
+
+**Running.** Unit tests: `dotnet test backend/StudentPortal.Tests` (no Docker). Integration tests: `dotnet test backend/StudentPortal.IntegrationTests` (requires Docker Desktop; first run pulls `postgres:17`).
 
 ---
 
@@ -441,10 +466,41 @@ Response interceptor:
 
 ### 3.8 Testing
 
-- Vitest + jsdom + @testing-library/react + @testing-library/user-event + @testing-library/jest-dom.
-- MSW 2 with `onUnhandledRequest: 'error'` in `src/test/server.ts`. Handlers emit `Set-Cookie` headers to exercise the full cookie plumbing (axios + browser cookie jar emulation in jsdom).
-- Vitest globals (`describe`, `it`, `expect`, `vi`) — not imported.
-- Co-locate tests next to source: `features/auth/pages/LoginPage.test.tsx`, etc.
+Vitest + jsdom + React Testing Library + user-event + jest-dom. MSW 2 is the HTTP mock boundary.
+
+**Two co-existing layouts:**
+
+- **Unit tests, co-located** at `features/<domain>/api/*.test.ts` and `features/<domain>/pages/*.test.tsx`. Single component, hook, store, schema, service, or lib helper per test file.
+- **Integration tests, dedicated folder** at `src/test/integration/<feature>/`. Multi-component flows, full page trees with router + MSW. Feature folders: `auth/`, `appeals/`, `dashboards/`, `grades/`, `user/`, `components/`, `a11y/`, `responsive/`.
+
+**Shared helpers at `src/test/helpers/`:**
+
+- `renderWithProviders.tsx` — anonymous render with the provider shell.
+- `authenticatedRender.tsx` — render under a logged-in role (`as: 'student' | 'professor' | 'admin'`), router (`initialEntries`), all providers.
+- `matchMedia.ts` — jsdom-safe `matchMedia` mock for responsive assertions.
+- `time.ts` — fake-timer helpers that pair with `vi.useFakeTimers()`.
+- `fixtures/` — typed response fixtures (student / professor dashboard payloads, user records, factories).
+- `mswHandlers/` — MSW handler factories per endpoint, overridable per test with `server.use(handler)`.
+
+**Mocking strategy:**
+
+- Service modules (API functions) → tested with **MSW** (real axios call, mocked HTTP response).
+- Component / page tests → `vi.mock()` the service module. Faster, no network layer.
+- Store, lib, Zod schema → no mocking. Pure units.
+- Axios interceptor → MSW with handler sequencing (e.g. first 401, then 200 after refresh).
+- Never mock what the test is verifying.
+
+**Test naming.** Describe blocks reference PRD sections — e.g. `describe('StudentDashboardPage aggregates (§5.5)', ...)`. Test names describe behavior from the user's perspective.
+
+**Time control (two treatments):**
+
+- **Backend-authoritative display:** server returns the full state (status, flags, deadlines). Component just renders. Test asserts the render.
+- **Client-side countdown:** component uses a client-side timer (e.g. 24h undo-deny countdown). Test uses `vi.useFakeTimers()` to advance.
+- No wall-clock sleeps in tests.
+
+**MSW setup.** `src/test/server.ts` with `onUnhandledRequest: 'error'`. Handlers emit `Set-Cookie` headers so axios + jsdom cookie-jar emulation cover the full cookie plumbing. Vitest globals (`describe`, `it`, `expect`, `vi`) — not imported.
+
+**Running.** `npm run test` from `frontend/` (equivalent to `vitest`). jsdom and MSW configured in `vitest.config.ts`.
 
 ### 3.9 Styling
 
