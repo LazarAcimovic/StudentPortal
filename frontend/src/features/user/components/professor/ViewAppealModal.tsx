@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import Modal from '../../../../components/ui/Modal';
 import type { ViewAppealModalProps } from '../../models/professor/professorDashboard';
 import { acceptAppeal, denyAppeal, undoDenyAppeal } from '../../../appeals/api/appealService';
-import { formatCountdown } from '../../util/gradeUtils';
+import { formatCountdown } from '../../utils/gradeUtils';
 
 function useCountdown(deadline: string | null): string {
   const [label, setLabel] = useState('');

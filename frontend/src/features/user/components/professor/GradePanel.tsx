@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { FormValues, GradePanelProps } from '../../models/professor/gradePanel';
 import { EMPTY_FORM, FIELDS } from '../../constants/professor/constants';
-import { parseField, validateField, computeFinalGrade } from '../../util/gradeUtils';
+import { parseField, validateField, computeFinalGrade } from '../../utils/gradeUtils';
 import { getDraft, saveDraft } from '../../../grades/api/gradeDraftService';
 import { professorConfirmGrade, professorReconfirmExam, getGradeByEnrollment, type GradeDto } from '../../../grades/api/gradeService';
 

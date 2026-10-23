@@ -325,6 +325,8 @@ const PATH_IN_BACKTICKS = /`([A-Za-z0-9_.\-]+(?:\/[A-Za-z0-9_.\-]+)+\.(?:ts|tsx|
 for (const rel of SOURCE_DOCS) {
   const lines = docs.get(rel);
   if (!lines) continue;
+  // Decisions.md is a historical record: it legitimately names files that were deleted.
+  if (rel === 'docs/Decisions.md') continue;
   lines.forEach((text, i) => {
     for (const m of text.matchAll(PATH_IN_BACKTICKS)) {
       const p = m[1];

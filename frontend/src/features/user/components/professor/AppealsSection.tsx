@@ -3,7 +3,7 @@ import type { ProfessorAppealRow, AppealsSectionProps } from '../../models/profe
 import { APPEAL_STATUS_BADGE } from '../../constants/professor/constants';
 import ViewAppealModal from './ViewAppealModal';
 import { undoDenyAppeal } from '../../../appeals/api/appealService';
-import { formatCountdown } from '../../util/gradeUtils';
+import { formatCountdown } from '../../utils/gradeUtils';
 
 function useCountdown(deadline: string | null): string {
   const [label, setLabel] = useState('');
