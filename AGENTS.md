@@ -17,10 +17,10 @@ Decide what KIND of change your task is, then load only the matching doc(s). Com
 | Concern | Load |
 |---|---|
 | Product rules, flows, edge cases | `docs/PRD.md` (by section — see §3 below) |
-| Backend architecture (services, controllers, EF, DI, auth) | `docs/Tech.md` §2 (and §1 if adding a package) |
-| Frontend architecture (routing, state store, folder layout, forms, testing) | `docs/Tech.md` §3 |
-| UI (screens, copy, modals, forms, responsiveness) | `docs/UI.md` |
-| Database (tables, columns, migrations, seeds, indexes) | `docs/DB.md` |
+| Backend architecture (`Backend-service`, `Backend-endpoint`, `Backend-migration`) | `docs/Tech.md` §2 (and §1 if adding a package) |
+| Frontend architecture (`Frontend-service`, `Frontend-component`, `Frontend-page`) | `docs/Tech.md` §3 |
+| UI (`UI`) — screens, copy, modals, forms, responsiveness | `docs/UI.md` |
+| Database (`DB`, `Seed`) — tables, columns, migrations, seeds, indexes | `docs/DB.md` |
 | Deployment | `docs/Tech.md` §5 + `docs/PRD.md` §8 |
 
 Rules of thumb:
@@ -89,3 +89,35 @@ A frontend feature often touches both `UI.md` and `Tech.md` §3 at once; include
 - Do not create tables, columns, or indexes that don't match `DB.md`.
 - Do not add UI copy, components, or breakpoints that don't match `UI.md`.
 - If a requirement is ambiguous or contradictory, document the ambiguity in your reply rather than invent a rule.
+
+---
+
+## 9. TDD discipline
+
+Every implementation subtask follows red-green-refactor:
+
+1. **Red** — write a failing test for the behavior the subtask is adding. Confirm it fails for the right reason.
+2. **Green** — write the minimum code that makes the test pass. Nothing more.
+3. **Refactor** — clean up without changing behavior. Keep tests green.
+4. **Verify** — run the full test suite for the touched layer. All green before committing.
+
+Backend testing conventions live in `docs/Tech.md` §2 Testing subsection. Frontend testing conventions live in `docs/Tech.md` §3 Testing subsection. Load them when writing tests.
+
+Each subtask body carries a mandatory `Rules:` line naming the PRD/UI/DB section(s) the subtask implements (e.g. `Rules: PRD §6 (security — opaque error, soft-delete rejection)`), or `Rules: none` for purely technical subtasks. Before writing the Red step, load every section the `Rules:` line names. The subtask bullets become the test cases; the referenced sections tell you WHY each bullet is a rule.
+
+**Sub-tag → test type (choose the matching tag; `Backend` or `Frontend` alone are not valid):**
+
+| Sub-tag | Test type | Where to look in Tech.md |
+|---|---|---|
+| `Backend-service` | Unit tests (mocked dependencies) | §2 Testing — "Unit tests" |
+| `Backend-endpoint` | Integration tests (real HTTP + real DB) | §2 Testing — "Integration tests" |
+| `Backend-migration` | Integration tests (schema assertion after migrate) | §2 Testing — "Integration tests" |
+| `Frontend-service` | Unit tests (MSW, no React) | §3 Testing — "Unit tests" |
+| `Frontend-component` | Unit tests (RTL, co-located, mocked deps) | §3 Testing — "Unit tests" |
+| `Frontend-page` | Integration tests (RTL + router + MSW) | §3 Testing — "Integration tests" |
+| `DB`, `Seed` | Integration tests (real DB) | §2 Testing — "Integration tests" |
+| `UI` | None required (visual-rules doc, no code) | n/a |
+| `Test` | Writes tests only (any kind) | task body says which |
+| `Docs`, `DevOps` | Exempt from TDD | n/a |
+
+Exceptions: `Docs:` and `DevOps:` subtasks skip TDD. Use `Test:` subtasks only for test-only work (coverage backfill, e2e, hardening) — never duplicate a `Test:` subtask next to the implementation subtask that is already producing the test under the Red step.
