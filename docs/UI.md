@@ -4,26 +4,26 @@
 
 ---
 
-## Table of contents
+## Section index
 
-> Agents: do not Read this file whole. Use the Read tool's offset/limit with the ranges below. If you edit this file and line counts change, update this table in the same commit.
+> Agents: do not Read this file whole. `grep -n "^## " docs/UI.md` for live line numbers, then Read with `offset`/`limit`. This index carries **no** line numbers on purpose (per D-011).
 
-| Section | Title | Lines |
-|---|---|---|
-| 1 | Visual foundation | 30–44 |
-| 2 | Layout patterns | 45–169 |
-| 3 | Navbar | 170–180 |
-| 4 | Home page | 181–190 |
-| 5 | Login page | 191–201 |
-| 6 | Student dashboard | 202–253 |
-| 7 | Professor dashboard | 254–318 |
-| 8 | Admin dashboard | 319–365 |
-| 9 | My Profile page | 366–393 |
-| 10 | Change password page | 394–437 |
-| 11 | Reusable primitives | 438–547 |
-| 12 | Responsiveness | 548–587 |
-| 13 | Copy conventions | 588–598 |
-| 14 | Accessibility baseline | 599–606 |
+| Section | Title |
+|---|---|
+| 1 | Visual foundation |
+| 2 | Layout patterns |
+| 3 | Navbar |
+| 4 | Home page |
+| 5 | Login page |
+| 6 | Student dashboard |
+| 7 | Professor dashboard |
+| 8 | Admin dashboard |
+| 9 | My Profile page |
+| 10 | Change password page |
+| 11 | Reusable primitives |
+| 12 | Responsiveness |
+| 13 | Copy conventions |
+| 14 | Accessibility baseline |
 
 ---
 
@@ -32,12 +32,15 @@
 - **Framework:** Bootstrap 5 (`bootstrap@5.3.8` is already in `frontend/package.json`). All layout, typography, spacing, cards, forms, alerts, modals and tables use existing Bootstrap classes. **Do not** introduce Tailwind, shadcn, radix, lucide-react, or `cn()` helpers.
 - **Icons:** FontAwesome (already installed via `@fortawesome/react-fontawesome` + `@fortawesome/free-solid-svg-icons`) for anywhere icons are already used. For one-off icons (password-field eye), prefer inline SVG so we don't pull in extra packages.
 - **Font:** Browser default + Bootstrap's native stack. No `@fontsource` imports.
-- **Colour palette:** Bootstrap defaults.
+- **Colour palette:** Bootstrap defaults, applied through utility classes.
   - Primary blue — brand, call-to-action buttons, active nav link.
   - Success green — Passed status, confirmation.
   - Danger red — Failed status, Appeal denied badge, destructive buttons.
   - Warning yellow — Edit buttons, "Awaiting confirmation" status.
+  - Info cyan — "Appeal pending" status, appeals review section header.
   - Secondary grey — overdue appeal text, disabled inputs, "Not graded" status.
+  - **One documented exception (per D-014):** the "Under admin review" badge uses Bootstrap's own `$purple` `#6f42c1` via an inline `backgroundColor`, because Bootstrap 5 ships no `.bg-purple` utility. This is the only colour in the app not applied through a utility class. Do not add a second exception — if you need another distinct colour, raise it as a decision first.
+- **Password fields:** every password input in the app is a `<PasswordInput>` (§11.2) with a show/hide eye toggle — login, admin create-user, and all three change-password fields (per D-001). There is no screen with a bare `type="password"`.
 - **Language:** English only. No Serbian strings in UI (translate anything that lingers).
 
 ---
@@ -161,9 +164,12 @@ The `d-none d-md-block` + `d-md-none` pair gives us the table-above-`md` / cards
 <span className="badge rounded-pill bg-warning text-dark">Awaiting confirmation</span>
 <span className="badge rounded-pill bg-info text-dark">Appeal pending</span>
 <span className="badge rounded-pill bg-danger ms-1">Appeal denied</span>
+<span className="badge rounded-pill text-white" style={{ backgroundColor: '#6f42c1' }}>Under admin review</span>
 ```
 
 Multiple badges stack with `ms-1` spacing.
+
+The "Under admin review" badge is the escalation status (PRD §4.8) and the single documented colour exception (§1, D-014).
 
 ---
 
@@ -193,7 +199,7 @@ Single login button, in the Navbar only. The hero section keeps its headline + l
 - Centred card at `col-md-6 offset-md-3`.
 - Card header: "Login" (`<h3>`).
 - Two fields (email, password), both required, both show validation errors below after `touched`.
-- Password field uses `type="password"` by default. **No** show/hide toggle on the login screen (toggle is only on admin create-user per PRD).
+- The password field is a `<PasswordInput autoComplete="current-password">` (§11.2): masked by default, with a show/hide eye toggle (per D-001, PRD §5.2). Every password field in the app has this toggle.
 - Submit error renders as a `<div className="alert alert-danger">` above the form.
 - Success toast fires on successful login ("Welcome back, {firstName}") via react-toastify.
 
@@ -210,14 +216,16 @@ Three lines: Name, Email, Index Number.
 ### 6.3 Study Statistics card (`bg-success` header)
 Four columns on desktop (`row g-3` with four `col-md-3`), collapsing to two columns at `sm` and one column at `xs`:
 
+All four tiles count **only truly-final grades** (PRD §4.7, per D-005).
+
 | Tile | Format | Source |
 |---|---|---|
-| Average Grade | one decimal (`.toFixed(1)`), big green `<h2>` | mean of final grades 6–10 across truly-final grades (failures excluded) |
+| Average Grade | **two decimals** (`.toFixed(2)`, per D-004), big green `<h2>` | mean of final grades 6–10 across truly-final grades (failures excluded) |
 | Passed Exams | integer, big primary `<h2>` | count of truly-final grades with `FinalGrade >= 6` |
-| Non-passed Exams | integer, big danger `<h2>` | count of truly-final `FinalGrade = 5` **plus** count of enrollments with no truly-final grade yet |
+| Non-passed Exams | integer, big danger `<h2>` | count of truly-final `FinalGrade = 5` **plus** count of enrollments with no truly-final grade yet (per D-006) |
 | Earned ECTS | integer, big info `<h2>` | sum of `Subject.ECTS` across truly-final passed grades |
 
-Zero values render as `0`, not em-dash.
+Zero values render as `0`, not em-dash. The backend computes every figure; the component only formats (PRD §5.5 owns the definitions).
 
 ### 6.4 My Subjects table
 
@@ -233,6 +241,7 @@ Columns (desktop): Subject, Professor, Final grade, Status, Action.
 | Truly final (passed) | the number | `Passed` green badge | empty |
 | Truly final (failed) | the number | `Failed` red badge | empty |
 | Appeal accepted, awaiting reconfirm | `—` | `Appeal pending` info badge | empty |
+| Escalated to the admin (PRD §4.8) | the number | `Under admin review` purple badge | empty |
 
 Below `sm`: table collapses to one card per subject.
 
@@ -253,9 +262,17 @@ Reusable `<Modal>`:
 
 ## 7. Professor dashboard
 
-### 7.1 Three-column layout (desktop)
+### 7.1 Three-stage column layout
 
-`row g-3` with three `col-lg-4`. On `<lg` the columns stack vertically.
+`row g-3` with three `col-12 col-sm-6 col-lg-4` children. That gives the three stages PRD §5.4 requires (per D-008):
+
+| Width | Columns |
+|---|---|
+| < 576 px (`xs`) | 1 — each panel full width, stacked |
+| 576–991 px (`sm`, `md`) | 2 — the third panel wraps onto its own row |
+| ≥ 992 px (`lg` and up) | 3 — side by side |
+
+Do not use a bare `col-lg-4`: it jumps straight from one column to three and skips the two-column stage.
 
 - **Column 1 — My Subjects**: `list-group` of selectable subjects. The selected subject has `active` class.
 - **Column 2 — Students in {subject}**: `list-group` of students enrolled in the selected subject. The selected student has `active` class.
@@ -286,6 +303,8 @@ Buttons row:
 - **Confirmed, no appeal:** 5 inputs rendered `disabled`, Final grade shown, no buttons.
 - **Appeal accepted, awaiting reconfirm:** midterms + attendance + practical shown as a one-line read-only summary (`Midterms: 50/60 • Attendance: 5/5 • Practical: 4/5`); only Exam input editable; Final grade re-computes live; Confirm button re-appears.
 - **Overdue appeal / Pending appeal for this grade:** the panel shows the confirmed grade read-only; a small banner above says "This student has a pending/overdue appeal — resolve it from the Appeals section below."
+- **Escalated, assigned to me:** read-only, with a banner "This case is assigned to you — resolve it from the Assigned Cases section below." (§7.6)
+- **Escalated, assigned to someone else:** read-only, no action buttons, banner "This case is under admin review and assigned to another professor." Write attempts would return `403` (PRD §4.8).
 
 ### 7.4 Appeals section
 
@@ -316,11 +335,35 @@ Clicking `[Accept]` closes the modal and refocuses the grading panel on the exam
 
 ---
 
+### 7.6 Assigned Cases section
+
+Below the Appeals section, a full-width card titled "Assigned Cases", rendered from `payload.assignedCases` (`Tech-Frontend.md` §1.1). **The whole section is hidden when the array is empty** — most professors never see it. Rules: PRD §4.8.
+
+Table columns:
+
+| Subject | Student | Grade | Reason | Action |
+
+- `Reason` is a label, not the raw enum: `AcceptedUnresolved` → "Accepted appeal — awaiting re-grade", `ChainExhausted` → "Two overdue appeals — awaiting review".
+- `Action` is a `[Resolve]` button (`btn btn-primary btn-sm`) opening the resolve modal.
+
+**Resolve modal** (reusable `<Modal>` with a blurred backdrop):
+
+- Appeal history list: each appeal as a `<blockquote>` with status, submitted date and text, oldest first.
+- **Scenario A panel** (`reason === 'AcceptedUnresolved'`): the collapsed read-only summary of midterms / attendance / practical (same one-line format as §7.3), an editable Exam input, a live final-grade read-out, and `[Confirm]` → `POST /api/Grade/reconfirm-exam`.
+- **Scenario B panel** (`reason === 'ChainExhausted'`): both overdue appeal texts, then `[Deny]` + `[Accept]` acting on the **latest** appeal. Deny shows the same confirmation sub-step as §7.5.
+- On success: close the modal, remove the row, refetch the dashboard.
+
+Below `sm`: the table collapses to stacked cards, `[Resolve]` full width.
+
+An escalated case the professor does **not** hold shows nothing here, and their grading panel shows the read-only banner from §7.3 instead — write buttons are hidden because the backend would return `403` (PRD §4.8, D-017).
+
+---
+
 ## 8. Admin dashboard
 
 ### 8.1 Tabs
 
-Three Bootstrap pill tabs: Users, Subjects, Enrollments. The active tab's content renders below; non-active content is unmounted (`conditional rendering`, no `display:none` hiding).
+Four Bootstrap pill tabs: Users, Subjects, Enrollments, Escalations. The active tab's content renders below; non-active content is unmounted (`conditional rendering`, no `display:none` hiding).
 
 ### 8.2 Users tab
 
@@ -344,10 +387,11 @@ Below `md`: cards per user.
 
 ### 8.4 Subjects tab
 
-Table columns (desktop): Subject Name, ECTS, Professor, Action.
+Table columns (desktop): Subject Name, Subject Code, ECTS, Professor, Action.
 
-Create / Edit subject fields:
+Create / Edit subject fields, in this order:
 - Subject Name — required, 1–100 chars.
+- **Subject Code** — required, 1–20 chars (per D-015), label `"Subject Code"`, placed directly below Subject Name. Help text: "Subjects sharing a code are the same course taught by different professors." Without it the subject has no eligible substitute professor, so an escalated case on it cannot be assigned (PRD §4.8).
 - ECTS — required, integer 1–30, default 6.
 - Professor — select populated from `/api/User?role=Professor`.
 
@@ -360,6 +404,33 @@ Create form fields:
 - Subject — select.
 
 No edit (delete / recreate instead).
+
+### 8.6 Escalations tab
+
+One row per escalated case. Rules: PRD §4.8, PRD §5.3.
+
+Table columns (desktop): **Subject**, **Student**, **Original Professor**, **Grade**, **Reason**, **Escalated Since**, **Status**, **Action**.
+
+Row rendering by `escalationStatus`:
+
+| Status | Badge | Action |
+|---|---|---|
+| `NeedsAssignment` | `badge rounded-pill bg-danger` "Needs assignment" | `[Assign professor]` |
+| `Assigned` | `badge rounded-pill bg-info text-dark` "Assigned" | none |
+| `NeedsReassignment` | `badge rounded-pill bg-warning text-dark` "Needs reassignment" | `[Reassign professor]` |
+| `Resolved` | `badge rounded-pill bg-success` "Resolved" + resolved date, whole row `text-muted` | none |
+
+`Escalated Since` is a relative time ("3 days ago") from the `escalatedSince` field via the helper in §13.
+
+**Assign / Reassign modal** — one shared layout, blurred backdrop, title "Assign professor" or "Reassign professor":
+
+- **Case detail**: subject (with its code), student, current grade, and the reason in prose.
+- **Appeal history**: each appeal as a `<blockquote>` with status, submitted date and text.
+- **Assignment history**, from `assignmentHistory[]`: a chronological table of professor name, assigned by, assigned at, and outcome — "Superseded" + date, "Active", or "Resolved". Hidden on a first assignment, when the list is empty.
+- **Eligible professors**: fetched once on modal open from `GET /api/Escalation/eligible-professors?subjectCode={code}&excludeProfessorId={id}`, rendered as a radio-style `list-group` (the backend scopes it to one subject code, so the list is naturally short). If empty: the text "No eligible professors available" and a disabled Confirm.
+- **Confirm** → `POST /api/Escalation/assign` on a first assignment, `POST /api/Escalation/reassign` on a later one. On success update the row in place and close.
+
+Below `md`: stacked cards like the other admin tabs, action button full width.
 
 ---
 
@@ -476,7 +547,9 @@ type PasswordInputProps = {
 };
 ```
 
-Renders a `.input-group` with an `<input>` + a `[btn btn-outline-secondary]` holding the eye SVG. Internal `useState` toggles `type` between `password` and `text`.
+Renders a `.input-group` with an `<input>` + a `[btn btn-outline-secondary]` holding the eye SVG. Internal `useState` toggles `type` between `password` and `text`. The toggle button carries an `aria-label` of "Show password" / "Hide password" (§14).
+
+**Used by every password field in the app** (per D-001): login (§5), admin create-user (§8.3), and all three change-password fields (§10). A raw `<input type="password">` anywhere is a bug.
 
 ### 11.3 `<RoleGate>`
 
@@ -561,10 +634,13 @@ const showAdminFields = scope === 'admin' && user.userRole !== USER_ROLES.ADMIN;
 
 | Context | Table cutoff | Below cutoff |
 |---|---|---|
-| Admin tables (Users, Subjects, Enrollments) | `md` (768 px) | Stacked cards, scrollable page |
+| Admin tables (Users, Subjects, Enrollments, Escalations) | `md` (768 px) | Stacked cards, scrollable page |
 | Student subjects table | `sm` (576 px) | Stacked cards |
 | Professor students list | `sm` (576 px) | Already a list-group — stays vertical |
 | Professor appeals table | `sm` (576 px) | Stacked cards |
+| Professor assigned-cases table | `sm` (576 px) | Stacked cards |
+
+The professor dashboard's three selection columns are not a table and follow their own three-stage rule — 1 / 2 / 3 columns at `xs` / `sm` / `lg` (§7.1, per D-008).
 
 ### 12.3 QA checklist (per Task 20.3)
 
@@ -573,9 +649,9 @@ Test the following widths in Chrome devtools:
 - **320 px** — iPhone SE first-gen. Everything must still fit; no horizontal scrollbar on any page.
 - **375 px** — iPhone X / 13 Mini.
 - **414 px** — iPhone 13 Pro Max.
-- **576 px** — exactly at the `sm` boundary; verify student/professor tables flip to cards here.
-- **768 px** — exactly at the `md` boundary; verify admin tables flip to cards here.
-- **992 px** — exactly at the `lg` boundary; verify the professor 3-column layout appears.
+- **576 px** — exactly at the `sm` boundary; verify student/professor tables flip to cards, **and** the professor dashboard goes from 1 column to 2 (§7.1).
+- **768 px** — exactly at the `md` boundary; verify admin tables (including Escalations) flip to cards here.
+- **992 px** — exactly at the `lg` boundary; verify the professor dashboard goes from 2 columns to 3 (§7.1).
 - Spot-check in **landscape** on 414 / 576 — some phones become wider than `sm` sideways.
 
 ### 12.4 Spacing
@@ -589,10 +665,11 @@ Test the following widths in Chrome devtools:
 
 - All UI copy is **English**. No remaining Serbian strings.
 - Buttons use imperative verbs: "Save draft", "Confirm grade", "Write appeal", "Submit", "Cancel", "Delete".
-- Status badges use adjectives / past-tense: "Passed", "Failed", "Not graded", "Awaiting confirmation", "Appeal pending", "Appeal denied".
+- Status badges use adjectives / past-tense: "Passed", "Failed", "Not graded", "Awaiting confirmation", "Appeal pending", "Appeal denied", "Under admin review", "Needs assignment", "Assigned", "Needs reassignment", "Resolved".
 - Error messages are concrete and short: "Invalid email or password", "Password must be at least 12 characters", "Appeal text is required".
 - Toasts are one sentence, no punctuation at the end: `toast.success('Appeal submitted')`, `toast.error('Could not save draft')`.
-- Dates on screen: short local format (`navigator.language` + `toLocaleDateString()`). Relative times ("2 days ago") computed with a small `utils/relativeTime.ts` helper (no `date-fns`, no `dayjs` dependency — write the ~20-line helper).
+- Dates on screen: short local format, via `formatDate` in `features/user/utils/dateUtils.ts`.
+- Relative times ("2 days ago") come from a `relativeTime` export in the same `dateUtils.ts` — no `date-fns`, no `dayjs` (Tech.md §1). **The helper does not exist yet**, so the relative times required by §7.4 and §8.6 currently render as absolute dates; building it is task 25.4.
 
 ---
 

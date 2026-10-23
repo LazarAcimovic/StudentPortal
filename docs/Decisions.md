@@ -1,0 +1,177 @@
+# Decision log
+
+> Append-only. One numbered entry per resolved question. **Never edit or renumber an existing entry** — supersede it with a new one and mark the old one `Superseded by D-0NN`.
+>
+> Any `(per D-0NN)` reference in `PRD.md`, `Tech*.md`, `UI.md`, `DB.md` or a task file must resolve to an entry here. `scripts/check-docs.mjs` fails the commit if it does not.
+>
+> An entry is **not** a source of truth. It records *why* a rule is what it is. The rule itself lives in PRD / Tech / UI / DB.
+
+---
+
+## Format
+
+```
+### D-0NN — <one-line question>
+**Decided:** <YYYY-MM-DD> · **Status:** Accepted | Superseded by D-0NN | OPEN
+**Answer:** <the rule, one or two sentences>
+**Lives in:** <PRD §x / UI §x / DB §x / Tech-Backend §x — where the rule is written down>
+**Why:** <the reasoning, one or two sentences>
+```
+
+An `OPEN` entry blocks every section listed under **Lives in**. Do not write code that depends on an OPEN decision.
+
+---
+
+### D-001 — Where is the password show/hide toggle available?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Every password field in the app has a show/hide eye toggle — login, admin create-user, and all three fields on the change-password page. There is no screen where a password input lacks it.
+**Lives in:** PRD §5.2, PRD §5.10, UI §5, UI §8.3, UI §10, UI §11.2
+**Why:** A toggle on one screen and not another is an inconsistency users notice, and the earlier split rule ("admin create only") was the source of a direct PRD/UI contradiction.
+
+### D-002 — Does the initial 7-day student window auto-finalize the grade when it expires in silence?
+
+**Decided:** 2026-10-23 · **Status:** Accepted (recovered from the retired `Q28` reference)
+**Answer:** Yes. If the student takes no action for 7 calendar days after `Grade.ConfirmedAt` and no appeal was ever submitted, the grade becomes truly final on day 8, exactly as if the student had clicked **Confirm grade**.
+**Lives in:** PRD §4.6, PRD §4.7
+**Why:** Silence on a fresh grade is treated as acceptance, so grades do not hang open forever when a student never logs in.
+
+### D-003 — Does the post-overdue window auto-finalize the grade when it expires in silence?
+
+**Decided:** 2026-10-23 · **Status:** Accepted (recovered from the retired `Q53` reference)
+**Answer:** No. If the student lets the second (post-overdue) window lapse without acting, the grade stays open. A grade with an overdue chain is only closed by a professor's accept/deny on a later student appeal, or through the escalation path (PRD §4.8).
+**Lives in:** PRD §4.6, PRD §4.7
+**Why:** The overdue chain exists because a *professor* failed to act. Auto-finalizing would let professor inaction silently lock a grade the student is still contesting.
+
+### D-004 — How many decimals does Average Grade show?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Two (`.toFixed(2)`), e.g. `8.37`.
+**Lives in:** PRD §5.5, UI §6.3
+**Why:** One decimal rounds 8.37 to 8.4 and hides real differences between students.
+
+### D-005 — Which grades do the student stat tiles count?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** All four tiles count **only truly-final grades** (PRD §4.7). A grade that is confirmed but still inside the student's 7-day window, or held open by an appeal or an escalation, is counted by no tile except as "non-passed" per D-006.
+**Lives in:** PRD §5.5, UI §6.3
+**Why:** Statistics that move while a grade is still contestable are misleading, and "confirmed-passed" vs "truly-final" was a live PRD/UI contradiction.
+
+### D-006 — What counts as a Non-passed Exam?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Truly-final grades with `FinalGrade = 5`, **plus** every enrollment that has no truly-final grade yet (not graded, in-window, appealed, or escalated).
+**Lives in:** PRD §5.5, UI §6.3
+**Why:** From the student's point of view, anything not yet passed is outstanding work. The two populations are disjoint, so nothing is double-counted.
+
+### D-007 — Which appeal gates Earned ECTS?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Only the **single most recent appeal** on the grade (highest `SubmittedAt`). If that appeal is effectively Pending (including Overdue) or Accepted-awaiting-reconfirm, ECTS does not count. A superseded older appeal — in particular an overdue one the student has already answered with a newer appeal — never blocks ECTS.
+**Lives in:** PRD §4.7, DB §6.2
+**Why:** The earlier query excluded a grade if *any* appeal was still stored as `Pending`. Because Overdue is stored as `Pending`, the chain "appeal #1 overdue → appeal #2 denied" produced a truly-final grade that earned 0 ECTS forever, contradicting PRD §4.7 case 3.
+
+### D-008 — How does the professor dashboard respond to screen width?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Three stages: **1 column** below 576 px, **2 columns** from 576 to 991 px, **3 columns** at 992 px and above. Implemented as `col-12 col-sm-6 col-lg-4`.
+**Lives in:** PRD §5.4, UI §7.1, UI §12.2
+**Why:** PRD previously implied three columns from 576 px up while UI used `col-lg-4`. Both breakpoints were real; they describe different stages of one layout, not a conflict.
+
+### D-009 — Which document wins when two documents disagree?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Product behaviour → PRD. Visual rules and copy → UI (only where PRD is silent). Schema → DB. Code structure, libraries, tests → Tech / Tech-Backend / Tech-Frontend. A conflict is never resolved by choosing: stop, open an entry here, report it.
+**Lives in:** AGENTS §0, Overview §5
+**Why:** Four co-equal "sources of truth" with no tie-breaker meant an agent silently picked whichever file it read last.
+
+### D-010 — Can a task file define a product rule?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** No. A task file is a plan. Its `Rules:` line may only name PRD / UI / DB / Tech sections, or `none`. A task that introduces a new rule writes that rule into the owning document in its **subtask 0**, before any code.
+**Lives in:** AGENTS §0, AGENTS §4, AGENTS §6
+**Why:** Task files are deleted on completion. Task 23 held the whole escalation rule set and nothing else did, so archiving it would have erased those rules from the documentation entirely.
+
+### D-011 — How does an agent locate a section inside a long document?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Grep for `^## ` in the file to get live heading line numbers, then `Read` with `offset`/`limit`. Section indexes list headings only and carry **no line numbers**.
+**Lives in:** AGENTS §3
+**Why:** Stored line ranges decay with every edit, fail silently (a section quietly loses its tail), and cost manual arithmetic on every commit. Grep is self-healing and free.
+
+### D-012 — Is `docs/old/` authoritative?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** No. `docs/old/**` is a local, git-ignored snapshot of superseded documents. Never Read, Grep or Glob it unless the user names it explicitly.
+**Lives in:** AGENTS §1
+**Why:** It holds a 2500-line earlier PRD whose rules contradict the current ones. Git-ignoring hides it from version control, not from file search.
+
+### D-013 — How is Tech.md organised?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Three files. `Tech.md` holds the shared parts (stack snapshot, database tooling, deployment, accepted trade-offs). `Tech-Backend.md` holds backend architecture and backend testing. `Tech-Frontend.md` holds frontend architecture and frontend testing. No `##` section exceeds ~150 lines.
+**Lives in:** AGENTS §2, AGENTS §3, Overview §3
+**Why:** The old `Tech.md §3` was 330 lines — reading "just that section" loaded 60% of the file, which defeated the point of section reads.
+
+### D-014 — What colour is the "Under admin review" badge?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Bootstrap's own `$purple` (`#6f42c1`), applied with an inline `backgroundColor` style because Bootstrap 5 ships no `.bg-purple` utility class. This is the **only** colour in the app not applied through a Bootstrap utility class.
+**Lives in:** UI §1, UI §2.5
+**Why:** Every Bootstrap contextual utility was already taken by an existing status, and escalation must be visually distinct from "Appeal pending". The value is Bootstrap's own palette, not an invented brand colour.
+
+### D-015 — How long is `Subject.SubjectCode`?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** The column is `varchar(50) NOT NULL` with a migration back-fill default of `''`. The API and the UI both validate **required, 1–20 characters**. The column is deliberately wider than the validator to leave migration headroom; **20 is the contract**.
+**Lives in:** DB §2.2, Tech-Backend §5, UI §8.4
+**Why:** Three different lengths (50 / 20 / 20) appeared across the task file with no statement of which was the contract.
+
+### D-016 — What timestamp type does the database use?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** `timestamp with time zone` (PostgreSQL `timestamptz`) for every timestamp column, values in UTC.
+**Lives in:** DB §1
+**Why:** DB.md claimed `timestamp without time zone`; all 16 timestamp columns in the EF model snapshot are `timestamp with time zone`. The code was right and the doc was wrong.
+
+### D-017 — Who may act on a grade once it is escalated?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** Reads are allowed for both the original and the assigned professor. Writes (accept, deny, undo-deny, reconfirm exam) are allowed **only** for the currently assigned professor once `Grade.AssignedProfessorId` is set; the original professor gets `403`. The assigned professor — and only the assigned professor — may act on an appeal that is already overdue.
+**Lives in:** PRD §4.8, PRD §6, Tech-Backend §3
+**Why:** Escalation exists because the original professor did not act. Handing write authority to the assignee is the whole point, and the overdue guard would otherwise block the very person brought in to clear it.
+
+### D-018 — Does an Accepted appeal ever become Overdue?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** No. Only `Pending` appeals surface as `Overdue` (computed as `SubmittedAt + 7d < now`). An appeal the professor accepted stays `Accepted` forever. What expires instead is the professor's 7-day window to re-enter the exam points, measured from `appeal.ReviewedAt`; when it lapses the **grade** escalates with reason `AcceptedUnresolved`.
+**Lives in:** PRD §4.8, DB §2.6
+**Why:** It is the obvious wrong guess, it was asked explicitly, and the two clocks (`SubmittedAt` for overdue, `ReviewedAt` for Scenario A) are easy to confuse.
+
+### D-019 — `features/user/util` or `features/user/utils`?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** `utils` only. `features/user/util/` is removed and `gradeUtils.ts` plus its test move into `features/user/utils/`.
+**Lives in:** Tech-Frontend §1
+**Why:** Both folders held live files, so an agent adding a helper had two equally valid-looking homes and imports split across a typo.
+
+### D-020 — What happens to the old Students page?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** `src/pages/students/StudentsPage.tsx` is deleted. The student dashboard is the only student-facing view.
+**Lives in:** PRD §5.5, UI §3
+**Why:** PRD and UI both stated it was already removed, and the file was unrouted dead code that contradicted them.
+
+### D-021 — Does an escalated grade count toward Earned ECTS?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** No. An open escalation means the grade is not truly final, so it contributes no ECTS and counts as non-passed per D-006 until the assigned professor resolves it and the grade finalizes.
+**Lives in:** PRD §4.7, PRD §4.8
+**Why:** Escalation exists precisely because the grade's outcome is still undecided; D-007's latest-appeal gate already produces this result, and stating it prevents a special case being invented.
+
+### D-022 — Are time-dependent states seeded in `seed.sql`?
+
+**Decided:** 2026-10-23 · **Status:** Accepted
+**Answer:** No. `seed.sql` contains no time-sensitive row. Overdue appeals, escalation Scenarios A and B, and the 24-hour undo window are produced per test by the backdating helpers on `IntegrationTestBase`, and in manual testing by the test-mode clock endpoint.
+**Lives in:** PRD §7, Tech-Backend §7
+**Why:** The seed replays before every integration test, so one backdated row would inject an overdue or escalated case into every test in the suite and silently corrupt unrelated dashboard assertions.

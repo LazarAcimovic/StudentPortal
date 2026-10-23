@@ -1,0 +1,21 @@
+#!/bin/sh
+# Documentation consistency gate (AGENTS §10).
+# Enable once per clone:  git config core.hooksPath .githooks
+
+# Only run when something under docs/, AGENTS.md or the script itself is staged.
+if ! git diff --cached --name-only | grep -Eq '^(docs/|AGENTS\.md$|scripts/check-docs\.mjs$)'; then
+  exit 0
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: node not found, skipping check-docs" >&2
+  exit 0
+fi
+
+echo "pre-commit: running scripts/check-docs.mjs"
+node scripts/check-docs.mjs || {
+  echo ""
+  echo "Commit blocked: the documents are inconsistent."
+  echo "Fix them — do not pass --no-verify (AGENTS §10)."
+  exit 1
+}

@@ -2,7 +2,7 @@
 
 > This document reflects the schema **after** all planned migrations have been applied. Current (pre-migration) schema differences are called out in each table's "Changes" note.
 
-Database engine: **PostgreSQL 15+**. Identifiers are quoted PascalCase (EF Core default). Primary keys are `uuid` (GUID). All timestamps are `timestamp without time zone`, stored UTC.
+Database engine: **PostgreSQL 15+** (integration tests pin `postgres:17`). Identifiers are quoted PascalCase (EF Core default). Primary keys are `uuid` (GUID). **All timestamps are `timestamp with time zone` (`timestamptz`), values in UTC** (per D-016) — every timestamp column in the EF model snapshot uses this type.
 
 ---
 
@@ -15,6 +15,9 @@ Subjects ──< Enrollments
 Enrollments ─1──1─ Grades
 Enrollments ─1──0..1─ GradeDrafts
 Grades ──< Appeals
+Grades ─1──0..1─ Escalations          (one open-or-resolved case per grade)
+Escalations ──< EscalationAssignments (assignment history; one active row)
+Grades ─0..1── Users                  (Grades.AssignedProfessorId, Role must be Professor)
 Users ──< RefreshTokens
 ```
 
@@ -44,18 +47,19 @@ Users ──< RefreshTokens
 
 ### 2.2 `Subjects`
 
-| Column        | Type           | Null | Default              | Notes                              |
-|---------------|----------------|------|----------------------|------------------------------------|
-| `Id`          | `uuid`         | NO   |                      | PK                                 |
-| `SubjectName` | `varchar(100)` | NO   |                      |                                    |
-| `ECTS`        | `integer`      | NO   | `6`                  | **Default added** (was no default) |
-| `ProfessorId` | `uuid`         | NO   |                      | FK → `Users.Id`, must be Professor |
-| `IsDeleted`   | `boolean`      | NO   | `false`              |                                    |
-| `CreatedAt`   | `timestamp`    | YES  | `CURRENT_TIMESTAMP`  |                                    |
+| Column        | Type           | Null | Default              | Notes                                      |
+|---------------|----------------|------|----------------------|--------------------------------------------|
+| `Id`          | `uuid`         | NO   |                      | PK                                         |
+| `SubjectName` | `varchar(100)` | NO   |                      |                                            |
+| `SubjectCode` | `varchar(50)`  | NO   | `''`                 | Groups the same course across professors   |
+| `ECTS`        | `integer`      | NO   | `6`                  |                                            |
+| `ProfessorId` | `uuid`         | NO   |                      | FK → `Users.Id`, must be Professor         |
+| `IsDeleted`   | `boolean`      | NO   | `false`              |                                            |
+| `CreatedAt`   | `timestamptz`  | YES  | `CURRENT_TIMESTAMP`  |                                            |
 
 **Indexes:** `IX Subjects_ProfessorId (ProfessorId)` (FK index).
 
-**Changes:** add `DEFAULT 6` to `ECTS`. Rows without a value get back-filled to 6 by the migration.
+**`SubjectCode` (per D-015).** The column is `varchar(50)` so the migration had headroom to back-fill existing rows with `''`, but **the contract is required, 1–20 characters**, enforced by `SubjectCreateDtoValidator` / `SubjectUpdateDtoValidator` and by the admin form's Zod schema. Two subjects sharing a code mean the same course taught by different professors, which is exactly what makes a professor *eligible* for an escalated case (PRD §4.8). A subject with an empty code can never have an eligible substitute professor.
 
 ---
 
@@ -87,10 +91,11 @@ Users ──< RefreshTokens
 | `PracticalPoints`     | `numeric(3,1)`   | NO   |                      | 0 – 5, step 0.5                                                       |
 | `ExamPoints`          | `numeric(4,1)`   | NO   |                      | 0 – 30, step 0.5                                                      |
 | `FinalGrade`          | `integer`        | NO   |                      | 5 – 10. Snapshot computed from the 5 fields at confirm time.          |
-| `ConfirmedAt`         | `timestamp`      | NO   |                      | When the professor clicked Confirm (initial or re-confirm after accept).|
-| `StudentConfirmedAt`  | `timestamp`      | YES  | `NULL`               | Set when student clicks Confirm Grade.                                |
-| `FinalizedAt`         | `timestamp`      | YES  | `NULL`               | Set the moment the grade becomes truly final (per PRD §4.7).          |
-| `CreatedAt`           | `timestamp`      | YES  | `CURRENT_TIMESTAMP`  |                                                                       |
+| `ConfirmedAt`         | `timestamptz`    | NO   |                      | When the professor clicked Confirm (initial or re-confirm after accept).|
+| `StudentConfirmedAt`  | `timestamptz`    | YES  | `NULL`               | Set when student clicks Confirm Grade.                                |
+| `FinalizedAt`         | `timestamptz`    | YES  | `NULL`               | Set the moment the grade becomes truly final (per PRD §4.7).          |
+| `AssignedProfessorId` | `uuid`           | YES  | `NULL`               | FK → `Users.Id`. The **currently** assigned professor on an escalated case (PRD §4.8). |
+| `CreatedAt`           | `timestamptz`    | YES  | `CURRENT_TIMESTAMP`  |                                                                       |
 | `IsDeleted`           | `boolean`        | NO   | `false`              |                                                                       |
 
 **Constraints:**
@@ -102,11 +107,9 @@ Users ──< RefreshTokens
 - `CK_Grades_Exam_Range` → `ExamPoints BETWEEN 0 AND 30`.
 - `CK_Grades_Half_Step` → each of the 5 point columns must be a multiple of 0.5 (checked via `col * 2 = FLOOR(col * 2)`).
 
-**Changes from current schema:**
-- Dropped columns: `Grade` (int, aka `StudentGrade` in the entity), `Comment`, `IsConfirmed`.
-- Added columns: the 5 point columns, `FinalGrade`, `ConfirmedAt`, `StudentConfirmedAt`, `FinalizedAt`.
-- Relationship: `Enrollment → Grade` becomes 1:0..1 (was 1:N). The old `CK_Grades_Grade_Range` is replaced.
-- Existing rows are dropped by the migration (schema change is destructive). `seed.sql` repopulates.
+**Indexes:** `UQ Grades_EnrollmentId (EnrollmentId)`, `IX Grades_AssignedProfessorId (AssignedProfessorId)`.
+
+**`AssignedProfessorId` semantics.** It holds only the *current* assignment so ownership checks need a single value and no join (PRD §4.8, D-017). It is `NULL` on almost every grade, is rewritten on every (re-)assignment, and stays set until the grade is resolved. The full history lives in `EscalationAssignments` (§2.9). FK delete behaviour is `SET NULL`.
 
 ---
 
@@ -140,14 +143,15 @@ Users ──< RefreshTokens
 | `Id`          | `uuid`         | NO   |         | PK                                                        |
 | `GradeId`     | `uuid`         | NO   |         | FK → `Grades.Id` (NOT unique — 1:N)                       |
 | `Text`        | `varchar(1000)`| NO   |         | Appeal body                                               |
-| `SubmittedAt` | `timestamp`    | NO   |         | Set at insert time                                        |
-| `Status`      | `varchar(16)`  | NO   | `Pending` | `Pending`, `Accepted`, `Denied`, `Overdue`              |
-| `ReviewedAt`  | `timestamp`    | YES  | `NULL`  | Set when prof accepts or denies (NULL for Pending / Overdue) |
+| `SubmittedAt` | `timestamptz`  | NO   |         | Set at insert time. Drives the Overdue computation        |
+| `Status`      | `varchar(16)`  | NO   | `Pending` | `Pending`, `Accepted`, `Denied` in storage; `Overdue` is computed, never written |
+| `ReviewedAt`  | `timestamptz`  | YES  | `NULL`  | Set when prof accepts or denies. Drives Scenario A escalation |
 
 **Business rules enforced in the service layer (not DB):**
-- At most one `Pending` appeal per `GradeId` at a time.
+- At most one `Pending` appeal per `GradeId` at a time; at most two appeals per grade in total (PRD §4.1, §4.5).
 - `Overdue` is **not written** — it is computed at read time as `Status = 'Pending' AND SubmittedAt + 7 days < NOW()`. The row stays with `Status = 'Pending'` in storage but surfaces as `Overdue` through the API.
-- Grade never finalizes while an effective-`Pending` appeal exists.
+- **An `Accepted` row never becomes `Overdue`** (per D-018). Only `Pending` rows do. What expires after an accept is the professor's re-grade window, measured from `ReviewedAt`, and that expiry escalates the *grade* (PRD §4.8) without touching the appeal row.
+- A grade never finalizes while its **most recent** appeal is effectively `Pending` or `Accepted`. An older superseded appeal — including an overdue one the student has already answered with a newer appeal — does not block finality (per D-007). See §6.2.
 
 **Indexes:** `IX Appeals_GradeId (GradeId)`.
 
@@ -172,14 +176,55 @@ Users ──< RefreshTokens
 
 ---
 
+### 2.8 `Escalations`
+
+One row per escalated grade — 1:0..1 with `Grades`. The row is the **case**; who has been assigned to it lives in §2.9.
+
+| Column       | Type          | Null | Default | Notes                                                        |
+|--------------|---------------|------|---------|--------------------------------------------------------------|
+| `Id`         | `uuid`        | NO   |         | PK                                                           |
+| `GradeId`    | `uuid`        | NO   |         | FK → `Grades.Id`, **UNIQUE**                                 |
+| `Reason`     | `varchar(32)` | NO   |         | `AcceptedUnresolved` \| `ChainExhausted` (stored as a string) |
+| `ResolvedAt` | `timestamptz` | YES  | `NULL`  | Stamped when the grade finalizes and the case auto-closes    |
+
+**Indexes:** `UQ Escalations_GradeId (GradeId)`.
+
+**Rules enforced in the service layer:** a grade has at most one escalation record ever; `ResolvedAt` is set only by `CloseIfEscalatedAsync`, called from the two finalization paths (`GradeService.ReconfirmExamAsync` and `AppealService.DenyAsync`). A resolved row is kept for history, never deleted.
+
+---
+
+### 2.9 `EscalationAssignments`
+
+One row per assignment attempt — 1:N with `Escalations`. This is the audit trail: nothing is overwritten.
+
+| Column                | Type          | Null | Default | Notes                                                   |
+|-----------------------|---------------|------|---------|---------------------------------------------------------|
+| `Id`                  | `uuid`        | NO   |         | PK                                                      |
+| `EscalationId`        | `uuid`        | NO   |         | FK → `Escalations.Id`, `CASCADE`                        |
+| `AssignedProfessorId` | `uuid`        | NO   |         | FK → `Users.Id`, `RESTRICT`. Must be an eligible professor |
+| `AssignedByAdminId`   | `uuid`        | NO   |         | FK → `Users.Id`, `RESTRICT`. Which admin assigned       |
+| `AssignedAt`          | `timestamptz` | NO   |         | Start of this assignee's 7-day window                   |
+| `SupersededAt`        | `timestamptz` | YES  | `NULL`  | Stamped when a reassignment replaces this row           |
+
+**Indexes:** `IX EscalationAssignments_EscalationId`, `IX EscalationAssignments_AssignedProfessorId`, `IX EscalationAssignments_AssignedByAdminId`.
+
+**The active assignment** is the single row with `SupersededAt IS NULL`. On reassignment the service stamps the old row's `SupersededAt`, inserts a new row, and updates `Grades.AssignedProfessorId` to match — those three writes always happen together.
+
+---
+
 ## 3. Relationships summary
 
 - `Subjects.ProfessorId → Users.Id` — `RESTRICT` delete.
 - `Enrollments.StudentId → Users.Id` — `RESTRICT` delete.
 - `Enrollments.SubjectId → Subjects.Id` — `RESTRICT` delete.
 - `Grades.EnrollmentId → Enrollments.Id` — `CASCADE` delete.
+- `Grades.AssignedProfessorId → Users.Id` — `SET NULL` delete.
 - `GradeDrafts.EnrollmentId → Enrollments.Id` — `CASCADE` delete.
 - `Appeals.GradeId → Grades.Id` — `CASCADE` delete.
+- `Escalations.GradeId → Grades.Id` — `CASCADE` delete.
+- `EscalationAssignments.EscalationId → Escalations.Id` — `CASCADE` delete.
+- `EscalationAssignments.AssignedProfessorId → Users.Id` — `RESTRICT` delete.
+- `EscalationAssignments.AssignedByAdminId → Users.Id` — `RESTRICT` delete.
 - `RefreshTokens.UserId → Users.Id` — `CASCADE` delete.
 
 ---
@@ -192,6 +237,8 @@ Per PRD §7. The `seed.sql` script runs in a single transaction:
 BEGIN;
 
 -- children first
+DELETE FROM "EscalationAssignments";
+DELETE FROM "Escalations";
 DELETE FROM "Appeals";
 DELETE FROM "GradeDrafts";
 DELETE FROM "Grades";
@@ -201,14 +248,18 @@ DELETE FROM "Subjects";
 DELETE FROM "Users";
 
 -- Users (1 admin + 4 professors + 10 students) ...
--- Subjects (~15, all ECTS=6) ...
+-- Subjects (~15, all ECTS=6, every row with a SubjectCode,
+--           at least two codes shared across two professors) ...
 -- Enrollments (~30) ...
 -- Grades (~20 across every state) ...
 -- GradeDrafts (~3) ...
--- Appeals (~5, including one overdue chain) ...
+-- Appeals (~5) ...
+-- Escalations / EscalationAssignments: none seeded (see below)
 
 COMMIT;
 ```
+
+**No time-sensitive row is seeded (per D-022).** `seed.sql` replays before every integration test, so a backdated `SubmittedAt` or `ReviewedAt` would inject an overdue or escalated case into every test in the suite. Overdue appeals, escalation Scenarios A and B, and the 24-hour undo window are created per test by the backdating helpers on `IntegrationTestBase` (`Tech-Backend.md` §7), and in manual testing by advancing the test-mode clock. The appeals the seed does create are freshly submitted or already reviewed, never mid-deadline.
 
 Fixed GUID prefixes (as in the pre-reset seed) keep FKs predictable:
 
@@ -221,18 +272,27 @@ Fixed GUID prefixes (as in the pre-reset seed) keep FKs predictable:
 | `50000000-...` | GradeDrafts |
 | `60000000-...` | Appeals |
 | `70000000-...` | RefreshTokens (none seeded — tokens are issued at runtime) |
+| `80000000-...` | Escalations (none seeded — see the note above) |
+| `90000000-...` | EscalationAssignments (none seeded) |
 
 All seeded users share the plaintext password `Password123!` (PBKDF2 hashed in the SQL literal).
 
 ---
 
-## 5. Migration order (applied by the agent, run by the human)
+## 5. Migrations, in applied order
 
-1. `AddRefreshToken` — PRD Task 6.8.
-2. `GradeRedesign` — PRD Task 7.4. Drops old Grade columns, adds new columns, adds `GradeDrafts` and `Appeals` tables, flips Grade → Enrollment uniqueness.
-3. `SubjectEctsDefault` — PRD Task 9.1. Adds `DEFAULT 6` and back-fills.
+Migration names are the stable identifiers — not task numbers, which change as tasks are archived.
 
-Each migration is one commit (per the plan's per-subtask commit rule).
+| # | Migration | What it does |
+|---|---|---|
+| 1 | `InitialCreate` | `Users`, `Subjects`, `Enrollments`, original `Grades`. |
+| 2 | `AddRefreshToken` | `RefreshTokens` table (§2.7). |
+| 3 | `GradeRedesign` | Drops old Grade columns, adds the 5 point columns + `FinalGrade` + the three timestamps, adds `GradeDrafts` and `Appeals`, flips Grade → Enrollment to 1:0..1. Destructive; `seed.sql` repopulates. |
+| 4 | `SubjectEctsDefault` | Adds `DEFAULT 6` to `Subjects.ECTS` and back-fills. |
+| 5 | `AddSubjectCode` | Adds `Subjects.SubjectCode varchar(50) NOT NULL DEFAULT ''` (§2.2). |
+| 6 | `AddEscalationWorkflow` | Adds `Grades.AssignedProfessorId`, creates `Escalations` (§2.8) and `EscalationAssignments` (§2.9) with their indexes and FKs. |
+
+Each migration is one commit. The agent generates it with `dotnet ef migrations add <Name>` and commits the files; the human runs `dotnet ef database update`. Append new rows to the end of this table in the same commit as the migration.
 
 ---
 
@@ -265,28 +325,72 @@ LEFT JOIN "Grades" g ON g."EnrollmentId" = e."Id"
 WHERE e."StudentId" = @studentId AND e."IsDeleted" = false;
 ```
 
-The service then computes `canWriteAppeal`, `canConfirmGrade`, `status`, and `appealStatus` labels per PRD §4.6 and §4.1.
+The service then computes `canWriteAppeal`, `canConfirmGrade`, `status`, `appealStatus` and `isEscalated` labels per PRD §4.1, §4.6 and §4.8. The escalation branches are evaluated **before** the generic accepted-appeal and overdue branches, otherwise an escalated grade would be labelled "Appeal pending" instead of "Under admin review".
+
+### 6.3 Escalated cases (admin Escalations tab)
+
+The case list is derived, not stored. For every grade with `FinalizedAt IS NULL`, the service checks:
+
+- **Scenario A** — any appeal with `Status = 'Accepted'` and `ReviewedAt + INTERVAL '7 days' < NOW()`.
+- **Scenario B** — two or more appeals with `Status = 'Pending'` and `SubmittedAt + INTERVAL '7 days' < NOW()`.
+
+A matching grade with no `Escalations` row is `NeedsAssignment`. With a row and `ResolvedAt IS NULL`, the active assignment (`SupersededAt IS NULL`) decides: `AssignedAt + INTERVAL '7 days' >= NOW()` → `Assigned`, otherwise `NeedsReassignment`. With `ResolvedAt` set → `Resolved`.
+
+Eligible professors for a case:
+
+```sql
+SELECT DISTINCT u.*
+FROM "Users" u
+JOIN "Subjects" s ON s."ProfessorId" = u."Id"
+WHERE u."UserRole" = 'Professor'
+  AND u."IsDeleted" = false
+  AND s."SubjectCode" = @subjectCode
+  AND u."Id" <> @originalProfessorId;
+```
 
 ### 6.2 Earned ECTS
+
+Gated by the **single most recent** appeal on the grade, never by any appeal (per D-007), and by the absence of an open escalation (per D-021).
 
 ```sql
 SELECT COALESCE(SUM(s."ECTS"), 0) AS earned_ects
 FROM "Enrollments" e
-JOIN "Subjects" s  ON s."Id" = e."SubjectId"
-JOIN "Grades" g    ON g."EnrollmentId" = e."Id"
-LEFT JOIN LATERAL (
-  SELECT a.*
+JOIN "Subjects" s ON s."Id" = e."SubjectId"
+JOIN "Grades"   g ON g."EnrollmentId" = e."Id"
+LEFT JOIN LATERAL (                        -- the latest appeal, whatever its status
+  SELECT a."Status"
   FROM "Appeals" a
-  WHERE a."GradeId" = g."Id" AND a."Status" IN ('Pending','Accepted')
+  WHERE a."GradeId" = g."Id"
   ORDER BY a."SubmittedAt" DESC
   LIMIT 1
-) active_appeal ON TRUE
+) latest ON TRUE
 WHERE e."StudentId" = @studentId
+  AND e."IsDeleted" = false
   AND g."FinalGrade" >= 6
-  AND active_appeal.* IS NULL              -- no live appeal blocking finality
+  -- (1) the grade is truly final by one of the PRD §4.7 routes
   AND (
-       g."StudentConfirmedAt" IS NOT NULL
-    OR g."FinalizedAt" IS NOT NULL
-    OR g."ConfirmedAt" + INTERVAL '7 days' < NOW()
-  );
+       g."FinalizedAt" IS NOT NULL                      -- deny, or accept + re-confirm
+    OR g."StudentConfirmedAt" IS NOT NULL               -- student confirmed
+    OR (latest."Status" IS NULL                         -- no appeal was ever submitted,
+        AND g."ConfirmedAt" + INTERVAL '7 days' < NOW())--   so day-8 silence finalizes it
+  )
+  -- (2) the latest appeal is not holding it open ('Pending' also covers Overdue)
+  AND (latest."Status" IS NULL OR latest."Status" <> 'Pending')
+  -- (3) no escalation is still open
+  AND NOT EXISTS (
+        SELECT 1 FROM "Escalations" esc
+        WHERE esc."GradeId" = g."Id" AND esc."ResolvedAt" IS NULL
+      );
 ```
+
+Why each clause earns its place:
+
+| Case | Outcome | Which clause decides |
+|---|---|---|
+| Appeal #1 overdue, student submitted #2, professor denied #2 | **counts** | latest is `Denied`, `FinalizedAt` set. The stale `Pending` row for #1 is ignored |
+| Appeal accepted, exam not yet re-confirmed | does not count | `FinalizedAt` and `StudentConfirmedAt` both NULL → clause (1) fails |
+| Appeal accepted and re-confirmed | counts | `FinalizedAt` set by the re-confirm |
+| Denied, then undone inside 24 h | does not count | the undo clears `FinalizedAt` and returns the row to `Pending` → clauses (1) and (2) both fail |
+| Single overdue appeal, student silent | does not count | latest is `Pending` → clause (2) fails |
+| Never appealed, 8 days of silence | counts | clause (1)'s third branch |
+| Escalated, not yet resolved | does not count | clause (3) |

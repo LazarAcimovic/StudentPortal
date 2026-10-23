@@ -2,330 +2,257 @@
 
 #### Overview
 
-When a professor fails to resolve an appeal within the allowed timeframe, the case is escalated to the administrator. Two scenarios trigger escalation:
+Deliver the escalation workflow: when a professor leaves an appeal unresolved, the case goes to an admin who assigns it to another eligible professor.
 
-- **Scenario A** — Professor accepts an appeal but does not re-enter exam points and re-confirm within **7 days of accepting** (`appeal.ReviewedAt + 7 days < now`).
-- **Scenario B** — Student submits a second appeal (after the first went overdue) and the professor again fails to accept or deny within the applicable 7-day window, leaving two overdue Pending appeals in the DB.
+**The rules for this feature live in `PRD.md` §4.8** (triggers, eligibility, the four case statuses, assignment and reassignment, write authority), with the schema in `DB.md` §2.2 / §2.4 / §2.8 / §2.9 and the screens in `UI.md` §6.4 / §7.6 / §8.4 / §8.6. This file is only the plan for getting there — read the rules from those sections, never from this Overview (AGENTS §0, D-010).
 
-In both cases the grade **must not auto-finalize** due to professor inaction. Escalation is the only resolution path. The administrator assigns an **eligible professor** — one who teaches another subject with the same `SubjectCode` as the escalated subject, excluding the original professor — who then resolves the case through the normal grading / appeal flow. If the assigned professor also fails to act within **7 days of their assignment**, the case surfaces again for the administrator to re-assign to someone else. Full assignment history is kept.
+> **Reconciled against the code on 2026-10-23.** The backend is complete and the professor/student UI has landed; the **admin Escalations tab (23.12), the SubjectCode form field (23.13), the seed update (23.14) and all tests (23.15) are outstanding**. Two files carrying 23.9 / 23.11 refinements are still uncommitted in the working tree.
+>
+> **23.13 is a live bug, not just a gap:** the API requires `SubjectCode` (non-empty) but no admin form sends it, so creating or editing a subject from the UI fails with `400`. Do 23.13 first.
 
-Key invariants:
-- Maximum 2 appeals per grade remains enforced.
-- The overdue-restriction on `AcceptAsync` / `DenyAsync` is lifted **only for the assigned professor** (they must be able to act on already-overdue appeals in Scenario B).
-- **Read** actions on an escalated grade: allowed for both the original professor and the assigned professor.
-- **Write** actions on an escalated grade (accept, deny, reconfirm exam): once `grade.AssignedProfessorId` is set, **only** the currently assigned professor may perform them; the original professor receives `403` and action buttons are hidden on the UI.
+**Depends on:** nothing · **Blocks:** task 22 (22a.10 covers the escalation integration tests)
 
 ---
 
-#### 23.1 — DB: Add `SubjectCode` to `Subject`
+#### 23.0 — Docs: Promote the escalation rules into the source-of-truth documents
 
-Rules: Task 23 Overview (SubjectCode defines eligible professors), DB.md §2 Subjects.
+Rules: none (this subtask *creates* the rules' home)
+Not in scope: any code change.
+Docs to update: PRD §2.1, §2.2, §4.5, §4.6, §4.7, §4.8, §5.3, §5.4, §5.5, §6, §7 · DB §1, §2.2, §2.4, §2.6, §2.8, §2.9, §3, §4, §5, §6.2, §6.3 · UI §1, §2.5, §6.3, §6.4, §7.1, §7.3, §7.6, §8.1, §8.4, §8.6, §12.2 · Tech-Backend §1, §2, §3 · Decisions D-014, D-015, D-016, D-017, D-018, D-021, D-022
+Verify: `node scripts/check-docs.mjs`
 
-Add `SubjectCode VARCHAR(50) NOT NULL DEFAULT ''` to the `Subjects` table. `SubjectCode` groups subjects that represent the same course taught by different professors and is used to determine which professors are eligible for assignment.
+- [x] Every rule that previously existed only in this task file is now written into PRD / DB / UI / Tech.
+- [x] `Overview.md` glossary entries for Escalation, Eligible professor and Assigned professor point at PRD §4.8, not at this file.
+- Commit: `docs: consistency pass — precedence, decision log, Tech split, escalation rules`
 
--  generate migration — `dotnet ef migrations add AddSubjectCode` from `backend/StudentPortal/`. Review the generated files, then run `dotnet ef database update`.
+---
+
+#### 23.1 — Backend-migration: `SubjectCode` on `Subjects`
+
+Rules: DB §2.2 (SubjectCode column and contract), PRD §4.8 (eligibility depends on it)
+Not in scope: DTOs, validators, UI — those are 23.4 and 23.13.
+Docs to update: DB §2.2, DB §5
+Verify: `dotnet ef migrations list` shows `AddSubjectCode`; `dotnet test backend/StudentPortal.IntegrationTests --filter Schema`
+
+- [x] Column `SubjectCode varchar(50) NOT NULL DEFAULT ''` added to `Subjects`.
+- [x] Migration `AddSubjectCode` generated and reviewed.
 - Commit: `feat(db): migration for SubjectCode on Subject`
 
-**After completing this subtask, explain:**
-- What `SubjectCode` represents and how it enables the professor-eligibility lookup.
-- The overall Task 23 workflow from end to end (escalation triggers → admin assigns → professor resolves → grade finalizes → escalation closes; and the re-assignment path when the assigned professor also fails).
-
 ---
 
-#### 23.2 — DB: `AssignedProfessorId` on `Grade` + `Escalations` + `EscalationAssignments` tables
+#### 23.2 — Backend-migration: `AssignedProfessorId` on `Grades` + `Escalations` + `EscalationAssignments`
 
-Rules: Task 23 Overview (escalation data model, 1:1 Grades/Escalations, 1:N Escalations/EscalationAssignments), DB.md §2 Grades.
+Rules: DB §2.4, §2.8, §2.9 (columns, keys, FK delete behaviour), PRD §4.8 (what the two tables mean)
+Not in scope: service logic (23.6), endpoints (23.7).
+Docs to update: DB §2.4, §2.8, §2.9, §3, §5
+Verify: `dotnet ef migrations list` shows `AddEscalationWorkflow`
 
-**1.** Add nullable `AssignedProfessorId UUID` (FK → `Users`) to `Grades`. Always holds the **currently active** assigned professor. `NULL` on most grades; updated on every (re-)assignment and remains set until the grade is resolved.
-
-**2.** Create `Escalations` table (one row per escalated grade — 1:1 with `Grades`):
-
-| Column | Type | Constraints |
-|---|---|---|
-| `Id` | UUID | PK |
-| `GradeId` | UUID | FK → Grades, UNIQUE |
-| `Reason` | VARCHAR | NOT NULL — `'AcceptedUnresolved'` \| `'ChainExhausted'` |
-| `ResolvedAt` | TIMESTAMP | NULL — stamped when grade finalizes |
-
-**3.** Create `EscalationAssignments` table (one row per assignment attempt — 1:N with `Escalations`):
-
-| Column | Type | Constraints |
-|---|---|---|
-| `Id` | UUID | PK |
-| `EscalationId` | UUID | FK → Escalations |
-| `AssignedProfessorId` | UUID | FK → Users |
-| `AssignedByAdminId` | UUID | FK → Users |
-| `AssignedAt` | TIMESTAMP | NOT NULL |
-| `SupersededAt` | TIMESTAMP | NULL — stamped when this assignment is replaced by a new one |
-
-The **currently active** assignment for an escalation is the row where `SupersededAt IS NULL`. On re-assignment the old row gets `SupersededAt = now`, a new row is inserted, and `Grade.AssignedProfessorId` is updated to match.
-
--  generate migration — `dotnet ef migrations add AddEscalationWorkflow`. Review, then run `dotnet ef database update`.
+- [x] Nullable `AssignedProfessorId uuid` on `Grades`, FK → `Users` with `SET NULL`, indexed.
+- [x] `Escalations` table: `Id`, `GradeId` (unique FK), `Reason varchar(32)`, `ResolvedAt`.
+- [x] `EscalationAssignments` table: `Id`, `EscalationId`, `AssignedProfessorId`, `AssignedByAdminId`, `AssignedAt`, `SupersededAt`.
 - Commit: `feat(db): migration for Grade.AssignedProfessorId, Escalations, and EscalationAssignments`
 
-**After completing this subtask, explain:**
-- Why `Grade.AssignedProfessorId` holds only the current assignment (ownership checks need a single value without joining).
-- Why `Escalations` and `EscalationAssignments` are separate tables (`Escalations` is the case; `EscalationAssignments` is the history of who was assigned).
-- The 1:1 relationship between `Grades` and `Escalations`, and the 1:N between `Escalations` and `EscalationAssignments`.
-
 ---
 
-#### 23.3 — Backend-service: Entities, enums, and repositories
+#### 23.3 — Backend-service: Entities, enum, and repositories
 
-Rules: Task 23 Overview (data-layer shape — Escalation and EscalationAssignment entities, EscalationReason enum, repositories).
+Rules: DB §2.8, §2.9 · Tech-Backend §1 (the DbContext is `StudentPortalApiContext`), §2 (DI registration order)
+Not in scope: business logic — that is 23.6.
+Docs to update: Tech-Backend §2 (DI list)
+Verify: `dotnet test backend/StudentPortal.Tests`
 
-Add:
-- `EscalationReason` enum (`AcceptedUnresolved`, `ChainExhausted`) in `Models/Enums/`.
-- `Escalation` entity with navigation properties to `Grade` and `ICollection<EscalationAssignment> Assignments`.
-- `EscalationAssignment` entity with navigation properties to `Escalation`, `AssignedProfessor` (User), `AssignedByAdmin` (User).
-- `IEscalationRepository` with: `GetByGradeIdAsync(Guid)`, `AddAsync(Escalation)`, `UpdateAsync(Escalation)`.
-- `IEscalationAssignmentRepository` with: `GetActiveByEscalationIdAsync(Guid)`, `GetAllByEscalationIdAsync(Guid)`, `AddAsync(EscalationAssignment)`, `UpdateAsync(EscalationAssignment)`.
-- `EscalationRepository` and `EscalationAssignmentRepository` implementations.
-- Register both `DbSet`s in `ApplicationDbContext` with EF mappings and FK constraints. Register both repository interfaces in `Program.cs`.
+- [x] `EscalationReason` enum (`AcceptedUnresolved`, `ChainExhausted`) in `Models/Enums/`.
+- [x] `Escalation` entity with navigation to `Grade` and `ICollection<EscalationAssignment> Assignments`.
+- [x] `EscalationAssignment` entity with navigation to `Escalation`, `AssignedProfessor`, `AssignedByAdmin`.
+- [x] `IEscalationRepository`: `GetByGradeIdAsync`, `AddAsync`, `UpdateAsync`.
+- [x] `IEscalationAssignmentRepository`: `GetActiveByEscalationIdAsync`, `GetAllByEscalationIdAsync`, `AddAsync`, `UpdateAsync`.
+- [x] Both `DbSet`s registered in **`StudentPortalApiContext`** with EF mappings and FK constraints; both repositories registered in `Program.cs`.
 - Commit: `feat(backend): Escalation and EscalationAssignment entities and repositories`
 
-**After completing this subtask, explain:**
-- The entity graph and how navigation properties connect `Escalation` → `EscalationAssignment` → `User`.
-- What "active assignment" means in code (`SupersededAt == null`).
-
 ---
 
-#### 23.4 — Backend-endpoint: `SubjectCode` on Subject entity + admin CRUD
+#### 23.4 — Backend-endpoint: `SubjectCode` in the subject API
 
-Rules: Task 23 Overview (SubjectCode is required for eligibility lookup), PRD §5.3 (admin Subjects tab).
+Rules: DB §2.2 (1–20 is the contract, per D-015), PRD §5.3 (admin Subjects tab), Tech-Backend §5 (validator conventions)
+Not in scope: the admin form field (23.13).
+Docs to update: Tech-Backend §5
+Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Subject`
 
-- Add `SubjectCode string` property to the `Subject` entity. Update EF mapping.
-- Add `SubjectCode` (required, 1–20 chars) to `SubjectCreateDto` and `SubjectUpdateDto`.
-- Update `SubjectCreateDtoValidator` and `SubjectUpdateDtoValidator` to enforce 1–20 chars, non-empty.
-- Update `SubjectService` create and update methods to persist `SubjectCode`.
-- Update `SubjectController` response DTOs to include `SubjectCode`.
+- [x] `SubjectCode` on the `Subject` entity with its EF mapping.
+- [x] `SubjectCode` on `SubjectCreateDto`, `SubjectUpdateDto`, `SubjectDto`.
+- [x] Both validators enforce non-empty, max 20 characters.
+- [x] `SubjectService` persists it; the controller returns it.
 - Commit: `feat(backend): add SubjectCode to Subject entity and admin CRUD`
 
-**After completing this subtask, explain:**
-- Why `SubjectCode` is required (without it the eligibility query cannot run).
-- How an admin sets it (covered in frontend subtask 23.13).
-
 ---
 
-#### 23.5 — Backend-service: Ownership check updates in `GradeService` and `AppealService`
+#### 23.5 — Backend-service: Two-tier ownership checks
 
-Rules: Task 23 Overview (assigned professor becomes the write-authority during an open escalation; overdue-restriction lift for assigned professor), PRD §6 (service-level ownership is the authoritative security layer).
+Rules: PRD §4.8 (write authority moves to the assignee; overdue lift), PRD §6 (service layer is authoritative), Tech-Backend §3 (the two-tier table)
+Not in scope: hiding buttons in the UI — 23.11 and UI §7.3.
+Docs to update: Tech-Backend §3
+Verify: `dotnet test backend/StudentPortal.Tests --filter "AppealService|GradeService"`
 
-Replace the single `subject.ProfessorId == callerId` ownership guard with a two-tier check:
-
-**Read actions** (`GetByEnrollmentAsync`, `GetByGradeAsync`): allow if `subject.ProfessorId == callerId` **OR** `grade.AssignedProfessorId == callerId`.
-
-**Write actions** (`ReconfirmExamAsync`, `AcceptAsync`, `DenyAsync`, `UndoDenyAsync`):
-- `grade.AssignedProfessorId == null` → allow only `subject.ProfessorId == callerId`.
-- `grade.AssignedProfessorId != null` → allow only `grade.AssignedProfessorId == callerId`; original professor receives `403`.
-
-**Overdue restriction lift**: in `AcceptAsync` and `DenyAsync`, skip the `appeal.SubmittedAt.AddDays(7) < now` overdue guard when `grade.AssignedProfessorId == callerId`.
-
+- [x] Reads allow `subject.ProfessorId == callerId` **or** `grade.AssignedProfessorId == callerId`.
+- [x] Writes allow only `subject.ProfessorId` when `AssignedProfessorId` is null, and only `AssignedProfessorId` when it is set; the original professor gets `403`.
+- [x] The overdue guard in `AcceptAsync` / `DenyAsync` is skipped only for the assigned professor.
 - Commit: `feat(backend): two-tier ownership checks for escalated grades`
-
-**After completing this subtask, explain:**
-- The read vs write distinction and the rationale.
-- Why the overdue restriction is lifted only for the assigned professor.
-- Why the backend check is the authoritative security layer even if the frontend hides buttons.
 
 ---
 
 #### 23.6 — Backend-service: `IEscalationService` + `EscalationService`
 
-Rules: Task 23 Overview (full escalation state machine — Scenario A/B detection, four statuses, assign/reassign/auto-close semantics, eligible-professor rule).
+Rules: PRD §4.8 (triggers, four statuses, assignment and reassignment rules, eligibility), DB §6.3 (how each status is derived), Tech-Backend §3 (service surface), Tech-Backend §6 (**inject `TimeProvider`; no `DateTime now` parameters**)
+Not in scope: HTTP surface (23.7).
+Docs to update: Tech-Backend §3
+Verify: `dotnet test backend/StudentPortal.Tests --filter Escalation`
 
-`EscalationService` in `Services/`, registered via `IEscalationService`:
-
-**`GetAllCasesAsync(DateTime now)`** — returns `EscalatedCaseDto[]` covering:
-- Grades with no `Escalation` record that match Scenario A or B detection conditions (status = `NeedsAssignment`).
-- Grades with an `Escalation` record where `ResolvedAt == null` and the active assignment's `AssignedAt + 7 days >= now` (status = `Assigned`).
-- Grades with an `Escalation` record where `ResolvedAt == null` and the active assignment's `AssignedAt + 7 days < now` (status = `NeedsReassignment`).
-- Grades with an `Escalation` record where `ResolvedAt != null` (status = `Resolved` — kept for history).
-
-Detection conditions:
-- **Scenario A**: `grade.FinalizedAt == null` AND any appeal has `Status == Accepted` AND `appeal.ReviewedAt!.Value.AddDays(7) < now`.
-- **Scenario B**: `grade.FinalizedAt == null` AND 2+ appeals all satisfy `Status == Pending && SubmittedAt.AddDays(7) < now`.
-
-`EscalatedCaseDto` fields: `gradeId`, `enrollmentId`, `subjectName`, `subjectCode`, `studentFirstName`, `studentLastName`, `originalProfessorFirstName`, `originalProfessorLastName`, `finalGrade`, `reason`, `escalationStatus`, `escalatedSince`, `resolvedAt?`, `appeals[]`, `assignmentHistory[]` (from `EscalationAssignments`, ordered by `AssignedAt` — each entry carries `assignedProfessorName`, `assignedByAdminName`, `assignedAt`, `supersededAt?`).
-
-**`GetEligibleProfessorsAsync(string subjectCode, Guid excludeProfessorId)`** — professors (not soft-deleted) who teach at least one `Subject` with `SubjectCode == subjectCode` and `ProfessorId != excludeProfessorId`.
-
-**`AssignProfessorAsync(Guid gradeId, Guid assignedProfessorId, Guid adminId, DateTime now)`** — first assignment: validates grade exists and is not finalized, professor is eligible, no open `Escalation` record exists. Creates `Escalation` row + first `EscalationAssignment` row. Sets `grade.AssignedProfessorId`.
-
-**`ReassignProfessorAsync(Guid gradeId, Guid newProfessorId, Guid adminId, DateTime now)`** — re-assignment: finds open `Escalation`, validates active assignment's `AssignedAt + 7 days < now` (otherwise reject — reassignment not yet due), new professor is eligible. Sets active assignment's `SupersededAt = now`. Inserts new `EscalationAssignment` row. Updates `grade.AssignedProfessorId`.
-
-**`CloseIfEscalatedAsync(Guid gradeId, DateTime now)`** — finds open `Escalation` for the grade; if found sets `ResolvedAt = now`.
-
+- [x] `GetAllCasesAsync` returns `EscalatedCaseDto[]` across `NeedsAssignment`, `Assigned`, `NeedsReassignment`, `Resolved`.
+- [x] Scenario A detection: `FinalizedAt == null` and an `Accepted` appeal with `ReviewedAt + 7d < now`.
+- [x] Scenario B detection: `FinalizedAt == null` and 2+ appeals with `Status == Pending && SubmittedAt + 7d < now`.
+- [x] `GetEligibleProfessorsAsync(subjectCode, excludeProfessorId)` per DB §6.3.
+- [x] `AssignProfessorAsync` creates the `Escalation` + first assignment and sets `Grade.AssignedProfessorId`.
+- [x] `ReassignProfessorAsync` rejects before the 7-day deadline, otherwise supersedes and re-points.
+- [x] `CloseIfEscalatedAsync` stamps `ResolvedAt`.
+- [ ] **Time comes from an injected `TimeProvider`, not a `DateTime now` parameter** (Tech-Backend §6). The current signatures take `DateTime now`; align them with the rest of the services. Covered by task 22's 22a.2 refactor — do it there or here, not twice.
 - Commit: `feat(backend): EscalationService with detection, assignment, reassignment, and auto-close`
-
-**After completing this subtask, explain:**
-- The four escalation statuses and how each is derived.
-- Step by step: first assignment vs re-assignment (what rows change in each case).
-- How `CloseIfEscalatedAsync` hooks into grade finalization.
 
 ---
 
 #### 23.7 — Backend-endpoint: `EscalationController` + auto-close hooks
 
-Rules: Task 23 Overview (admin-only endpoints, auto-close triggered by grade finalization paths), PRD §6 (role-based authorization — admin only).
+Rules: PRD §4.8 (resolution paths), PRD §6 (admin-only), Tech-Backend §3
+Not in scope: the admin UI (23.12).
+Docs to update: Tech-Backend §3
+Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Escalation`
 
-**`EscalationController`** `[Authorize(Roles = "Admin")]`, route `api/Escalation`:
-
-- `GET /` → `GetAllCasesAsync` → `200 EscalatedCaseDto[]`.
-- `GET /eligible-professors?subjectCode={code}&excludeProfessorId={id}` → `GetEligibleProfessorsAsync` → `200 UserDto[]`.
-- `POST /assign` body `{ gradeId, assignedProfessorId }` → `AssignProfessorAsync` → `200 EscalatedCaseDto`. `400` if grade not found or already has an open escalation. `422` if professor not eligible.
-- `POST /reassign` body `{ gradeId, newProfessorId }` → `ReassignProfessorAsync` → `200 EscalatedCaseDto`. `400` if no open escalation or reassignment not yet due. `422` if professor not eligible.
-
-**Auto-close hooks**: inject `IEscalationService` into `GradeService` and `AppealService`. Call `CloseIfEscalatedAsync` inside:
-- `GradeService.ReconfirmExamAsync` — after `FinalizedAt` is set (Scenario A resolution path).
-- `AppealService.DenyAsync` — after `grade.FinalizedAt` is set (Scenario B deny-path).
-- Scenario B accept-path: `AcceptAsync` does not finalize; `ReconfirmExamAsync` does → already covered above.
-
+- [x] `[Authorize(Roles = "Admin")]` on `api/Escalation`.
+- [x] `GET /` → cases; `GET /eligible-professors?subjectCode=&excludeProfessorId=` → users.
+- [x] `POST /assign` and `POST /reassign` → `200 EscalatedCaseDto`; `400` for a missing grade / no open escalation / reassignment not yet due; `422` for an ineligible professor.
+- [x] `CloseIfEscalatedAsync` called from `GradeService.ReconfirmExamAsync` and `AppealService.DenyAsync` — the only two finalization paths.
 - Commit: `feat(backend): EscalationController with assign/reassign endpoints and auto-close hooks`
 
-**After completing this subtask, explain:**
-- Each endpoint and its role.
-- Why `POST /reassign` is a separate endpoint from `POST /assign`.
-- The two finalization paths and why auto-close hooks into those specific methods.
-
 ---
 
-#### 23.8 — Backend-endpoint: Student dashboard — `"Under admin review"` status
+#### 23.8 — Backend-service: Student dashboard "Under admin review"
 
-Rules: Task 23 Overview ("Under admin review" status is shown when the grade is escalated and not finalized), PRD §5.5 (student dashboard — status column semantics).
+Rules: PRD §4.8, PRD §5.5 (status column), DB §6.1 (branch ordering)
+Not in scope: the badge itself (23.10).
+Docs to update: DB §6.1
+Verify: `dotnet test backend/StudentPortal.Tests --filter StudentDashboard`
 
-Update `StudentDashboardService.BuildSubjectRow` and `SubjectRowDto`:
-
-- Add `bool IsEscalated` to `SubjectRowDto`.
-- Before the existing "accepted appeal awaiting reconfirm" and "overdue appeals" branches, check:
-  - Scenario A active: `FinalizedAt == null` AND accepted appeal with `ReviewedAt + 7 days < now` → `Status = "Under admin review"`, `IsEscalated = true`, no buttons.
-  - Scenario B active: `FinalizedAt == null` AND 2+ overdue Pending appeals → `Status = "Under admin review"`, `IsEscalated = true`, no buttons.
-
+- [x] `bool IsEscalated` on `SubjectRowDto`.
+- [x] Both scenario branches sit **before** the generic accepted-appeal and overdue branches, and set `Status = "Under admin review"` with no action buttons.
 - Commit: `feat(backend): student dashboard escalation status`
 
-**After completing this subtask, explain:**
-- Where the new branches sit in the `BuildSubjectRow` decision chain.
-- Why they must be evaluated before the generic accepted-appeal and overdue branches.
-
 ---
 
-#### 23.9 — Backend-endpoint: Professor dashboard — `assignedCases` section
+#### 23.9 — Backend-service: Professor dashboard `assignedCases`
 
-Rules: Task 23 Overview (assigned professor sees the escalated grades they must resolve), PRD §5.4 (professor dashboard structure).
+Rules: PRD §4.8, PRD §5.4 (professor dashboard sections), Tech-Frontend §1.1 (payload contract)
+Not in scope: rendering (23.11).
+Docs to update: Tech-Frontend §1.1
+Verify: `dotnet test backend/StudentPortal.Tests --filter ProfessorDashboard`
 
-Add `assignedCases: AssignedCaseDto[]` to the professor dashboard response. Entry appears for every grade where `grade.AssignedProfessorId == callerProfId` and `grade.FinalizedAt == null`.
-
-`AssignedCaseDto`: `enrollmentId`, `gradeId`, `subjectName`, `studentFirstName`, `studentLastName`, `midterm1Points`, `midterm2Points`, `attendancePoints`, `practicalPoints`, `examPoints`, `finalGrade`, `reason`, `appeals: AppealDto[]`.
-
+- [x] `assignedCases: AssignedCaseDto[]` on the professor dashboard response, one entry per grade where `AssignedProfessorId == caller` and `FinalizedAt == null`.
+- [x] `AssignedCaseDto` carries the five point fields, final grade, reason and the appeal list, so the resolve modal needs no second request.
 - Commit: `feat(backend): professor dashboard assigned cases section`
 
-**After completing this subtask, explain:**
-- How assigned cases are queried.
-- What data the professor needs per scenario (Scenario A: grade fields + accepted appeal; Scenario B: both overdue appeal texts).
-
 ---
 
-#### 23.10 — Frontend-component: Student dashboard `"Under admin review"` badge
+#### 23.10 — Frontend-component: Student dashboard "Under admin review" badge
 
-Rules: Task 23 Overview (status badge, no action buttons while escalated), UI.md §6 (student dashboard patterns), PRD §5.5 (student dashboard).
+Rules: UI §2.5 (badge markup), UI §6.4 (status row), PRD §5.5
+Not in scope: changing the status string — the backend owns it.
+Docs to update: none
+Verify: `npm run test -- StudentDashboard`
 
-When `status === "Under admin review"`, render a distinct badge (purple — not used by existing badges) with no action buttons. Stacked-card variant below `sm` shows the same badge.
-
+- [x] `status === "Under admin review"` renders the purple badge from UI §2.5, no action buttons.
+- [x] The stacked-card variant below `sm` shows the same badge.
 - Commit: `feat(frontend): student dashboard under-admin-review status badge`
 
-**After completing this subtask, explain:**
-- Where in the status-rendering branch the new case is handled.
-- The badge colour choice relative to existing badges.
-
 ---
 
-#### 23.11 — Frontend-component: Professor dashboard `"Assigned Cases"` section
+#### 23.11 — Frontend-page: Professor dashboard "Assigned Cases" section
 
-Rules: Task 23 Overview (resolve-modal UX for Scenario A/B), UI.md §7 (professor dashboard patterns), PRD §5.4 (professor dashboard).
+Rules: UI §7.6 (section, resolve modal, both scenario panels), UI §7.3 (read-only banners), PRD §4.8, Tech-Frontend §1.1 (read from the dashboard payload, no extra fetch)
+Not in scope: new endpoints — it reuses `reconfirm-exam`, `accept`, `deny`.
+Docs to update: none
+Verify: `npm run test -- ProfessorDashboard`
 
-Add **Assigned Cases** section below the Appeals section, using `assignedCases` from the dashboard payload.
-
-Each row: subject name, student name, final grade, reason label (`"Accepted appeal — awaiting re-grade"` / `"Two overdue appeals — awaiting review"`), **Resolve** button.
-
-**Resolve modal** (reusable `Modal`, blurred backdrop):
-- Appeal history list (status, submitted date, text).
-- **Scenario A panel**: collapsed midterms/attendance/practical summary + editable exam input + **Confirm** → `POST /api/Grade/reconfirm-exam`. On success: close modal, remove row.
-- **Scenario B panel**: two overdue appeal texts (oldest first) + **Accept** / **Deny** on the latest appeal → existing endpoints. Deny shows the confirm sub-step. On success: close modal, remove row.
-
-Responsive: collapses to stacked cards below `sm`.
-
+- [x] Section hidden entirely when `assignedCases` is empty.
+- [x] Row shows subject, student, grade, reason label, `[Resolve]`.
+- [x] Scenario A panel: collapsed summary + editable exam + Confirm → `POST /api/Grade/reconfirm-exam`.
+- [x] Scenario B panel: both overdue texts + Accept / Deny on the latest appeal, with the deny confirmation sub-step.
+- [x] Collapses to stacked cards below `sm`.
 - Commit: `feat(frontend): professor dashboard assigned cases section with resolve modal`
 
-**After completing this subtask, explain:**
-- How the modal selects Scenario A vs B from the `reason` field.
-- How section data is sourced (from dashboard payload, no extra fetch).
-- The responsive collapse behaviour.
-
 ---
 
-#### 23.12 — Frontend-page: Admin dashboard `"Escalations"` tab
+#### 23.12 — Frontend-page: Admin dashboard "Escalations" tab
 
-Rules: Task 23 Overview (four escalation statuses with per-status actions, assign/reassign modal, assignment history), UI.md §8 (admin dashboard patterns), PRD §5.3 (admin dashboard).
+Rules: UI §8.6 (columns, per-status badges and actions, assign/reassign modal, assignment history, empty eligible list), UI §8.1 (four tabs), PRD §4.8, PRD §5.3, Tech-Frontend §3 (**the eligible-professor fetch on modal open is Pattern B**)
+Not in scope: backend changes — every endpoint already exists (23.7).
+Docs to update: Tech-Frontend §1 (add the new service / hook / models to the layout block)
+Verify: `npm run test -- Escalations`
 
-Add **Escalations** tab to `AdminDashboardPage` alongside Users, Subjects, Enrollments.
-
-Table columns: **Subject**, **Student**, **Original Professor**, **Grade**, **Reason**, **Escalated Since**, **Status**, **Action**.
-
-Row rendering by `escalationStatus`:
-- `NeedsAssignment` — `"Needs assignment"` badge; **Assign professor** button.
-- `Assigned` — `"Assigned"` badge; no action button.
-- `NeedsReassignment` — `"Needs reassignment"` badge (amber); **Reassign professor** button.
-- `Resolved` — entire row greyed; `"Resolved"` badge + resolved date; no action button.
-
-**Assign / Reassign modal** (shared layout, blurred backdrop):
-- Case detail: subject, student, current grade, reason description, full appeal history.
-- **Assignment history** list (from `assignmentHistory[]` in the DTO): chronological table showing professor name, assigned by, assigned at, outcome (`"Superseded"` + date or `"Active"` or `"Resolved"`).
-- **Eligible professors** list — fetched once on modal open via `GET /api/Escalation/eligible-professors?subjectCode={code}&excludeProfessorId={id}`. The backend scopes the result to professors who teach the same `SubjectCode`, so the list is naturally small. Render as a selectable list (radio-style). If empty: `"No eligible professors available"` + disabled Confirm.
-- **Confirm** → `POST /api/Escalation/assign` (first assignment) or `POST /api/Escalation/reassign` (re-assignment). On success: update row in-place, close modal.
-
-Responsive: collapses to stacked cards below `md` (same as other admin tabs). Assign button full-width in card.
-
+- [ ] `features/escalations/api/escalationService.ts` — `getCases`, `getEligibleProfessors`, `assign`, `reassign`; each takes an optional `AbortSignal` and re-throws as `Error` (Tech-Frontend §3).
+- [ ] `features/escalations/models/escalation.ts` — `EscalatedCase`, `AssignmentHistoryEntry`, `EscalationStatus`.
+- [ ] `features/escalations/hooks/useEscalations.ts` — Pattern A, loads the case list when the tab mounts.
+- [ ] `features/escalations/hooks/useEligibleProfessors.ts` — Pattern B, caller owns the `AbortController`, triggered on modal open.
+- [ ] Fourth pill tab in `AdminDashboardPage`, content unmounted when inactive.
+- [ ] Table with the eight columns from UI §8.6 and the four per-status rows.
+- [ ] Assign / reassign modal: case detail, appeal history, assignment history (hidden when empty), radio-style eligible list, "No eligible professors available" + disabled Confirm when empty.
+- [ ] Confirm posts to `/assign` or `/reassign`, updates the row in place, closes the modal.
+- [ ] Collapses to stacked cards below `md`.
 - Commit: `feat(frontend): admin escalations tab with assign/reassign modal and assignment history`
 
-**After completing this subtask, explain:**
-- How the four status states drive row rendering and which action button each shows.
-- How the assignment history list is rendered inside the modal.
-- The eligible-professor dropdown and the empty-list case.
-- The responsive collapse behaviour.
+---
+
+#### 23.13 — Frontend-component: `SubjectCode` field in the admin subject forms
+
+Rules: UI §8.4 (field, label, help text, position), DB §2.2 (1–20 characters, per D-015), PRD §5.3
+Not in scope: the backend, which already requires and returns the field (23.4).
+Docs to update: none
+Verify: `npm run test -- Subject`; then create and edit a subject in the running app and confirm no `400`
+
+- [ ] `SubjectCode` text input in `SubjectCreateForm` and `SubjectEditForm`, directly below Subject Name, label "Subject Code", with the help text from UI §8.4.
+- [ ] Zod: required, 1–20 characters. Field error shown only after `touched` (UI §2.3).
+- [ ] The create and update payloads both send `subjectCode`.
+- [ ] The Subjects table shows a Subject Code column.
+- Commit: `fix(frontend): send SubjectCode from admin subject create and edit forms`
 
 ---
 
-#### 23.13 — Frontend-component: `SubjectCode` field in admin subject forms
+#### 23.14 — Seed: `SubjectCode` on every seeded subject
 
-Rules: Task 23 Overview (SubjectCode required so eligibility lookup can run), PRD §5.3 (admin dashboard — Subjects tab), UI.md §8 (admin dashboard).
+Rules: PRD §7 (seeding scope and the no-time-sensitive-rows rule, per D-022), DB §4 (seed shape and GUID prefixes), PRD §4.8 (eligibility needs a shared code)
+Not in scope: **seeding escalated cases.** Backdated rows in `seed.sql` would leak into every integration test (D-022). Scenario A and B states are created by the test helpers in Tech-Backend §7 and, for manual checks, by the test-mode clock.
+Docs to update: DB §4
+Verify: `psql -f backend/StudentPortal/Migrations/seed.sql` twice in a row, then `dotnet test backend/StudentPortal.IntegrationTests`
 
-Add `SubjectCode` text input (required, Zod: non-empty, ≤ 20 chars, label `"Subject Code"`) to subject **Create** and **Edit** forms, directly below Subject Name.
-
-- Commit: `feat(frontend): SubjectCode field in admin subject create and edit forms`
-
-**After completing this subtask, explain:**
-- Where the field sits in the form layout.
-- Why it is required and what format is expected (e.g. `"MATH-101"`).
+- [ ] Every seeded subject gets a `SubjectCode`.
+- [ ] At least two subjects taught by **different** professors share one code, so an eligible professor exists.
+- [ ] The `DELETE` block covers `EscalationAssignments` and `Escalations`, children first.
+- [ ] No seeded appeal or grade carries a backdated `SubmittedAt` / `ReviewedAt` / `ConfirmedAt`.
+- Commit: `feat(db): seed SubjectCode across subjects with shared codes for escalation`
 
 ---
 
-#### 23.14 — Seed: Explicit Scenario A and Scenario B escalation rows
+#### 23.15 — Test: Escalation coverage, unit and integration
 
-Rules: Task 23 Overview (Scenarios A and B definitions, SubjectCode must be shared across at least two subjects), PRD §7 (data seeding scope).
+Rules: PRD §4.8 (every rule below), PRD §4.7 + DB §6.2 (ECTS while escalated, per D-021), Tech-Backend §7 (fixture, backdating helpers, FakeTimeProvider, three-point boundary testing)
+Not in scope: frontend tests for 23.12 — they ship with that subtask.
+Docs to update: none
+Verify: `dotnet test backend/StudentPortal.Tests --filter Escalation` and `dotnet test backend/StudentPortal.IntegrationTests --filter Escalation`
 
-Update `seed.sql`:
+This subtask exists because 23.1–23.11 shipped without tests, against AGENTS §9. It is a coverage backfill, so it is tagged `Test`; future subtasks write their tests in the Red step instead.
 
-1. Set `SubjectCode` on **all** seeded subjects. At minimum two subjects must share a code so an eligible professor exists for the escalated cases.
-
-2. **Scenario A** — one enrollment + grade with an accepted appeal whose `ReviewedAt = NOW() - INTERVAL '10 days'` (past the 7-day reconfirm window). `FinalizedAt = NULL`. Subject shares a `SubjectCode` with a subject taught by a different professor.
-
-3. **Scenario B** — one enrollment + grade with two Pending appeals: `SubmittedAt = NOW() - INTERVAL '17 days'` (first) and `NOW() - INTERVAL '10 days'` (second). Both overdue. `FinalizedAt = NULL`. Subject shares a `SubjectCode` with another professor's subject.
-
-Document both in seed comments (`-- Scenario A ...`, `-- Scenario B ...`).
-
-- Commit: `feat(db): seed Scenario A and B escalation cases with backdated timestamps`
-
-**After completing this subtask, explain:**
-- Which seeded students, professors, and subjects were used for each scenario.
-- How to verify: log in as admin, open Escalations tab, confirm both rows appear with status `"Needs assignment"`.
-
+- [ ] `StudentPortal.Tests/Services/EscalationServiceTests.cs`: Scenario A and B detection at the 7-day boundary (before / at / after), the four status derivations, eligibility excluding the original professor and soft-deleted users, reassignment rejected before the deadline, `CloseIfEscalatedAsync` idempotent.
+- [ ] `StudentPortal.IntegrationTests/Tests/Escalations/`: admin-only access (401 anonymous, 403 for professor and student), assign happy path, `422` for an ineligible professor, `400` for a double assign, reassign before and after the deadline.
+- [ ] Authority matrix: original professor `403` on write once assigned, assigned professor `200`, both `200` on read.
+- [ ] Assigned professor can accept or deny an **already overdue** appeal; the original professor still cannot.
+- [ ] Auto-close: reconfirm-exam and deny both stamp `ResolvedAt`.
+- [ ] An escalated grade contributes no ECTS; once resolved, the grade finalizes and its ECTS counts (D-007, D-021).
+- [ ] One overdue appeal alone does **not** escalate; two do.
+- Commit: `test(backend): escalation service unit tests and endpoint integration tests`

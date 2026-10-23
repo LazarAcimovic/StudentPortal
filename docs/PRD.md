@@ -4,22 +4,22 @@
 
 ---
 
-## Table of contents
+## Section index
 
-> Agents: do not Read this file whole. Use the Read tool's offset/limit with the ranges below. If you edit this file and line counts change, update this table in the same commit.
+> Agents: do not Read this file whole. `grep -n "^## " docs/PRD.md` for live line numbers, then Read with `offset`/`limit`. This index carries **no** line numbers on purpose (per D-011).
 
-| Section | Title | Lines |
-|---|---|---|
-| 1 | One-line summary | 26–31 |
-| 2 | Actors and what each one can do | 32–69 |
-| 3 | The grading model | 70–110 |
-| 4 | The appeal flow | 111–189 |
-| 5 | Screen inventory | 190–293 |
-| 6 | Security requirements | 294–317 |
-| 7 | Data seeding | 318–337 |
-| 8 | Deployment target | 338–342 |
-| 9 | Implementation task list (pointer only) | 343–349 |
-| 10 | Out of scope | 350–365 |
+| Section | Title |
+|---|---|
+| 1 | One-line summary |
+| 2 | Actors and what each one can do |
+| 3 | The grading model |
+| 4 | The appeal flow (including §4.8 escalation) |
+| 5 | Screen inventory |
+| 6 | Security requirements |
+| 7 | Data seeding |
+| 8 | Deployment target |
+| 9 | Implementation task list (pointer only) |
+| 10 | Out of scope |
 
 ---
 
@@ -42,7 +42,8 @@ StudentPortal is an internal web app for a university faculty where **Admins** m
 - Manage subjects: create (name, ECTS defaults to 6, assigned professor), edit, delete.
 - Manage enrollments: create (student + subject pair), delete.
 - Edit **own** `FirstName`, `LastName`, `Email`, and password (via `/profile` and `/profile/change-password`). Cannot change own `UserRole` or `IsDeleted`.
-- No access to the grading flow.
+- No access to the grading flow — an admin never enters, confirms or appeals a grade.
+- Manage escalated appeal cases (see §4.8): see every escalated case, assign it to an eligible professor, and reassign it when the assignee also fails to act.
 
 ### 2.2 Professor
 - Log in / log out.
@@ -53,8 +54,9 @@ StudentPortal is an internal web app for a university faculty where **Admins** m
 - Confirm the grade (triggers the student-side 7-day window).
 - Review appeals for grades on their own subjects: accept or deny.
 - Undo a deny within 24 hours of denying.
-- Cannot act on another professor's subjects or students.
-- Cannot accept or deny an **overdue** appeal (see §4.4).
+- Cannot act on another professor's subjects or students, **except** a case explicitly assigned to them through escalation (see §4.8).
+- Cannot accept or deny an **overdue** appeal (see §4.5). The one exception is an assigned professor acting on an escalated case (§4.8).
+- When assigned an escalated case, resolve it through the normal flow: accept / deny the appeal, or re-enter the exam points and re-confirm.
 - Edit **own** `FirstName`, `LastName`, and password (via `/profile` and `/profile/change-password`). Cannot change own `Email`, `UserRole`, or `IsDeleted` — those are admin-only.
 
 ### 2.3 Student
@@ -147,7 +149,8 @@ When any appeal exists on a professor's subject, their dashboard shows an **Appe
 - The grade does not finalize while an Overdue appeal exists.
 - The student's dashboard shows **Write appeal** again, with a fresh 7-day window starting from the moment the appeal went overdue.
 - The student can submit one more appeal; the first overdue one stays in the DB as audit.
-- A professor **cannot** accept or deny an overdue appeal (the Accept/Deny buttons are not rendered for overdue entries in the View appeal modal).
+- A professor **cannot** accept or deny an overdue appeal (the Accept/Deny buttons are not rendered for overdue entries in the View appeal modal). The sole exception is an **assigned** professor clearing an escalated case — see §4.8.
+- One overdue appeal on its own never escalates. Escalation needs a second ignored appeal (§4.8, Scenario B).
 
 ### 4.6 Student's 7-day action window — when it applies
 
@@ -164,8 +167,8 @@ What ends the window:
 |---|---|
 | Student clicks **Confirm grade** | Grade is immediately truly final (§4.7). ECTS counts. |
 | Student clicks **Write appeal** (fresh or post-overdue) | Grade stays open until the professor accepts, denies, or the new appeal goes Overdue. The window becomes irrelevant for the duration of the Pending appeal. |
-| Window silently expires (7 days of silence on the initial window) | Grade is auto-finalized on day 8, same effect as if the student had clicked Confirm grade (per Q28). |
-| Post-overdue window silently expires | Grade stays open — no auto-finalize. A grade with an overdue chain is only closed by a professor's accept/deny on a subsequent student appeal (per Q53). |
+| Window silently expires (7 days of silence on the initial window) | Grade is auto-finalized on day 8, same effect as if the student had clicked Confirm grade (per D-002). |
+| Post-overdue window silently expires | Grade stays open — no auto-finalize. A grade with an overdue chain is only closed by a professor's accept/deny on a subsequent student appeal, or through escalation (§4.8) (per D-003). |
 
 What the student sees during each state:
 
@@ -176,6 +179,7 @@ What the student sees during each state:
 | Appeal denied, grade truly final | 🟢 Passed / 🔴 Failed + 🔴 Appeal denied badge | *(none)* |
 | Appeal accepted, prof hasn't re-confirmed yet | 🔵 Appeal pending | *(none)* |
 | Overdue chain, window live | 🟡 Awaiting confirmation | **Write appeal** (fresh window) |
+| Escalated to the admin (§4.8) | 🟣 Under admin review | *(none)* |
 | Truly final (any route) | 🟢 Passed / 🔴 Failed | *(none)* |
 
 ### 4.7 Earned ECTS rule
@@ -183,7 +187,50 @@ A grade contributes its subject's ECTS to **Earned ECTS** only when the grade is
 1. The student clicks **Confirm grade**.
 2. 7 days pass with no student action on the **initial** window (no pending appeal has ever been submitted). This path does not apply to the post-overdue window — see §4.6.
 3. The professor denies the appeal (ECTS counts from the deny moment; the 24-hour undo window flicks it off if used — see §4.4).
-4. The professor accepts the appeal and re-confirms the exam points.
+4. The professor accepts the appeal and re-confirms the exam points. If the case was escalated, the **assigned** professor does this (§4.8).
+
+**Which appeal gates finality (per D-007).** Only the grade's **single most recent** appeal — the one with the highest `SubmittedAt` — decides whether the grade is held open. If that appeal is effectively Pending (including Overdue) or Accepted-awaiting-reconfirm, the grade is not truly final and earns no ECTS. An older, superseded appeal never blocks finality: in the chain "appeal #1 goes overdue → student submits appeal #2 → professor denies #2", the grade is truly final and its ECTS counts, even though appeal #1 is still stored as Pending.
+
+**An open escalation means the grade is not truly final (per D-021)**, so it contributes no ECTS and counts as non-passed (§5.5) until the assigned professor resolves it.
+
+### 4.8 Escalation when a professor does not act
+
+A grade must never finalize because a professor failed to act. When that happens the case **escalates** to the admin, who hands it to another professor. Escalation is the only resolution path; nothing resolves itself on a timer.
+
+**Two triggers, computed on read — no background job:**
+
+- **Scenario A — accepted but not re-graded.** A professor accepted an appeal but did not re-enter the exam points and re-confirm within **7 days of accepting** (`appeal.ReviewedAt + 7 days < now`, `Grade.FinalizedAt IS NULL`). Reason code `AcceptedUnresolved`.
+- **Scenario B — chain exhausted.** The grade carries **two or more** appeals that are all effectively overdue (`Status = Pending` and `SubmittedAt + 7 days < now`), with `Grade.FinalizedAt IS NULL`. This is reached only after the student has answered a first overdue appeal with a second one, which the professor also ignored. Reason code `ChainExhausted`.
+
+A **single** overdue appeal does not escalate. It opens a fresh 7-day window for the student (§4.6); escalation needs the second ignored appeal.
+
+**An accepted appeal never becomes Overdue (per D-018).** Only Pending appeals surface as Overdue. The appeal row stays `Accepted` for good; what expires in Scenario A is the professor's re-grade window, measured from `ReviewedAt`.
+
+**Eligible professor.** A professor who is not soft-deleted and teaches at least one subject with the **same `SubjectCode`** as the escalated subject, excluding the original professor. `SubjectCode` is the field that groups the same course taught by different professors; without it there is no eligibility list.
+
+**Case lifecycle — four statuses, all derived on read:**
+
+| Status | Condition |
+|---|---|
+| `NeedsAssignment` | trigger matched, no escalation record yet |
+| `Assigned` | escalation open, active assignment still inside its 7-day window |
+| `NeedsReassignment` | escalation open, active assignment's `AssignedAt + 7 days < now` |
+| `Resolved` | escalation record has `ResolvedAt` set — kept for history |
+
+**Assignment rules:**
+
+- The admin assigns one eligible professor. That professor becomes the **assigned professor** and is recorded on the grade (`AssignedProfessorId`) and in the assignment history.
+- If the assigned professor also fails to act within **7 days of their assignment**, the case resurfaces as `NeedsReassignment` and the admin picks someone else. Reassignment is rejected before that deadline.
+- Full assignment history is kept — who was assigned, by which admin, when, and when they were superseded. Nothing is overwritten.
+- The escalation closes automatically (`ResolvedAt` stamped) the moment the grade finalizes, through either resolution path: a re-confirm of the exam points, or a deny.
+
+**Authority while a case is open (per D-017):**
+
+- **Read** a grade and its appeals: both the original professor and the assigned professor.
+- **Write** — accept, deny, undo-deny, re-confirm exam: **only** the currently assigned professor. The original professor receives `403`, and the UI hides their action buttons.
+- The "cannot act on an overdue appeal" rule (§4.5) is lifted **only** for the assigned professor. They must be able to clear a chain that is overdue by definition.
+
+**What the student sees.** While a case is escalated and the grade is not final, the status column reads **Under admin review** with no action buttons. The student takes no part in escalation; the maximum of two appeals per grade (§4.1, §4.5) is unchanged by it.
 
 ---
 
@@ -195,28 +242,33 @@ A grade contributes its subject's ECTS to **Earned ECTS** only when the grade is
 - Feature cards below (as they are today, translated to English).
 
 ### 5.2 Login screen (`/login`)
-- Email + password form, both required, email format validated, password shown as masked by default, with an show/hide eye icon. Click on that eye icon shows/hide the currently entered password
+- Email + password form, both required, email format validated. The password field is masked by default and carries a show/hide eye icon that reveals the currently entered password while pressed into the "shown" state. Every password field in the app has this toggle (per D-001).
 - Submit → on success, the server sets auth cookies and the SPA redirects to the role's dashboard.
 - Serbian localized strings are replaced with English.
 
 ### 5.3 Admin dashboard (`/admin-dashboard`)
-Three tabs: **Users**, **Subjects**, **Enrollments**.
+Four tabs: **Users**, **Subjects**, **Enrollments**, **Escalations**.
 
 - Users tab: table with ID, First Name, Last Name, Email, Role, Status (Active/Inactive from `IsDeleted`), Edit button. Above: **Create New User** button.
 - **Admin's own row has no Edit button rendered.** He uses `/profile` for self-service edits.
 - **Create User modal** uses `<UserCreateForm>`: first name, last name, email, role (dropdown), index number (shown only when role=Student), password with show/hide toggle.
-- **Edit User modal** uses the reusable `<UserEditForm>` with `scope='admin'`. Rendered fields depend on the target's role (see field matrix in §5.9 and the component spec in `UI.md` §9.6): Email is always editable; IndexNumber shows only if target is Student; UserRole dropdown and IsDeleted checkbox are hidden when target is another Admin.
-- Subjects tab: table with name, ECTS, professor, Edit button + Create button.
+- **Edit User modal** uses the reusable `<UserEditForm>` with `scope='admin'`. Rendered fields depend on the target's role (see field matrix in §5.9 and the component spec in `UI.md` §11.6): Email is always editable; IndexNumber shows only if target is Student; UserRole dropdown and IsDeleted checkbox are hidden when target is another Admin.
+- Subjects tab: table with name, **subject code**, ECTS, professor, Edit button + Create button. `SubjectCode` is required on both create and edit (1–20 characters, per D-015) because it is what determines eligible professors for escalation (§4.8).
 - Enrollments tab: table with student, subject, Delete button + Create button.
+- **Escalations tab**: one row per escalated case (§4.8) showing subject, student, original professor, grade, reason, escalated-since, status, and an action that depends on the status — **Assign professor** for `NeedsAssignment`, **Reassign professor** for `NeedsReassignment`, none for `Assigned` or `Resolved`. The assign / reassign modal shows the case detail, the full appeal history, the full assignment history, and the list of eligible professors to choose from. An empty eligible list disables confirmation.
 - Responsiveness: at <768 px (`md` breakpoint) each table becomes a vertical stack of scrollable cards.
 
 ### 5.4 Professor dashboard (`/professor-dashboard`)
-Three columns on desktop:
+Three selection columns:
 1. **My Subjects** — selectable list.
 2. **Students in <subject>** — selectable list of students enrolled in the selected subject.
 3. **Grade for <student>** — the grading UI (see §3.3 and §5.6 below).
 
-Below those columns, an **Appeals** section listing every Pending or Overdue appeal across all the professor's subjects. Each row has a **View appeal** button opening the appeal modal (see §4.2).
+The three columns are a **three-stage responsive layout** (per D-008): one column below 576 px, two columns from 576 px to 991 px, three columns at 992 px and above.
+
+Below those columns, an **Appeals** section listing every Pending or Overdue appeal across all the professor's subjects, plus every appeal they denied within the last 24 hours. Each row has a **View appeal** button opening the appeal modal (see §4.2).
+
+Below Appeals, an **Assigned Cases** section listing every escalated case currently assigned to this professor (§4.8) — one row per grade where they are the assigned professor and the grade is not final. Each row shows subject, student, final grade, a reason label, and a **Resolve** button that opens the case: Scenario A offers the collapsed four-field summary plus an editable exam input and **Confirm**; Scenario B offers both overdue appeal texts plus **Accept** / **Deny** on the latest appeal. The section is absent when the professor holds no assigned cases.
 
 The Appeals section is **vertically scrollable** when the list gets long — the section wraps its table in a container with a fixed `max-height` (desktop target: ~360 px, roughly 6 rows) and `overflow-y: auto`, so a professor with many open appeals sees a scrollbar inside the section rather than the appeals pushing the rest of the page off-screen. The section header stays sticky at the top of the scroll area so the column labels remain visible while scrolling. On mobile (where the table collapses to stacked cards, see below) the same fixed-height + overflow-y rule applies — the whole card stack scrolls inside its container.
 
@@ -224,8 +276,12 @@ Responsiveness: at <576 px (`sm` breakpoint) the three columns stack vertically 
 
 ### 5.5 Student dashboard (`/student-dashboard`)
 - **My Information**: name, email, index number.
-- **Study Statistics**: four stat tiles — Average Grade (two decimal place, mean of all confirmed-passed grades, failures excluded), Passed Exams (count), Non-passed Exams (count of failures AND un-graded enrollments), Earned ECTS (sum from truly-final passed grades per §4.7).
-- **My Subjects**: table — Subject name, Professor name, Final grade (or `—` if not graded yet), Status (`Passed` / `Failed` / `Not graded` / `Awaiting confirmation` / `Appeal pending`, plus a secondary `Appeal denied` badge if applicable), Action column (either **Write appeal** button, **Confirm grade** button, both, or nothing — see §4.1).
+- **Study Statistics**: four stat tiles. **All four count only truly-final grades** (§4.7, per D-005) — a grade still inside the student's window, held open by an appeal, or escalated is not counted as passed or failed:
+  - **Average Grade** — two decimals (per D-004), mean of truly-final grades with `FinalGrade >= 6`; failures excluded.
+  - **Passed Exams** — count of truly-final grades with `FinalGrade >= 6`.
+  - **Non-passed Exams** — count of truly-final grades with `FinalGrade = 5`, **plus** every enrollment with no truly-final grade yet (per D-006).
+  - **Earned ECTS** — sum of `Subject.ECTS` across truly-final passed grades (§4.7).
+- **My Subjects**: table — Subject name, Professor name, Final grade (or `—` if not graded yet), Status (`Passed` / `Failed` / `Not graded` / `Awaiting confirmation` / `Appeal pending` / `Under admin review`, plus a secondary `Appeal denied` badge if applicable), Action column (either **Write appeal** button, **Confirm grade** button, both, or nothing — see §4.1 and §4.8).
 - Responsiveness: at <576 px (`sm`) the subjects table becomes stacked cards.
 - The old **Students** link and page are removed. The dashboard is the only student view.
 
@@ -297,6 +353,8 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 - All non-auth endpoints require authentication.
 - Admin-only endpoints enforce the Admin role via a controller/action attribute.
 - Professor-only endpoints enforce the Professor role plus a service-level ownership check (professor can only touch grades, drafts, and appeals on their own subjects).
+- Escalation endpoints are **Admin-only**. Case listing, eligible-professor lookup, assign and reassign all require the Admin role.
+- On an escalated grade the ownership check is two-tier (§4.8, per D-017): reads allow the original **or** the assigned professor; writes allow **only** the currently assigned professor, and the original professor receives `403`. Hiding buttons in the UI is a convenience — the service-level check is the authoritative layer.
 - Student-only endpoints enforce the Student role plus a service-level ownership check (student can only touch their own enrollments, grades, and appeals).
 - Self-service profile edit (`PUT /api/Account/profile`) is role-agnostic authenticated. Server guard: non-Admin callers cannot change their own `Email`; attempting to send a different Email returns `403`.
 - Password change (`POST /api/Account/change-password`) requires the correct current password. On success, every refresh row for the user is revoked (sign-out-everywhere, including the current session), the SPA is redirected to `/login`, and the user re-authenticates with the new password.
@@ -319,7 +377,7 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 
 A re-runnable `seed.sql` populates the database with:
 - **1 Admin + 4 Professors + 10 Students = 15 Users anchor**.
-- ~15 Subjects, each 6 ECTS (default), spread across the 4 professors.
+- ~15 Subjects, each 6 ECTS (default), spread across the 4 professors. **Every subject carries a `SubjectCode`**, and at least two subjects taught by different professors share one, so an eligible professor exists for escalation (§4.8).
 - ~30 Enrollments covering realistic student-subject pairs.
 - ~20 Grades across mixed states:
   - several truly-final (student confirmed, 7-day lapse, or deny past undo window),
@@ -330,6 +388,8 @@ A re-runnable `seed.sql` populates the database with:
   - at least one Overdue scenario (first appeal overdue, second pending),
 - ~3 GradeDrafts for grades not yet confirmed.
 - All seeded users share the plaintext password `Password123!`.
+
+**No row in `seed.sql` is time-sensitive (per D-022).** The seed replays before every integration test, so a backdated timestamp there would leak an overdue or escalated case into every test run. States that depend on elapsed time — overdue appeals, escalation Scenarios A and B, the 24-hour undo window — are produced per test by the backdating helpers described in `Tech-Backend.md` §7, and in manual testing by the test-mode clock endpoint.
 
 The old seed (from the pre-5-field schema) is replaced wholesale.
 
