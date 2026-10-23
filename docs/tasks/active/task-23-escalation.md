@@ -19,6 +19,8 @@ Key invariants:
 
 #### 23.1 — DB: Add `SubjectCode` to `Subject`
 
+Rules: Task 23 Overview (SubjectCode defines eligible professors), DB.md §2 Subjects.
+
 Add `SubjectCode VARCHAR(50) NOT NULL DEFAULT ''` to the `Subjects` table. `SubjectCode` groups subjects that represent the same course taught by different professors and is used to determine which professors are eligible for assignment.
 
 -  generate migration — `dotnet ef migrations add AddSubjectCode` from `backend/StudentPortal/`. Review the generated files, then run `dotnet ef database update`.
@@ -31,6 +33,8 @@ Add `SubjectCode VARCHAR(50) NOT NULL DEFAULT ''` to the `Subjects` table. `Subj
 ---
 
 #### 23.2 — DB: `AssignedProfessorId` on `Grade` + `Escalations` + `EscalationAssignments` tables
+
+Rules: Task 23 Overview (escalation data model, 1:1 Grades/Escalations, 1:N Escalations/EscalationAssignments), DB.md §2 Grades.
 
 **1.** Add nullable `AssignedProfessorId UUID` (FK → `Users`) to `Grades`. Always holds the **currently active** assigned professor. `NULL` on most grades; updated on every (re-)assignment and remains set until the grade is resolved.
 
@@ -66,7 +70,9 @@ The **currently active** assignment for an escalation is the row where `Supersed
 
 ---
 
-#### 23.3 — Backend: Entities, enums, and repositories
+#### 23.3 — Backend-service: Entities, enums, and repositories
+
+Rules: Task 23 Overview (data-layer shape — Escalation and EscalationAssignment entities, EscalationReason enum, repositories).
 
 Add:
 - `EscalationReason` enum (`AcceptedUnresolved`, `ChainExhausted`) in `Models/Enums/`.
@@ -84,7 +90,9 @@ Add:
 
 ---
 
-#### 23.4 — Backend: `SubjectCode` on Subject entity + admin CRUD
+#### 23.4 — Backend-endpoint: `SubjectCode` on Subject entity + admin CRUD
+
+Rules: Task 23 Overview (SubjectCode is required for eligibility lookup), PRD §5.3 (admin Subjects tab).
 
 - Add `SubjectCode string` property to the `Subject` entity. Update EF mapping.
 - Add `SubjectCode` (required, 1–20 chars) to `SubjectCreateDto` and `SubjectUpdateDto`.
@@ -99,7 +107,9 @@ Add:
 
 ---
 
-#### 23.5 — Backend: Ownership check updates in `GradeService` and `AppealService`
+#### 23.5 — Backend-service: Ownership check updates in `GradeService` and `AppealService`
+
+Rules: Task 23 Overview (assigned professor becomes the write-authority during an open escalation; overdue-restriction lift for assigned professor), PRD §6 (service-level ownership is the authoritative security layer).
 
 Replace the single `subject.ProfessorId == callerId` ownership guard with a two-tier check:
 
@@ -120,7 +130,9 @@ Replace the single `subject.ProfessorId == callerId` ownership guard with a two-
 
 ---
 
-#### 23.6 — Backend: `IEscalationService` + `EscalationService`
+#### 23.6 — Backend-service: `IEscalationService` + `EscalationService`
+
+Rules: Task 23 Overview (full escalation state machine — Scenario A/B detection, four statuses, assign/reassign/auto-close semantics, eligible-professor rule).
 
 `EscalationService` in `Services/`, registered via `IEscalationService`:
 
@@ -153,7 +165,9 @@ Detection conditions:
 
 ---
 
-#### 23.7 — Backend: `EscalationController` + auto-close hooks
+#### 23.7 — Backend-endpoint: `EscalationController` + auto-close hooks
+
+Rules: Task 23 Overview (admin-only endpoints, auto-close triggered by grade finalization paths), PRD §6 (role-based authorization — admin only).
 
 **`EscalationController`** `[Authorize(Roles = "Admin")]`, route `api/Escalation`:
 
@@ -176,7 +190,9 @@ Detection conditions:
 
 ---
 
-#### 23.8 — Backend: Student dashboard — `"Under admin review"` status
+#### 23.8 — Backend-endpoint: Student dashboard — `"Under admin review"` status
+
+Rules: Task 23 Overview ("Under admin review" status is shown when the grade is escalated and not finalized), PRD §5.5 (student dashboard — status column semantics).
 
 Update `StudentDashboardService.BuildSubjectRow` and `SubjectRowDto`:
 
@@ -193,7 +209,9 @@ Update `StudentDashboardService.BuildSubjectRow` and `SubjectRowDto`:
 
 ---
 
-#### 23.9 — Backend: Professor dashboard — `assignedCases` section
+#### 23.9 — Backend-endpoint: Professor dashboard — `assignedCases` section
+
+Rules: Task 23 Overview (assigned professor sees the escalated grades they must resolve), PRD §5.4 (professor dashboard structure).
 
 Add `assignedCases: AssignedCaseDto[]` to the professor dashboard response. Entry appears for every grade where `grade.AssignedProfessorId == callerProfId` and `grade.FinalizedAt == null`.
 
@@ -207,7 +225,9 @@ Add `assignedCases: AssignedCaseDto[]` to the professor dashboard response. Entr
 
 ---
 
-#### 23.10 — Frontend: Student dashboard `"Under admin review"` badge
+#### 23.10 — Frontend-component: Student dashboard `"Under admin review"` badge
+
+Rules: Task 23 Overview (status badge, no action buttons while escalated), UI.md §6 (student dashboard patterns), PRD §5.5 (student dashboard).
 
 When `status === "Under admin review"`, render a distinct badge (purple — not used by existing badges) with no action buttons. Stacked-card variant below `sm` shows the same badge.
 
@@ -219,7 +239,9 @@ When `status === "Under admin review"`, render a distinct badge (purple — not 
 
 ---
 
-#### 23.11 — Frontend: Professor dashboard `"Assigned Cases"` section
+#### 23.11 — Frontend-component: Professor dashboard `"Assigned Cases"` section
+
+Rules: Task 23 Overview (resolve-modal UX for Scenario A/B), UI.md §7 (professor dashboard patterns), PRD §5.4 (professor dashboard).
 
 Add **Assigned Cases** section below the Appeals section, using `assignedCases` from the dashboard payload.
 
@@ -241,7 +263,9 @@ Responsive: collapses to stacked cards below `sm`.
 
 ---
 
-#### 23.12 — Frontend: Admin dashboard `"Escalations"` tab
+#### 23.12 — Frontend-page: Admin dashboard `"Escalations"` tab
+
+Rules: Task 23 Overview (four escalation statuses with per-status actions, assign/reassign modal, assignment history), UI.md §8 (admin dashboard patterns), PRD §5.3 (admin dashboard).
 
 Add **Escalations** tab to `AdminDashboardPage` alongside Users, Subjects, Enrollments.
 
@@ -271,7 +295,9 @@ Responsive: collapses to stacked cards below `md` (same as other admin tabs). As
 
 ---
 
-#### 23.13 — Frontend: `SubjectCode` field in admin subject forms
+#### 23.13 — Frontend-component: `SubjectCode` field in admin subject forms
+
+Rules: Task 23 Overview (SubjectCode required so eligibility lookup can run), PRD §5.3 (admin dashboard — Subjects tab), UI.md §8 (admin dashboard).
 
 Add `SubjectCode` text input (required, Zod: non-empty, ≤ 20 chars, label `"Subject Code"`) to subject **Create** and **Edit** forms, directly below Subject Name.
 
@@ -284,6 +310,8 @@ Add `SubjectCode` text input (required, Zod: non-empty, ≤ 20 chars, label `"Su
 ---
 
 #### 23.14 — Seed: Explicit Scenario A and Scenario B escalation rows
+
+Rules: Task 23 Overview (Scenarios A and B definitions, SubjectCode must be shared across at least two subjects), PRD §7 (data seeding scope).
 
 Update `seed.sql`:
 
