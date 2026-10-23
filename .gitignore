@@ -68,3 +68,8 @@ Thumbs.db
 .env.*.local
 appsettings.Local.json
 appsettings.*.Local.json
+
+# ===============================
+# Local-only snapshots of docs
+# ===============================
+docs/old/
