@@ -19,3 +19,12 @@ node scripts/check-docs.mjs || {
   echo "Fix them — do not pass --no-verify (AGENTS §10)."
   exit 1
 }
+
+# The bootstrap prompt is git-ignored, so a change to it can never stage anything and could
+# never trigger its own check. Run it on every docs commit instead; it exits 0 when absent.
+node scripts/check-prompt.mjs --reference || {
+  echo ""
+  echo "Commit blocked: docs/old/prompt.md is inconsistent with itself or with this repo."
+  echo "Fix it — do not pass --no-verify (AGENTS §10)."
+  exit 1
+}

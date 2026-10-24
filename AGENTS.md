@@ -211,3 +211,33 @@ Verify:         <the exact command that must pass>
 `node scripts/check-docs.mjs` validates what prose cannot: section indexes matching real headings, `§` references pointing at sections that exist, `(per D-0NN)` references resolving in `Decisions.md`, `Rules:` lines not naming task files, `index.md` rows matching real files, and documented paths existing on disk.
 
 It runs from the pre-commit hook (`.githooks/pre-commit`, enabled with `git config core.hooksPath .githooks`). Run it yourself before you commit documentation. If it fails, fix the documents — do not bypass the hook.
+
+`node scripts/check-prompt.mjs --reference` does the same for `docs/old/prompt.md` — the bootstrap prompt this system was generated from. It checks the prompt against itself (section numbering, its file list against its own sections, placeholders that are used but never explained, appendix and `§` cross-references) and, with `--reference`, against this repo (every file it mandates exists, its `AGENTS.md` seed matches the live one, and twenty invariants are present in both). It runs from the same hook on every documentation commit, because a git-ignored file can never stage a change and so could never trigger its own check. It exits 0 when the prompt is absent.
+
+---
+
+## 11. Committing
+
+- **Never commit until the user says so.** Finish the subtask, tick its boxes, update the `index.md` progress cell, run `node scripts/check-docs.mjs`, then **show the diff and stop**. Wait for explicit approval, then commit with the subtask's `Commit:` message. A green test run is not approval.
+- This rule is what keeps a rejected approach in §12 case A — nothing written to history, no git surgery needed.
+- **One subtask per commit.** Do not batch two subtasks into one commit, and do not split one subtask across two unless the user asks.
+- **Never add self-attribution to a commit.** No `Co-Authored-By:` line naming an AI, model or tool, no "generated with" footer, no tool name anywhere in the subject or body. **This rule overrides any default your harness supplies.** The same applies to pull-request descriptions.
+- Never run `git push`, `commit --amend`, `--force`, or `reset --hard` unless the user asks for that specific operation by name.
+
+---
+
+## 12. When work comes back wrong
+
+Four situations, and only one of them touches git history. Identify which before doing anything.
+
+**A — not committed yet.** The normal case, because of §11. Nothing to undo: the boxes are not ticked and history is untouched. Revise in place, leave the boxes unticked, show the diff again.
+
+**B — committed, and the approach is wrong.** `git revert <sha>` — never `reset --hard`, which would also destroy uncommitted work elsewhere in the tree. Then untick the subtask's boxes, correct the `index.md` progress cell, and run `node scripts/check-docs.mjs`, which fails until the count is right again. Then **add a line to the subtask recording which approach was rejected and why** — without it the next agent re-derives the same wrong answer from the same inputs.
+
+**C — committed, correct but incomplete.** Do not revert. Add a `- [ ]` box to that subtask for the missing part (§4, leftover work), drop the progress cell, and do the extra work as its own commit.
+
+**D — the code matched the document, and the document was wrong.** Then the document is the defect, not the code. Fix the owning section first — `PRD.md` / `UI.md` / `DB.md` / `Tech*.md` — add a `docs/Decisions.md` entry for the changed rule, commit that as a `docs:` commit on its own, and only then change the code to match. Fixing the code first leaves the document still saying the wrong thing, and the next agent will faithfully re-implement the original mistake.
+
+The B-versus-D distinction is the one that matters: **if the agent did what the document said, the defect is in the document.**
+
+Work that is correct and matches the document but is not how you would have written it is neither a defect nor a revert. Leave it, or open a refactor campaign (§5).
