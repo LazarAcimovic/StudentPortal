@@ -15,6 +15,9 @@ out/
 *.sln.docstates
 .vscode/
 .idea/
+# Authoring templates (docs/tasks/ and docs/refactors/) stay local.
+# AGENTS §4 and §5 point at them; scripts/check-docs.mjs exempts both paths.
+TEMPLATE.md
 
 # ===============================
 # NuGet

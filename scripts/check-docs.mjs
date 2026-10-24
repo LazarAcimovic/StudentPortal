@@ -28,17 +28,22 @@ const SOURCE_DOCS = [
   'AGENTS.md',
 ];
 
-// Documents that plan future work: § refs still checked, paths may not exist yet.
-const PLAN_DOCS = [
-  ...readdirSync(join(ROOT, 'docs/tasks/active'))
-    .filter((f) => f.endsWith('.md'))
-    .map((f) => `docs/tasks/active/${f}`),
-  ...(existsSync(join(ROOT, 'docs/refactors'))
-    ? readdirSync(join(ROOT, 'docs/refactors'))
-        .filter((f) => f.endsWith('.md'))
-        .map((f) => `docs/refactors/${f}`)
-    : []),
+// The two work trackers. Feature tasks and refactor campaigns share one shape, so they share
+// every check below: index rows, subtask progress, the four mandatory lines.
+const TRACKERS = [
+  { dir: 'docs/tasks/active', pattern: /^task-.*\.md$/, label: 'active tasks' },
+  { dir: 'docs/refactors/active', pattern: /^refactor-.*\.md$/, label: 'active campaigns' },
 ];
+
+const listTracker = (t) =>
+  existsSync(join(ROOT, t.dir)) ? readdirSync(join(ROOT, t.dir)).filter((f) => f.endsWith('.md')) : [];
+
+// Documents that plan future work: § refs still checked, paths may not exist yet.
+const PLAN_DOCS = TRACKERS.flatMap((t) => listTracker(t).map((f) => `${t.dir}/${f}`));
+
+// Authoring templates are forms, not documents. Their placeholders are not real references, and
+// docs/refactors/TEMPLATE.md is deliberately git-ignored, so it may be absent in a fresh clone.
+const TEMPLATE_PATHS = ['docs/tasks/TEMPLATE.md', 'docs/refactors/TEMPLATE.md'];
 
 const ALL_DOCS = [...SOURCE_DOCS, ...PLAN_DOCS];
 
@@ -250,36 +255,24 @@ for (const rel of PLAN_DOCS) {
   });
 }
 
-// Every subtask heading must carry the four mandatory lines.
-for (const rel of PLAN_DOCS.filter((p) => p.includes('/tasks/'))) {
+// Every subtask heading must carry the four mandatory lines. Any `####` heading is a subtask
+// except the Overview and the campaign-only blocks, so ids like `22a.1` and `R01.3` both work
+// without the checker needing to know the numbering scheme.
+const NON_SUBTASK_HEADINGS = /^####\s+(Overview|Baseline|Out of scope|Rollback)\b/;
+
+for (const rel of PLAN_DOCS) {
   const lines = docs.get(rel);
   if (!lines) continue;
   lines.forEach((text, i) => {
-    if (!/^####\s+\d+(\.\d+)?[a-z]?\.\d+\s+—/.test(text) && !/^####\s+\d+\.\d+\s+—/.test(text)) return;
-    const block = lines.slice(i + 1, i + 14).join('\n');
+    if (!/^####\s/.test(text) || NON_SUBTASK_HEADINGS.test(text)) return;
+    const block = lines.slice(i + 1, i + 16).join('\n');
     for (const key of ['Rules:', 'Not in scope:', 'Docs to update:', 'Verify:']) {
       if (!block.includes(key)) warn(rel, i + 1, `subtask is missing its "${key}" line (AGENTS §9)`);
     }
   });
 }
 
-// ------------------------------------------------------------- task index
-
-const activeDir = join(ROOT, 'docs/tasks/active');
-const taskFiles = readdirSync(activeDir).filter((f) => /^task-.*\.md$/.test(f));
-const indexLines = docs.get('docs/tasks/active/index.md') ?? [];
-const linked = new Set();
-indexLines.forEach((text, i) => {
-  for (const m of text.matchAll(/\]\((task-[^)]+\.md)\)/g)) {
-    linked.add(m[1]);
-    if (!existsSync(join(activeDir, m[1]))) {
-      fail('docs/tasks/active/index.md', i + 1, `row links ${m[1]}, which does not exist`);
-    }
-  }
-});
-for (const f of taskFiles) {
-  if (!linked.has(f)) errors.push(`docs/tasks/active/${f} exists but has no row in index.md`);
-}
+// --------------------------------------------- task and campaign index integrity
 
 // Progress is counted in SUBTASKS, not individual boxes: a subtask is done when it has
 // at least one checkbox and every one of them is ticked.
@@ -300,20 +293,48 @@ export function subtaskProgress(lines) {
   return { done, total };
 }
 
-for (const f of taskFiles) {
-  const lines = read(`docs/tasks/active/${f}`);
-  const { done, total } = subtaskProgress(lines);
-  const row = indexLines.find((l) => l.includes(`](${f})`));
-  if (!row) continue;
-  const m = /\|\s*(\d+)\s*\/\s*(\d+)\s*\|/.exec(row);
-  if (!m) {
-    warn('docs/tasks/active/index.md', 1, `row for ${f} has no "done/total" progress cell`);
-  } else if (Number(m[1]) !== done || Number(m[2]) !== total) {
-    fail(
-      'docs/tasks/active/index.md',
-      indexLines.indexOf(row) + 1,
-      `${f} progress says ${m[1]}/${m[2]} but ${done}/${total} subtasks are fully ticked`,
-    );
+let trackedFiles = 0;
+
+for (const t of TRACKERS) {
+  const indexRel = `${t.dir}/index.md`;
+  const files = listTracker(t).filter((f) => t.pattern.test(f));
+  trackedFiles += files.length;
+
+  if (!docs.has(indexRel) && !existsSync(join(ROOT, indexRel))) {
+    if (files.length) errors.push(`${t.dir} holds ${files.length} file(s) but has no index.md`);
+    continue;
+  }
+  const indexLines = read(indexRel);
+
+  // every linked file exists, and every file is linked
+  const linked = new Set();
+  indexLines.forEach((text, i) => {
+    for (const m of text.matchAll(/\]\(((?:task|refactor)-[^)]+\.md)\)/g)) {
+      linked.add(m[1]);
+      if (!existsSync(join(ROOT, t.dir, m[1]))) {
+        fail(indexRel, i + 1, `row links ${m[1]}, which does not exist`);
+      }
+    }
+  });
+  for (const f of files) {
+    if (!linked.has(f)) errors.push(`${t.dir}/${f} exists but has no row in index.md`);
+  }
+
+  // the progress cell must match the ticked subtasks
+  for (const f of files) {
+    const { done, total } = subtaskProgress(read(`${t.dir}/${f}`));
+    const row = indexLines.find((l) => l.includes(`](${f})`));
+    if (!row) continue;
+    const m = /\|\s*(\d+)\s*\/\s*(\d+)\s*\|/.exec(row);
+    if (!m) {
+      warn(indexRel, 1, `row for ${f} has no "done/total" progress cell`);
+    } else if (Number(m[1]) !== done || Number(m[2]) !== total) {
+      fail(
+        indexRel,
+        indexLines.indexOf(row) + 1,
+        `${f} progress says ${m[1]}/${m[2]} but ${done}/${total} subtasks are fully ticked`,
+      );
+    }
   }
 }
 
@@ -330,8 +351,10 @@ for (const rel of SOURCE_DOCS) {
   lines.forEach((text, i) => {
     for (const m of text.matchAll(PATH_IN_BACKTICKS)) {
       const p = m[1];
-      // Skip globs, the old snapshot, and filename placeholders like YYYY-MM or <name>.
+      // Skip globs, the old snapshot, filename placeholders like YYYY-MM or <name>, and the
+      // authoring templates (one of which is intentionally git-ignored).
       if (p.includes('*') || p.startsWith('docs/old') || /YYYY|MM-|<|\{/.test(p)) continue;
+      if (TEMPLATE_PATHS.includes(p)) continue;
       const found = PREFIXES.some((pre) => existsSync(join(ROOT, pre + p)));
       if (!found) warn(rel, i + 1, `documents path \`${p}\`, which does not exist on disk (AGENTS §7)`);
     }
@@ -366,4 +389,6 @@ if (hardFail) {
   console.log('\ncheck-docs: FAILED — fix the documents, do not bypass the hook (AGENTS §10).\n');
   process.exit(1);
 }
-console.log(`\ncheck-docs: OK (${docs.size} documents, ${decisionIds.size} decisions, ${taskFiles.length} active tasks)\n`);
+console.log(
+  `\ncheck-docs: OK (${docs.size} documents, ${decisionIds.size} decisions, ${trackedFiles} open tasks and campaigns)\n`,
+);

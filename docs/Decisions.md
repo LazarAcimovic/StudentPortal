@@ -12,13 +12,18 @@
 
 ```
 ### D-0NN — <one-line question>
-**Decided:** <YYYY-MM-DD> · **Status:** Accepted | Superseded by D-0NN | OPEN
+**Decided:** <YYYY-MM-DD> · **Status:** Accepted | Superseded by D-0NN | OPEN | N/A
 **Answer:** <the rule, one or two sentences>
 **Lives in:** <PRD §x / UI §x / DB §x / Tech-Backend §x — where the rule is written down>
 **Why:** <the reasoning, one or two sentences>
 ```
 
-An `OPEN` entry blocks every section listed under **Lives in**. Do not write code that depends on an OPEN decision.
+The four statuses:
+
+- **Accepted** — the rule is in force and written in the documents named under **Lives in**.
+- **Superseded by D-0NN** — a later entry replaced it. The old entry stays; it is never edited or renumbered.
+- **OPEN** — the question is unanswered. It **blocks every section listed under Lives in**; do not write code that depends on it.
+- **N/A** — the question was asked and the answer is "this system has none". **Lives in** becomes `—`, and **Why** says why it does not apply. This status exists so that "nobody asked" and "asked, and there are none" are distinguishable — a system with no deadlines should say so explicitly rather than leave a silence an agent can fill with an invention.
 
 ---
 

@@ -44,7 +44,7 @@ Your subtask's sub-tag determines the **minimum** you must read. This is a floor
 | `Frontend-service` | `Tech-Frontend.md` §3–§4 · + every section on the `Rules:` line |
 | `Frontend-component` | `Tech-Frontend.md` §1–§2, §5–§6 · `UI.md` (the screen's section) · + every section on the `Rules:` line |
 | `Frontend-page` | `Tech-Frontend.md` §1–§5 · `UI.md` (the screen's section) · + every section on the `Rules:` line |
-| `Seed` | `DB.md` §4 · `PRD.md` §7 · `Tech-Backend.md` §7 (seed-vs-in-test policy) · + `Rules:` sections |
+| `Seed` | `DB.md` §4 · `PRD.md` §7 · `Tech-Backend.md` §7 (seed-vs-in-test policy) · + `Rules:` sections | 
 | `UI` | `UI.md` (the screen's section) + §13 copy conventions · + `Rules:` sections |
 | `Test` | `Tech-Backend.md` §7 or `Tech-Frontend.md` §7 · + every section on the `Rules:` line |
 | `Refactor` | the Tech section covering the layer you are changing · + `Rules:` sections |
@@ -66,7 +66,7 @@ Deployment work reads `Tech.md` §3 plus `PRD.md` §8. A localized bug fix insid
 
 `PRD.md`, `Tech.md`, `Tech-Backend.md`, `Tech-Frontend.md` and `UI.md` each carry a **Section index** listing headings only — deliberately with no line numbers (D-011). Never Read these files whole. The flow is:
 
-1. `grep -n "^## " docs/<file>.md` — this gives you live, correct line numbers.
+1. `grep -n "^## " docs/<file>.md` — this gives you live, correct line numbers. For a subsection, grep -n "^### " docs/<file>.md to locate it the same way.
 2. Pick the section(s) your task touches; the next heading's line number minus one is the end of yours.
 3. `Read` with `offset` and `limit` for just that range.
 4. Multiple non-adjacent sections → multiple targeted Reads.
@@ -79,9 +79,12 @@ Never trust a line number written inside a document; grep for the heading instea
 
 ## 4. Tasks
 
-- Open work lives as **one file per task** in `docs/tasks/active/`. Read `docs/tasks/active/index.md` first (one row per open task, with status and dependencies), then read only the task file you are working on. Do not load other task files — they are other people's concerns.
+- Open work lives as **one file per task** in `docs/tasks/active/`. Read `docs/tasks/active/index.md` first (one row per open task, with progress and dependencies), then read only the task file you are working on. Do not load other task files — they are other people's concerns.
 - **Every subtask carries a checkbox.** `- [ ]` not started, `- [x]` done. **Resume at the first unchecked subtask**, and tick it in the same commit as its work. Never assume a task is untouched because its file still exists.
-- Respect `Depends on:` / `Blocks:` in `index.md`. If a task you are asked to start is blocked, say so instead of starting it.
+- **A task file is read by section too, never whole** — see §4.1. A large task runs to hundreds of lines, and every subtask except yours is either already done or somebody else's turn.
+- Respect `Depends on:` / `Blocks:` in `index.md`, and any `Depends on:` line on an individual subtask. If a task or subtask you are asked to start is blocked, say so instead of starting it.
+- **Leftover work inside a ticked subtask is a box, not a nested subtask.** When you find that a finished subtask needs more — a refactor, an alignment, a case nobody thought of — add a `- [ ]` box to that subtask. It drops back to part-done and the `index.md` progress cell falls with it. Do **not** nest subtasks under subtasks, and do **not** add a routine `Refactor` subtask beside every implementation subtask. Promote a leftover into its own subtask only when it needs a different sub-tag or its own `Verify:` command; then append it at the end of the task, have the original's box name it, and tick both in the same commit. Nesting would also break §4.1, because `#####` headings make `grep "^#### "` stop finding the real boundaries.
+- A new task file follows `docs/tasks/TEMPLATE.md`. Copy it; do not improvise the shape.
 - Completed work is archived by month in `docs/tasks/done/YYYY-MM.md`, trimmed to id + commit message. Do not load these unless the user asks about historical work.
 - **Archival gate.** A task may be archived only when all three hold:
   1. Every rule stated in the task's Overview appears in PRD / UI / DB / Tech. If it only exists in the task file, promote it first.
@@ -90,11 +93,36 @@ Never trust a line number written inside a document; grep for the heading instea
 
   Then, in one commit: append the trimmed entry to the current month's `done/YYYY-MM.md`, delete the task file, remove its row from `index.md`.
 
+### 4.1 Opening a task file
+
+Task files are navigated by grep, exactly like the long documents in §3. Subtask headings are always `#### <id> — <sub-tag>: <title>`, so they are greppable. Two commands, then two targeted Reads:
+
+```bash
+grep -n "^#### " docs/tasks/active/task-22-tests.md          # the subtask map
+grep -n "^- \[ \]" docs/tasks/active/task-22-tests.md | head -3   # the first unfinished boxes
+```
+
+1. The second command gives the line of the first `- [ ]`. **The subtask that owns it is the last `####` at or before that line** — read it off the map from the first command.
+2. `Read` the **Overview**: line 1 to the first `####` minus one. That is where the "rules live in" pointer, `Depends on:` and `Blocks:` are.
+3. `Read` **your subtask only**: its `####` line to the next `####` minus one.
+4. Stop there. Earlier subtasks are done and later ones are not yours; reading them wastes context and invites you to start work nobody asked for.
+
+On a 740-line task file that is roughly 50 lines instead of 740. If a subtask carries its own `Depends on:` line, resolve it before starting — that may mean reading one other subtask, which is fine.
+
 ---
 
-## 5. Refactor plans
+## 5. Refactor campaigns
 
-Dedicated plans live in `docs/refactors/<name>.md`, one file per campaign. When a plan is done, move the file to `docs/refactors/done/`. Both folders may be empty between campaigns — only create a file when a plan actually exists.
+Structural work that changes no behaviour is a **campaign**, tracked exactly like a task but in its own folder. Everything in §4 and §4.1 applies verbatim — the index first, checkboxes, resume at the first unchecked subtask, grep to open the file, `Depends on:` / `Blocks:`, leftover work as a box.
+
+- Campaigns live as **one file per campaign** in `docs/refactors/active/`. Read `docs/refactors/active/index.md` first, then only the campaign file you are working on.
+- Campaigns have their own number sequence — `refactor-01`, `refactor-02` — independent of task numbers. A new campaign follows `docs/refactors/TEMPLATE.md`. Copy it; do not improvise the shape, and do not reuse the task template.
+- Subtask ids are `RNN.M` (`#### R01.3 — Refactor: …`), so they grep the same way as task subtasks.
+- **A campaign changes structure only.** Its sub-tag is `Refactor`, which means **no new test** (§9): the existing suites are the safety net, and `Verify:` names the suites that must *stay* green. `Rules:` points at the `Tech*.md` section defining the target structure, never at PRD behaviour — nothing behavioural changes. If you find a bug while moving code, leave it and open a box on the task that owns it.
+- Every campaign records a **baseline** before its first subtask. "No behaviour change" is only checkable against a recorded before.
+- **Archival gate.** A campaign may be archived only when every subtask is `- [x]`, the baseline table's "After" column is filled in, the named suites are green, and any `Tech*.md` layout block it touched carries a fresh `verified at <sha>`. Then, in one commit: **move the whole file** to `docs/refactors/done/YYYY-MM-<slug>.md` and remove its row from `docs/refactors/active/index.md`.
+
+Campaigns are archived by moving the file, not by trimming it to commit messages the way tasks are (§4). A campaign's value afterwards is the record of *why a structure changed*, which trimming would throw away.
 
 ---
 

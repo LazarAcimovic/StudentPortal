@@ -185,11 +185,14 @@ Verify: `npm run test -- ProfessorDashboard`
 - [x] Scenario A panel: collapsed summary + editable exam + Confirm → `POST /api/Grade/reconfirm-exam`.
 - [x] Scenario B panel: both overdue texts + Accept / Deny on the latest appeal, with the deny confirmation sub-step.
 - [x] Collapses to stacked cards below `sm`.
+- [ ] Split into one component per file with the reason-label map in the constants folder — **done as 23.16**, tick both in the same commit.
 - Commit: `feat(frontend): professor dashboard assigned cases section with resolve modal`
 
 ---
 
 #### 23.12 — Frontend-page: Admin dashboard "Escalations" tab
+
+Depends on: 23.14 for meaningful manual verification. Until the seed sets subject codes, every subject shares the empty code `''`, so `GetProfessorsBySubjectCodeAsync` matches **every** other professor and the eligible list is noise rather than empty. Build and unit-test this subtask in order; do not trust a manual click-through of assign / reassign until 23.14 has landed.
 
 Rules: UI §8.6 (columns, per-status badges and actions, assign/reassign modal, assignment history, empty eligible list), UI §8.1 (four tabs), PRD §4.8, PRD §5.3, Tech-Frontend §3 (**the eligible-professor fetch on modal open is Pattern B**)
 Not in scope: backend changes — every endpoint already exists (23.7).
@@ -256,3 +259,22 @@ This subtask exists because 23.1–23.11 shipped without tests, against AGENTS �
 - [ ] An escalated grade contributes no ECTS; once resolved, the grade finalizes and its ECTS counts (D-007, D-021).
 - [ ] One overdue appeal alone does **not** escalate; two do.
 - Commit: `test(backend): escalation service unit tests and endpoint integration tests`
+
+---
+
+#### 23.16 — Refactor: Split `AssignedCasesSection` into one component per file
+
+Rules: Tech-Frontend §1 (one component per file under `components/<role>/`; constants live in the feature's `constants/` folder), Tech-Frontend §2 (function components, props down)
+Not in scope: **any behaviour change.** No new props, no new states, no copy edits, no styling changes. If you find a bug while splitting, leave it and add a box to the subtask that owns it.
+Docs to update: Tech-Frontend §1 (list the new files in the layout block and refresh the `verified at <sha>` marker)
+Verify: `npm run test -- ProfessorDashboard` and `npm run test -- integration/grades` — both must stay green, and say so in the commit. `npx tsc --noEmit` clean.
+
+Completes the open box in 23.11. `AssignedCasesSection.tsx` is 426 lines holding six components and an inline label map, which is the "everything in one file" shape Tech-Frontend §1 does not allow. Tagged `Refactor`, so **no new test is required** (AGENTS §9) — the existing suites are the safety net.
+
+- [ ] `REASON_LABEL` moved into `features/user/constants/professor/constants.ts`, next to `APPEAL_STATUS_BADGE`, and imported by both consumers instead of being defined inline.
+- [ ] `AppealHistory`, `ScenarioAPanel`, `ScenarioBPanel`, `ResolveModal` and `AssignedCaseItem` each move to their own file under `features/user/components/professor/`.
+- [ ] `AssignedCasesSection.tsx` keeps only the section itself and its props type, and imports the five pieces.
+- [ ] Shared prop types move to `features/user/models/professor/`, not duplicated per file.
+- [ ] No file left over ~150 lines.
+- [ ] Both named suites green, `tsc --noEmit` clean, and the last box of 23.11 ticked in the same commit.
+- Commit: `refactor(professor): split AssignedCasesSection into one component per file`
