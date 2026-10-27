@@ -60,8 +60,8 @@ Not in scope: the submit flow and sign-out-everywhere behaviour, which already w
 Docs to update: none
 Verify: `npm run test -- ChangePasswordPage`
 
-- [ ] Current password → `<PasswordInput autoComplete="current-password">`.
-- [ ] New password → `<PasswordInput autoComplete="new-password">`, 12–128 characters.
-- [ ] Confirm new password → `<PasswordInput autoComplete="new-password">`, must equal New password.
-- [ ] Each field toggles independently — revealing one does not reveal the others.
+- [x] Current password → `<PasswordInput autoComplete="current-password">`.
+- [x] New password → `<PasswordInput autoComplete="new-password">`, 12–128 characters.
+- [x] Confirm new password → `<PasswordInput autoComplete="new-password">`, must equal New password.
+- [x] Each field toggles independently — revealing one does not reveal the others.
 - Commit: `feat(user): use PasswordInput on the change-password page`

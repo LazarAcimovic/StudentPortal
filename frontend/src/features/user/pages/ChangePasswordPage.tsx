@@ -6,12 +6,11 @@ import { clearAuthSession } from '../../../lib/auth';
 import { changePasswordSchema } from '../utils/profileSchemas';
 import { APP_ROUTES } from '../../../config/constants';
 import { CHANGE_PASSWORD_INITIAL_FORM } from '../../../shared/constants/constants';
-import { EyeIcon, EyeSlashIcon } from '../../../shared/constants/icons';
 import type { ChangePasswordFormState } from '../../../shared/models/ChangePasswordFormState';
+import PasswordInput from '../../../components/ui/PasswordInput';
 
 const ChangePasswordPage: React.FC = () => {
   const [form, setForm] = useState<ChangePasswordFormState>(CHANGE_PASSWORD_INITIAL_FORM);
-  const [show, setShow] = useState({ current: false, next: false, confirm: false });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,83 +84,50 @@ const ChangePasswordPage: React.FC = () => {
 
         <div className="mb-3">
           <label htmlFor="cp-current" className="form-label">Current password</label>
-          <div className="input-group">
-            <input
-              type={show.current ? 'text' : 'password'}
-              id="cp-current"
-              name="currentPassword"
-              autoComplete="current-password"
-              className={`form-control${touched.currentPassword && errors.currentPassword ? ' is-invalid' : ''}`}
-              value={form.currentPassword}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            />
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={() => setShow((s) => ({ ...s, current: !s.current }))}
-              aria-label={show.current ? 'Hide password' : 'Show password'}
-            >
-              {show.current ? <EyeSlashIcon /> : <EyeIcon />}
-            </button>
-            {touched.currentPassword && errors.currentPassword && (
-              <div className="invalid-feedback">{errors.currentPassword}</div>
-            )}
-          </div>
+          <PasswordInput
+            id="cp-current"
+            name="currentPassword"
+            autoComplete="current-password"
+            value={form.currentPassword}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            isInvalid={!!(touched.currentPassword && errors.currentPassword)}
+          />
+          {touched.currentPassword && errors.currentPassword && (
+            <div className="invalid-feedback d-block">{errors.currentPassword}</div>
+          )}
         </div>
 
         <div className="mb-3">
           <label htmlFor="cp-new" className="form-label">New password</label>
-          <div className="input-group">
-            <input
-              type={show.next ? 'text' : 'password'}
-              id="cp-new"
-              name="newPassword"
-              autoComplete="new-password"
-              className={`form-control${touched.newPassword && errors.newPassword ? ' is-invalid' : ''}`}
-              value={form.newPassword}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            />
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={() => setShow((s) => ({ ...s, next: !s.next }))}
-              aria-label={show.next ? 'Hide password' : 'Show password'}
-            >
-              {show.next ? <EyeSlashIcon /> : <EyeIcon />}
-            </button>
-            {touched.newPassword && errors.newPassword && (
-              <div className="invalid-feedback">{errors.newPassword}</div>
-            )}
-          </div>
+          <PasswordInput
+            id="cp-new"
+            name="newPassword"
+            autoComplete="new-password"
+            value={form.newPassword}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            isInvalid={!!(touched.newPassword && errors.newPassword)}
+          />
+          {touched.newPassword && errors.newPassword && (
+            <div className="invalid-feedback d-block">{errors.newPassword}</div>
+          )}
         </div>
 
         <div className="mb-4">
           <label htmlFor="cp-confirm" className="form-label">Confirm new password</label>
-          <div className="input-group">
-            <input
-              type={show.confirm ? 'text' : 'password'}
-              id="cp-confirm"
-              name="confirmNewPassword"
-              autoComplete="new-password"
-              className={`form-control${touched.confirmNewPassword && errors.confirmNewPassword ? ' is-invalid' : ''}`}
-              value={form.confirmNewPassword}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            />
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={() => setShow((s) => ({ ...s, confirm: !s.confirm }))}
-              aria-label={show.confirm ? 'Hide password' : 'Show password'}
-            >
-              {show.confirm ? <EyeSlashIcon /> : <EyeIcon />}
-            </button>
-            {touched.confirmNewPassword && errors.confirmNewPassword && (
-              <div className="invalid-feedback">{errors.confirmNewPassword}</div>
-            )}
-          </div>
+          <PasswordInput
+            id="cp-confirm"
+            name="confirmNewPassword"
+            autoComplete="new-password"
+            value={form.confirmNewPassword}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            isInvalid={!!(touched.confirmNewPassword && errors.confirmNewPassword)}
+          />
+          {touched.confirmNewPassword && errors.confirmNewPassword && (
+            <div className="invalid-feedback d-block">{errors.confirmNewPassword}</div>
+          )}
         </div>
 
         <div className="d-flex gap-2">
