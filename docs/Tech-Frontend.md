@@ -36,7 +36,7 @@ frontend/src/
     router.tsx                  createBrowserRouter config
     authGuard.tsx               <AuthGuard>
   components/
-    ui/                         Modal.tsx, Navbar.tsx, UserEditForm.tsx
+    ui/                         Modal.tsx, Navbar.tsx, PasswordInput.tsx, UserEditForm.tsx
     shared/                     RoleGate.tsx
   features/
     auth/

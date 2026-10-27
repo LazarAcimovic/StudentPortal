@@ -17,11 +17,11 @@ Not in scope: adopting it in any form — that is 24.2–24.4.
 Docs to update: Tech-Frontend §1 (add the file to the `components/ui/` listing)
 Verify: `npm run test -- PasswordInput`
 
-- [ ] `src/components/ui/PasswordInput.tsx` with exactly the props from UI §11.2: `id`, `name`, `value`, `onChange`, `onBlur?`, `autoComplete`, `required?`, `isInvalid?`.
-- [ ] Renders an `.input-group` with the `<input>` plus a `btn btn-outline-secondary` holding an inline eye SVG (no new icon package — Tech.md §1).
-- [ ] Internal `useState` toggles `type` between `password` and `text`.
-- [ ] The toggle button has `aria-label` "Show password" / "Hide password" reflecting current state, and `type="button"` so it never submits the form.
-- [ ] `isInvalid` adds `is-invalid` to the input so Bootstrap's `invalid-feedback` still renders (UI §2.3).
+- [x] `src/components/ui/PasswordInput.tsx` with exactly the props from UI §11.2: `id`, `name`, `value`, `onChange`, `onBlur?`, `autoComplete`, `required?`, `isInvalid?`.
+- [x] Renders an `.input-group` with the `<input>` plus a `btn btn-outline-secondary` holding an inline eye SVG (no new icon package — Tech.md §1).
+- [x] Internal `useState` toggles `type` between `password` and `text`.
+- [x] The toggle button has `aria-label` "Show password" / "Hide password" reflecting current state, and `type="button"` so it never submits the form.
+- [x] `isInvalid` adds `is-invalid` to the input so Bootstrap's `invalid-feedback` still renders (UI §2.3).
 - Commit: `feat(frontend): reusable PasswordInput primitive with show/hide toggle`
 
 ---
