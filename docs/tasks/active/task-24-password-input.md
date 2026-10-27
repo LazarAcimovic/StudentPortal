@@ -47,8 +47,8 @@ Not in scope: the edit-user form, which has no password field (UI §11.6).
 Docs to update: none
 Verify: `npm run test -- UserCreateForm`
 
-- [ ] The create-user password field is a `<PasswordInput autoComplete="new-password">`.
-- [ ] The existing ad-hoc toggle markup is removed in favour of the primitive.
+- [x] The create-user password field is a `<PasswordInput autoComplete="new-password">`.
+- [x] The existing ad-hoc toggle markup is removed in favour of the primitive.
 - Commit: `refactor(admin): use PasswordInput on the create-user form`
 
 ---
