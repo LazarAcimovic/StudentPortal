@@ -33,9 +33,9 @@ Not in scope: changing the login error display, which stays an inline `alert ale
 Docs to update: none
 Verify: `npm run test -- LoginPage`
 
-- [ ] The login password field is a `<PasswordInput autoComplete="current-password">`.
-- [ ] Clicking the eye reveals and re-masks the currently entered value.
-- [ ] Validation errors still appear only after `touched` (UI §2.3).
+- [x] The login password field is a `<PasswordInput autoComplete="current-password">`.
+- [x] Clicking the eye reveals and re-masks the currently entered value.
+- [x] Validation errors still appear only after `touched` (UI §2.3).
 - Commit: `feat(auth): use PasswordInput on the login form`
 
 ---

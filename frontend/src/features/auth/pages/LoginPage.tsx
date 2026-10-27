@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../../store/user/useUserStore";
 import { USER_ROLES } from "../../../shared/constants/constants";
-import { EyeIcon, EyeSlashIcon } from "../../../shared/constants/icons";
 import { login } from "../api/authService";
 import { loginSchema } from "../models/schemas/loginSchema";
 import type { LoginFormValues } from "../models/schemas/loginSchema";
@@ -11,15 +10,14 @@ import {
   LOGIN_INITIAL_VALUES,
   LOGIN_INITIAL_TOUCHED,
   LOGIN_INITIAL_SERVER_ERROR,
-  LOGIN_INITIAL_SHOW_PASSWORD,
   LOGIN_INITIAL_IS_SUBMITTING,
 } from "../constants/constants";
+import PasswordInput from "../../../components/ui/PasswordInput";
 
 const LoginPage: React.FC = () => {
   const [values, setValues] = useState<LoginFormValues>(LOGIN_INITIAL_VALUES);
   const [touched, setTouched] = useState<Record<keyof LoginFormValues, boolean>>(LOGIN_INITIAL_TOUCHED);
   const [serverError, setServerError] = useState<string | null>(LOGIN_INITIAL_SERVER_ERROR);
-  const [showPassword, setShowPassword] = useState(LOGIN_INITIAL_SHOW_PASSWORD);
   const [isSubmitting, setIsSubmitting] = useState(LOGIN_INITIAL_IS_SUBMITTING);
 
   const navigate = useNavigate();
@@ -107,29 +105,18 @@ const LoginPage: React.FC = () => {
                   <label htmlFor="password" className="form-label">
                     Password
                   </label>
-                  <div className="input-group">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      id="password"
-                      name="password"
-                      className={`form-control${touched.password && fieldErrors.password ? " is-invalid" : ""}`}
-                      value={values.password}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
-                    </button>
-                    {touched.password && fieldErrors.password && (
-                      <div className="invalid-feedback">{fieldErrors.password[0]}</div>
-                    )}
-                  </div>
+                  <PasswordInput
+                    id="password"
+                    name="password"
+                    value={values.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    autoComplete="current-password"
+                    isInvalid={touched.password && !!fieldErrors.password}
+                  />
+                  {touched.password && fieldErrors.password && (
+                    <div className="invalid-feedback d-block">{fieldErrors.password[0]}</div>
+                  )}
                 </div>
 
                 <div className="d-grid gap-2">

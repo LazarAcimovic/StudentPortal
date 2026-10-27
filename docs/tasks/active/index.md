@@ -14,7 +14,7 @@ Progress counts **subtasks**, and a subtask counts as done only when every one o
 |---|---|---|---|---|---|---|
 | 22 | Tests — backend integration, frontend unit + integration, e2e | 20/38 | 22a–22c essentially done, 6 subtasks part-ticked; **22d not started** | 23 (23.15 owns escalation coverage) | — | [task-22-tests.md](task-22-tests.md) |
 | 23 | Escalation workflow for unresolved appeals | 10/17 | backend + professor/student UI shipped; **admin tab, SubjectCode form, seed, tests and the 23.11 split outstanding** | — | 22 | [task-23-escalation.md](task-23-escalation.md) |
-| 24 | `<PasswordInput>` primitive and a toggle on every password field | 1/4 | 24.2–24.4 (adopt in login, admin create-user, change-password) | — | 22 (22b.9) | [task-24-password-input.md](task-24-password-input.md) |
+| 24 | `<PasswordInput>` primitive and a toggle on every password field | 2/4 | 24.3–24.4 (adopt in admin create-user, change-password) | — | 22 (22b.9) | [task-24-password-input.md](task-24-password-input.md) |
 | 25 | Align the shipped UI with the rules settled in the consistency pass | 0/4 | not started | — | 22 (22c.7) | [task-25-ui-alignment.md](task-25-ui-alignment.md) |
 
 ## Order of work

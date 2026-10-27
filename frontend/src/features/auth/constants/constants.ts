@@ -11,5 +11,4 @@ export const LOGIN_INITIAL_TOUCHED: Record<keyof LoginFormValues, boolean> = {
 };
 
 export const LOGIN_INITIAL_SERVER_ERROR: string | null = null;
-export const LOGIN_INITIAL_SHOW_PASSWORD = false;
 export const LOGIN_INITIAL_IS_SUBMITTING = false;
