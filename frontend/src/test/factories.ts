@@ -53,6 +53,7 @@ export function makeStudentDashboardSubject(
     professorName: 'Petar Petrović',
     finalGrade: null,
     status: 'Not graded',
+    isEscalated: false,
     appealStatus: null,
     canWriteAppeal: false,
     canConfirmGrade: false,

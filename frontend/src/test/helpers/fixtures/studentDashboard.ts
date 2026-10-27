@@ -28,6 +28,7 @@ export function makeSubject(
     professorName: overrides.professorName ?? 'P. Rof',
     finalGrade: overrides.finalGrade ?? null,
     status: overrides.status ?? 'Not graded',
+    isEscalated: overrides.isEscalated ?? false,
     appealStatus: overrides.appealStatus ?? null,
     canWriteAppeal: overrides.canWriteAppeal ?? false,
     canConfirmGrade: overrides.canConfirmGrade ?? false,
@@ -96,6 +97,22 @@ export const dashboardAppealDenied: StudentDashboardData = {
       finalGrade: 6,
       status: 'Passed',
       appealStatus: 'Appeal denied',
+      canWriteAppeal: false,
+      canConfirmGrade: false,
+    }),
+  ],
+};
+
+export const dashboardUnderAdminReview: StudentDashboardData = {
+  ...emptyStudentDashboard,
+  subjects: [
+    makeSubject({
+      enrollmentId: 'e-escalated',
+      subjectName: 'Software Engineering',
+      professorName: 'SE Prof',
+      finalGrade: 6,
+      status: 'Under admin review',
+      isEscalated: true,
       canWriteAppeal: false,
       canConfirmGrade: false,
     }),

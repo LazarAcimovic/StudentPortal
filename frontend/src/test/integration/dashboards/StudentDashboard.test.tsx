@@ -9,6 +9,7 @@ import {
   dashboardPendingAppeal,
   dashboardAppealDenied,
   dashboardTrulyFinal,
+  dashboardUnderAdminReview,
   emptyStudentDashboard,
   makeSubject,
 } from '../../helpers/fixtures/studentDashboard';
@@ -83,6 +84,12 @@ describe('StudentDashboardPage aggregates (§5.5)', () => {
       label: 'Truly final — no action buttons',
       fx: dashboardTrulyFinal,
       expectStatus: /Passed/i,
+      expectButtons: [],
+    },
+    {
+      label: 'Under admin review — purple badge, no action buttons',
+      fx: dashboardUnderAdminReview,
+      expectStatus: /Under admin review/i,
       expectButtons: [],
     },
   ])('§4.6 state matrix: $label', async ({ fx, expectStatus, expectButtons }) => {
