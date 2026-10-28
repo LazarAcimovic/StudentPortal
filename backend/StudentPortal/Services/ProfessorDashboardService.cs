@@ -100,12 +100,15 @@ public class ProfessorDashboardService : IProfessorDashboardService
     private static AssignedCaseDto BuildAssignedCaseRow(Grade grade, DateTime now)
     {
         var enrollment = grade.Enrollment;
-        var reason = grade.Escalation?.Reason switch
-        {
-            EscalationReason.AcceptedUnresolved => "Accepted appeal — awaiting re-grade",
-            EscalationReason.ChainExhausted => "Two overdue appeals — awaiting review",
-            _ => "Escalated",
-        };
+        var hasAcceptedAwaitingReconfirm = grade.Appeals.Any(a => a.Status == AppealStatus.Accepted);
+        var reason = hasAcceptedAwaitingReconfirm
+            ? "AcceptedUnresolved"
+            : grade.Escalation?.Reason switch
+            {
+                EscalationReason.AcceptedUnresolved => "AcceptedUnresolved",
+                EscalationReason.ChainExhausted => "ChainExhausted",
+                _ => "AcceptedUnresolved",
+            };
 
         var appealDtos = grade.Appeals
             .OrderBy(a => a.SubmittedAt)
