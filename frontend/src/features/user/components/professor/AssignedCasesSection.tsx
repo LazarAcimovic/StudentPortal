@@ -11,19 +11,22 @@ const REASON_LABEL: Record<string, string> = {
 
 function AppealHistory({ appeals }: { appeals: AssignedCaseAppeal[] }) {
   if (!appeals.length) return null;
+
+  const renderItem = (a: AssignedCaseAppeal, i: number) => (
+    <div key={a.id} className="p-2 mb-2 rounded border small">
+      <div className="d-flex justify-content-between mb-1">
+        <span className="fw-semibold">Appeal {i + 1}</span>
+        <span className="text-muted">{new Date(a.submittedAt).toLocaleDateString()}</span>
+      </div>
+      <div className="text-muted mb-1">Status: {a.status}</div>
+      <div>{a.text}</div>
+    </div>
+  );
+
   return (
     <div className="mb-3">
       <h6 className="fw-semibold mb-2">Appeal History</h6>
-      {appeals.map((a, i) => (
-        <div key={a.id} className="p-2 mb-2 rounded border small">
-          <div className="d-flex justify-content-between mb-1">
-            <span className="fw-semibold">Appeal {i + 1}</span>
-            <span className="text-muted">{new Date(a.submittedAt).toLocaleDateString()}</span>
-          </div>
-          <div className="text-muted mb-1">Status: {a.status}</div>
-          <div>{a.text}</div>
-        </div>
-      ))}
+      {appeals.map(renderItem)}
     </div>
   );
 }
@@ -158,19 +161,21 @@ function ScenarioBPanel({
     }
   };
 
+  const renderOverdueItem = (a: AssignedCaseAppeal, i: number) => (
+    <div key={a.id} className="p-2 mb-2 rounded border small">
+      <div className="d-flex justify-content-between mb-1">
+        <span className="fw-semibold text-muted">
+          [OVERDUE] Appeal {i + 1}
+        </span>
+        <span className="text-muted">{new Date(a.submittedAt).toLocaleDateString()}</span>
+      </div>
+      <div>{a.text}</div>
+    </div>
+  );
+
   return (
     <div>
-      {sorted.map((a, i) => (
-        <div key={a.id} className="p-2 mb-2 rounded border small">
-          <div className="d-flex justify-content-between mb-1">
-            <span className="fw-semibold text-muted">
-              [OVERDUE] Appeal {i + 1}
-            </span>
-            <span className="text-muted">{new Date(a.submittedAt).toLocaleDateString()}</span>
-          </div>
-          <div>{a.text}</div>
-        </div>
-      ))}
+      {sorted.map(renderOverdueItem)}
       <div className="mt-3">
         {confirmingDeny ? (
           <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -360,6 +365,16 @@ interface AssignedCasesSectionProps {
 const AssignedCasesSection: React.FC<AssignedCasesSectionProps> = ({ assignedCases, onRefresh }) => {
   const [selectedCase, setSelectedCase] = useState<AssignedCase | null>(null);
 
+  const renderCases = (layout: 'table' | 'card') =>
+    assignedCases.map(c => (
+      <AssignedCaseItem
+        key={c.gradeId}
+        assignedCase={c}
+        layout={layout}
+        onResolveClick={setSelectedCase}
+      />
+    ));
+
   return (
     <>
       <div className="card mt-4">
@@ -382,29 +397,11 @@ const AssignedCasesSection: React.FC<AssignedCasesSectionProps> = ({ assignedCas
                       <th className="text-end">Action</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {assignedCases.map(c => (
-                      <AssignedCaseItem
-                        key={c.gradeId}
-                        assignedCase={c}
-                        layout="table"
-                        onResolveClick={setSelectedCase}
-                      />
-                    ))}
-                  </tbody>
+                  <tbody>{renderCases('table')}</tbody>
                 </table>
               </div>
 
-              <div className="d-sm-none p-2">
-                {assignedCases.map(c => (
-                  <AssignedCaseItem
-                    key={c.gradeId}
-                    assignedCase={c}
-                    layout="card"
-                    onResolveClick={setSelectedCase}
-                  />
-                ))}
-              </div>
+              <div className="d-sm-none p-2">{renderCases('card')}</div>
             </div>
           )}
         </div>
