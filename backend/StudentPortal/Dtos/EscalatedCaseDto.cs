@@ -8,6 +8,7 @@ public class EscalatedCaseDto
     public string SubjectCode { get; set; }
     public string StudentFirstName { get; set; }
     public string StudentLastName { get; set; }
+    public Guid OriginalProfessorId { get; set; }
     public string OriginalProfessorFirstName { get; set; }
     public string OriginalProfessorLastName { get; set; }
     public int FinalGrade { get; set; }

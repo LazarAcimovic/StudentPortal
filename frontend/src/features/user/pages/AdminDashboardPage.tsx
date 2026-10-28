@@ -24,6 +24,7 @@ import SubjectEditForm from "../components/admin/SubjectEditForm";
 import SubjectCreateForm from "../components/admin/SubjectCreateForm";
 import EnrollmentsTable from "../components/admin/EnrollmentsTable";
 import EnrollmentCreateForm from "../components/admin/EnrollmentCreateForm";
+import EscalationsTab from "../components/admin/EscalationsTab";
 
 const AdminDashboardPage: React.FC = () => {
   const { currentUser } = useUserStore();
@@ -269,6 +270,8 @@ const AdminDashboardPage: React.FC = () => {
             )}
           </>
         );
+      case "escalations":
+        return <EscalationsTab />;
       default:
         return null;
     }
@@ -302,6 +305,14 @@ const AdminDashboardPage: React.FC = () => {
             onClick={() => setActiveTab("enrollments")}
           >
             Enrollments
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "escalations" ? "active" : ""}`}
+            onClick={() => setActiveTab("escalations")}
+          >
+            Escalations
           </button>
         </li>
       </ul>

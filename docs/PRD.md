@@ -206,7 +206,7 @@ A **single** overdue appeal does not escalate. It opens a fresh 7-day window for
 
 **An accepted appeal never becomes Overdue (per D-018).** Only Pending appeals surface as Overdue. The appeal row stays `Accepted` for good; what expires in Scenario A is the professor's re-grade window, measured from `ReviewedAt`.
 
-**Eligible professor.** A professor who is not soft-deleted and teaches at least one subject with the **same `SubjectCode`** as the escalated subject, excluding the original professor. `SubjectCode` is the field that groups the same course taught by different professors; without it there is no eligibility list.
+**Eligible professor.** A professor who is not soft-deleted and teaches at least one subject with the **same `SubjectCode`** as the escalated subject, excluding the original professor and any professor who has already appeared in this escalation's assignment history. `SubjectCode` is the field that groups the same course taught by different professors; without it there is no eligibility list. (per D-023)
 
 **Case lifecycle — four statuses, all derived on read:**
 

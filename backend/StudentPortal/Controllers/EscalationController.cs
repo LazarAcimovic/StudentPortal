@@ -30,14 +30,20 @@ public class EscalationController : ControllerBase
 
     [HttpGet("eligible-professors")]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetEligibleProfessors(
-        [FromQuery] string subjectCode,
-        [FromQuery] Guid excludeProfessorId)
+        [FromQuery] Guid gradeId)
     {
-        if (string.IsNullOrWhiteSpace(subjectCode))
-            return BadRequest("subjectCode is required.");
+        if (gradeId == Guid.Empty)
+            return BadRequest("gradeId is required.");
 
-        var professors = await _escalationService.GetEligibleProfessorsAsync(subjectCode, excludeProfessorId);
-        return Ok(professors);
+        try
+        {
+            var professors = await _escalationService.GetEligibleProfessorsAsync(gradeId);
+            return Ok(professors);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     [HttpPost("assign")]

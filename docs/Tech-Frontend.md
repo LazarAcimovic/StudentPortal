@@ -24,7 +24,7 @@
 
 ## 1. Project layout
 
-> **Verified against the working tree at commit `b64d2a6` (2026-10-23).** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
+> **Verified against the working tree at commit `b64d2a6` (2026-10-23); escalations feature added for task 23.12.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
 
 ```
 frontend/src/
@@ -50,7 +50,8 @@ frontend/src/
       api/profileService.ts     getMe, updateProfile, changePassword
       components/admin/         UsersTable, UserCreateForm, SubjectsTable,
                                 SubjectCreateForm, SubjectEditForm,
-                                EnrollmentsTable, EnrollmentCreateForm
+                                EnrollmentsTable, EnrollmentCreateForm,
+                                EscalationsTab
       components/professor/     SubjectsList, StudentsList, GradePanel,
                                 AppealsSection, ViewAppealModal, AssignedCasesSection
       components/student/       StudentInfoCard, StudyStatsCard, SubjectsCard,
@@ -79,6 +80,12 @@ frontend/src/
     subjects/
       api/subjectService.ts
       api/enrollmentService.ts
+      index.ts
+    escalations/
+      api/escalationService.ts   getCases, getEligibleProfessors, assign, reassign
+      hooks/useEscalations.ts    Pattern A — GET /api/Escalation
+      hooks/useEligibleProfessors.ts  Pattern B — GET /api/Escalation/eligible-professors
+      models/escalation.ts       EscalatedCase, AssignmentHistoryEntry, EscalationStatus, EligibleProfessor
       index.ts
   lib/
     navigation.ts               navigation singleton

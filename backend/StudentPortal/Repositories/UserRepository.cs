@@ -65,12 +65,13 @@ public class UserRepository : IUserRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<User>> GetProfessorsBySubjectCodeAsync(string subjectCode, Guid excludeProfessorId)
+    public async Task<IEnumerable<User>> GetProfessorsBySubjectCodeAsync(string subjectCode, IEnumerable<Guid> excludeIds)
     {
+        var excludeSet = excludeIds.ToHashSet();
         return await _context.Users
             .Where(u => !u.IsDeleted
                 && u.Subjects.Any(s => s.SubjectCode == subjectCode)
-                && u.Id != excludeProfessorId)
+                && !excludeSet.Contains(u.Id))
             .AsNoTracking()
             .ToListAsync();
     }

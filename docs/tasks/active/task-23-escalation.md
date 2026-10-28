@@ -199,15 +199,15 @@ Not in scope: backend changes — every endpoint already exists (23.7).
 Docs to update: Tech-Frontend §1 (add the new service / hook / models to the layout block)
 Verify: `npm run test -- Escalations`
 
-- [ ] `features/escalations/api/escalationService.ts` — `getCases`, `getEligibleProfessors`, `assign`, `reassign`; each takes an optional `AbortSignal` and re-throws as `Error` (Tech-Frontend §3).
-- [ ] `features/escalations/models/escalation.ts` — `EscalatedCase`, `AssignmentHistoryEntry`, `EscalationStatus`.
-- [ ] `features/escalations/hooks/useEscalations.ts` — Pattern A, loads the case list when the tab mounts.
-- [ ] `features/escalations/hooks/useEligibleProfessors.ts` — Pattern B, caller owns the `AbortController`, triggered on modal open.
-- [ ] Fourth pill tab in `AdminDashboardPage`, content unmounted when inactive.
-- [ ] Table with the eight columns from UI §8.6 and the four per-status rows.
-- [ ] Assign / reassign modal: case detail, appeal history, assignment history (hidden when empty), radio-style eligible list, "No eligible professors available" + disabled Confirm when empty.
-- [ ] Confirm posts to `/assign` or `/reassign`, updates the row in place, closes the modal.
-- [ ] Collapses to stacked cards below `md`.
+- [x] `features/escalations/api/escalationService.ts` — `getCases`, `getEligibleProfessors`, `assign`, `reassign`; each takes an optional `AbortSignal` and re-throws as `Error` (Tech-Frontend §3).
+- [x] `features/escalations/models/escalation.ts` — `EscalatedCase`, `AssignmentHistoryEntry`, `EscalationStatus`.
+- [x] `features/escalations/hooks/useEscalations.ts` — Pattern A, loads the case list when the tab mounts.
+- [x] `features/escalations/hooks/useEligibleProfessors.ts` — Pattern B, caller owns the `AbortController`, triggered on modal open.
+- [x] Fourth pill tab in `AdminDashboardPage`, content unmounted when inactive.
+- [x] Table with the eight columns from UI §8.6 and the four per-status rows.
+- [x] Assign / reassign modal: case detail, appeal history, assignment history (hidden when empty), radio-style eligible list, "No eligible professors available" + disabled Confirm when empty.
+- [x] Confirm posts to `/assign` or `/reassign`, updates the row in place, closes the modal.
+- [x] Collapses to stacked cards below `md`.
 - Commit: `feat(frontend): admin escalations tab with assign/reassign modal and assignment history`
 
 ---

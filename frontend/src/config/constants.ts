@@ -27,4 +27,8 @@ export const API_ROUTES = {
   APPEAL_PENDING: '/Appeal/pending',
   STUDENT_ME_DASHBOARD: '/Student/me/dashboard',
   PROFESSOR_ME_DASHBOARD: '/Professor/me/dashboard',
+  ESCALATION: '/Escalation',
+  ESCALATION_ELIGIBLE_PROFESSORS: '/Escalation/eligible-professors',
+  ESCALATION_ASSIGN: '/Escalation/assign',
+  ESCALATION_REASSIGN: '/Escalation/reassign',
 } as const;

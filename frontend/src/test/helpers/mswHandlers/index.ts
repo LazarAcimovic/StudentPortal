@@ -53,6 +53,18 @@ export function professorDashboardHandler(payload: unknown): HttpHandler {
   );
 }
 
+export function escalationCasesHandler(payload: unknown): HttpHandler {
+  return http.get(`/api${API_ROUTES.ESCALATION}`, () =>
+    HttpResponse.json(payload)
+  );
+}
+
+export function eligibleProfessorsHandler(payload: unknown): HttpHandler {
+  return http.get(`/api${API_ROUTES.ESCALATION_ELIGIBLE_PROFESSORS}`, () =>
+    HttpResponse.json(payload)
+  );
+}
+
 export function defaultHandlers(user: StoreUser | null = seededStudent): HttpHandler[] {
   return [
     meHandler(user),

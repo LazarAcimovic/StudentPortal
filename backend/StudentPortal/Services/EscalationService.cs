@@ -40,9 +40,15 @@ public class EscalationService : IEscalationService
         return result;
     }
 
-    public async Task<IEnumerable<UserDto>> GetEligibleProfessorsAsync(string subjectCode, Guid excludeProfessorId)
+    public async Task<IEnumerable<UserDto>> GetEligibleProfessorsAsync(Guid gradeId)
     {
-        var professors = await _userRepository.GetProfessorsBySubjectCodeAsync(subjectCode, excludeProfessorId);
+        var grade = await _gradeRepository.GetByIdWithEscalationDetailsAsync(gradeId);
+        if (grade == null)
+            throw new KeyNotFoundException($"Grade {gradeId} not found.");
+
+        var subjectCode = grade.Enrollment?.Subject?.SubjectCode ?? string.Empty;
+        var excludeIds = BuildExcludeIds(grade);
+        var professors = await _userRepository.GetProfessorsBySubjectCodeAsync(subjectCode, excludeIds);
         return professors.Select(MapUserToDto).ToList();
     }
 
@@ -60,8 +66,8 @@ public class EscalationService : IEscalationService
             throw new InvalidOperationException("An open escalation already exists for this grade.");
 
         var subjectCode = grade.Enrollment?.Subject?.SubjectCode ?? string.Empty;
-        var originalProfId = grade.Enrollment?.Subject?.ProfessorId ?? Guid.Empty;
-        var eligibleProfessors = await _userRepository.GetProfessorsBySubjectCodeAsync(subjectCode, originalProfId);
+        var excludeIds = BuildExcludeIds(grade);
+        var eligibleProfessors = await _userRepository.GetProfessorsBySubjectCodeAsync(subjectCode, excludeIds);
         if (!eligibleProfessors.Any(p => p.Id == assignedProfessorId))
             throw new InvalidOperationException("Professor is not eligible for this subject.");
 
@@ -110,8 +116,8 @@ public class EscalationService : IEscalationService
             throw new InvalidOperationException("Reassignment is not yet due. The 7-day assignment window has not expired.");
 
         var subjectCode = grade.Enrollment?.Subject?.SubjectCode ?? string.Empty;
-        var originalProfId = grade.Enrollment?.Subject?.ProfessorId ?? Guid.Empty;
-        var eligibleProfessors = await _userRepository.GetProfessorsBySubjectCodeAsync(subjectCode, originalProfId);
+        var excludeIds = BuildExcludeIds(grade);
+        var eligibleProfessors = await _userRepository.GetProfessorsBySubjectCodeAsync(subjectCode, excludeIds);
         if (!eligibleProfessors.Any(p => p.Id == newProfessorId))
             throw new InvalidOperationException("Professor is not eligible for this subject.");
 
@@ -246,6 +252,7 @@ public class EscalationService : IEscalationService
             SubjectCode = subject?.SubjectCode ?? string.Empty,
             StudentFirstName = student?.FirstName ?? string.Empty,
             StudentLastName = student?.LastName ?? string.Empty,
+            OriginalProfessorId = originalProf?.Id ?? Guid.Empty,
             OriginalProfessorFirstName = originalProf?.FirstName ?? string.Empty,
             OriginalProfessorLastName = originalProf?.LastName ?? string.Empty,
             FinalGrade = grade.FinalGrade,
@@ -256,6 +263,18 @@ public class EscalationService : IEscalationService
             Appeals = appealDtos,
             AssignmentHistory = assignmentHistory
         };
+    }
+
+    private static HashSet<Guid> BuildExcludeIds(Grade grade)
+    {
+        var ids = new HashSet<Guid>();
+        var originalProfId = grade.Enrollment?.Subject?.ProfessorId ?? Guid.Empty;
+        if (originalProfId != Guid.Empty)
+            ids.Add(originalProfId);
+        if (grade.Escalation?.Assignments != null)
+            foreach (var a in grade.Escalation.Assignments)
+                ids.Add(a.AssignedProfessorId);
+        return ids;
     }
 
     private static EscalationReason DetermineReason(Grade grade, DateTime now)

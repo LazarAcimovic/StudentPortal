@@ -174,6 +174,13 @@ The four statuses:
 **Lives in:** PRD §4.7, PRD §4.8
 **Why:** Escalation exists precisely because the grade's outcome is still undecided; D-007's latest-appeal gate already produces this result, and stating it prevents a special case being invented.
 
+### D-023 — Can the admin re-pick a professor who was already assigned to this escalation?
+
+**Decided:** 2026-10-28 · **Status:** Accepted
+**Answer:** No. Any professor who appears in the escalation's assignment history is excluded from the eligible list, in addition to the original grading professor.
+**Lives in:** PRD §4.8
+**Why:** A professor who already failed to act on the same escalation provides no additional chance of resolution; the assignment history is already stored in `EscalationAssignments`, so the exclusion costs one extra query with no schema change.
+
 ### D-022 — Are time-dependent states seeded in `seed.sql`?
 
 **Decided:** 2026-10-23 · **Status:** Accepted

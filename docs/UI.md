@@ -427,7 +427,7 @@ Row rendering by `escalationStatus`:
 - **Case detail**: subject (with its code), student, current grade, and the reason in prose.
 - **Appeal history**: each appeal as a `<blockquote>` with status, submitted date and text.
 - **Assignment history**, from `assignmentHistory[]`: a chronological table of professor name, assigned by, assigned at, and outcome — "Superseded" + date, "Active", or "Resolved". Hidden on a first assignment, when the list is empty.
-- **Eligible professors**: fetched once on modal open from `GET /api/Escalation/eligible-professors?subjectCode={code}&excludeProfessorId={id}`, rendered as a radio-style `list-group` (the backend scopes it to one subject code, so the list is naturally short). If empty: the text "No eligible professors available" and a disabled Confirm.
+- **Eligible professors**: fetched once on modal open from `GET /api/Escalation/eligible-professors?subjectCode={code}&gradeId={id}`, rendered as a radio-style `list-group` (the backend scopes it to one subject code and excludes the original professor and all past assignees, so the list is naturally short). If empty: the text "No eligible professors available" and a disabled Confirm.
 - **Confirm** → `POST /api/Escalation/assign` on a first assignment, `POST /api/Escalation/reassign` on a later one. On success update the row in place and close.
 
 Below `md`: stacked cards like the other admin tabs, action button full width.
