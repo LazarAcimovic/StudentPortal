@@ -20,6 +20,7 @@ beforeEach(() => {
 const subjectRow = {
   id: 42,
   subjectName: 'Programming 1',
+  subjectCode: 'CS200',
   ects: 6,
   professorId: 7,
   professorFirstName: 'Petar',
@@ -70,18 +71,20 @@ describe('subjectService.createSubject', () => {
     server.use(
       http.post(apiUrl(API_ROUTES.SUBJECT), async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ ...subjectRow, subjectName: 'Databases', ects: 7, professorId: 3 });
+        return HttpResponse.json({ ...subjectRow, subjectName: 'Databases', subjectCode: 'CS101', ects: 7, professorId: 3 });
       })
     );
 
     const result = await createSubject({
       SubjectName: 'Databases',
+      SubjectCode: 'CS101',
       ECTS: 7,
       ProfessorId: 3,
     });
 
     expect(body).toEqual({
       subjectName: 'Databases',
+      subjectCode: 'CS101',
       ects: 7,
       professorId: 3,
     });
@@ -89,7 +92,7 @@ describe('subjectService.createSubject', () => {
     expect(result?.ects).toBe(7);
   });
 
-  it('does NOT send any field other than subjectName/ects/professorId', async () => {
+  it('sends subjectCode/subjectName/ects/professorId and nothing else', async () => {
     let body: Record<string, unknown> | null = null;
     server.use(
       http.post(apiUrl(API_ROUTES.SUBJECT), async ({ request }) => {
@@ -98,10 +101,10 @@ describe('subjectService.createSubject', () => {
       })
     );
 
-    await createSubject({ SubjectName: 'X', ECTS: 6, ProfessorId: 1 });
+    await createSubject({ SubjectName: 'X', SubjectCode: 'SC1', ECTS: 6, ProfessorId: 1 });
 
     expect(body).not.toBeNull();
-    expect(Object.keys(body!).sort()).toEqual(['ects', 'professorId', 'subjectName']);
+    expect(Object.keys(body!).sort()).toEqual(['ects', 'professorId', 'subjectCode', 'subjectName']);
   });
 
   it('returns null (and logs) on a 400 validation error', async () => {
@@ -111,7 +114,7 @@ describe('subjectService.createSubject', () => {
       )
     );
 
-    const result = await createSubject({ SubjectName: '', ECTS: 6, ProfessorId: 1 });
+    const result = await createSubject({ SubjectName: '', SubjectCode: '', ECTS: 6, ProfessorId: 1 });
 
     expect(result).toBeNull();
     expect(console.error).toHaveBeenCalled();
@@ -133,6 +136,7 @@ describe('subjectService.updateSubject', () => {
     const result = await updateSubject({
       Id: 42,
       SubjectName: 'Renamed',
+      SubjectCode: 'CS200',
       ECTS: 8,
       ProfessorId: 7,
       IsDeleted: false,
@@ -142,6 +146,7 @@ describe('subjectService.updateSubject', () => {
     expect(body).toEqual({
       id: 42,
       subjectName: 'Renamed',
+      subjectCode: 'CS200',
       ects: 8,
       professorId: 7,
       isDeleted: false,
@@ -161,6 +166,7 @@ describe('subjectService.updateSubject', () => {
     const result = await updateSubject({
       Id: 42,
       SubjectName: subjectRow.subjectName,
+      SubjectCode: subjectRow.subjectCode,
       ECTS: subjectRow.ects,
       ProfessorId: subjectRow.professorId,
       IsDeleted: true,
@@ -180,6 +186,7 @@ describe('subjectService.updateSubject', () => {
     const result = await updateSubject({
       Id: 999,
       SubjectName: 'X',
+      SubjectCode: 'XX',
       ECTS: 6,
       ProfessorId: 1,
       IsDeleted: false,
@@ -199,6 +206,7 @@ describe('subjectService.updateSubject', () => {
     const result = await updateSubject({
       Id: 42,
       SubjectName: 'X',
+      SubjectCode: 'XX',
       ECTS: 6,
       ProfessorId: 1,
       IsDeleted: false,

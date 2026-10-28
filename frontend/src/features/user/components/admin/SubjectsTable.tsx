@@ -36,6 +36,7 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
             <tr>
               <th>ID</th>
               <th>Subject Name</th>
+              <th>Subject Code</th>
               <th>ECTS</th>
               <th>Professor</th>
               <th>Status</th>
@@ -47,6 +48,7 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
               <tr key={subject.id}>
                 <td>{subject.id}</td>
                 <td>{subject.subjectName}</td>
+                <td>{subject.subjectCode}</td>
                 <td>{subject.ects}</td>
                 <td>
                   {subject.professorFirstName} {subject.professorLastName}
@@ -75,6 +77,9 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
               <div className="d-flex justify-content-between align-items-start mb-1 gap-2">
                 <div className="fw-bold text-break">{subject.subjectName}</div>
                 <StatusBadge isDeleted={subject.isDeleted} />
+              </div>
+              <div className="text-muted small mb-1">
+                Subject Code: {subject.subjectCode}
               </div>
               <div className="text-muted small mb-1">
                 Professor: {subject.professorFirstName}{" "}

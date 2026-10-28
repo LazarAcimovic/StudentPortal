@@ -23,6 +23,7 @@ export const createSubject = async (
   try {
     const dataToSend = {
       subjectName: newSubject.SubjectName,
+      subjectCode: newSubject.SubjectCode,
       ects: newSubject.ECTS,
       professorId: newSubject.ProfessorId,
     };
@@ -42,6 +43,7 @@ export const updateSubject = async (
     const dataToSend = {
       id: updatedSubject.Id,
       subjectName: updatedSubject.SubjectName,
+      subjectCode: updatedSubject.SubjectCode,
       ects: updatedSubject.ECTS,
       professorId: updatedSubject.ProfessorId,
       isDeleted: updatedSubject.IsDeleted,

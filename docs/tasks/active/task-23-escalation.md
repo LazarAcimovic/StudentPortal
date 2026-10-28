@@ -219,10 +219,10 @@ Not in scope: the backend, which already requires and returns the field (23.4).
 Docs to update: none
 Verify: `npm run test -- Subject`; then create and edit a subject in the running app and confirm no `400`
 
-- [ ] `SubjectCode` text input in `SubjectCreateForm` and `SubjectEditForm`, directly below Subject Name, label "Subject Code", with the help text from UI §8.4.
-- [ ] Zod: required, 1–20 characters. Field error shown only after `touched` (UI §2.3).
-- [ ] The create and update payloads both send `subjectCode`.
-- [ ] The Subjects table shows a Subject Code column.
+- [x] `SubjectCode` text input in `SubjectCreateForm` and `SubjectEditForm`, directly below Subject Name, label "Subject Code", with the help text from UI §8.4.
+- [x] Zod: required, 1–20 characters. Field error shown only after `touched` (UI §2.3).
+- [x] The create and update payloads both send `subjectCode`.
+- [x] The Subjects table shows a Subject Code column.
 - Commit: `fix(frontend): send SubjectCode from admin subject create and edit forms`
 
 ---

@@ -2,6 +2,10 @@
 import type { Subject, UpdateSubject } from "../../../../models/SubjectModel";
 import type { User } from "../../../../models/UserModel";
 import { USER_ROLES } from "../../../../shared/constants/constants";
+import {
+  subjectEditSchema,
+  type SubjectEditFieldErrors,
+} from "../../utils/subjectSchemas";
 
 interface SubjectEditFormProps {
   subject: Subject;
@@ -9,6 +13,9 @@ interface SubjectEditFormProps {
   onSave: (updatedSubject: UpdateSubject) => void;
   onCancel: () => void;
 }
+
+const SUBJECT_CODE_HELP =
+  "Subjects sharing a code are the same course taught by different professors.";
 
 const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
   subject,
@@ -19,36 +26,48 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
   const [formData, setFormData] = useState<UpdateSubject>({
     Id: subject.id,
     SubjectName: subject.subjectName,
+    SubjectCode: subject.subjectCode ?? "",
     ECTS: subject.ects,
     ProfessorId: subject.professorId,
     IsDeleted: subject.isDeleted,
   });
+  const [touched, setTouched] = useState<Partial<Record<keyof UpdateSubject, boolean>>>({});
+
+  const parsed = subjectEditSchema.safeParse(formData);
+  const fieldErrors: SubjectEditFieldErrors = parsed.success
+    ? {}
+    : (parsed.error.flatten().fieldErrors as SubjectEditFieldErrors);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-
     if (type === "checkbox") {
       setFormData((prev) => ({
         ...prev,
         [name]: (e.target as HTMLInputElement).checked,
       }));
-    } else if (name === "ProfessorId" || name === "Etcs") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: Number(value),
-      }));
+    } else if (name === "ProfessorId" || name === "ECTS") {
+      setFormData((prev) => ({ ...prev, [name]: Number(value) }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleBlur = (field: keyof UpdateSubject) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({
+      SubjectName: true,
+      SubjectCode: true,
+      ECTS: true,
+      ProfessorId: true,
+      IsDeleted: true,
+    });
+    if (!parsed.success) return;
     onSave(formData);
   };
 
@@ -58,35 +77,63 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
         <h5>Edit Subject</h5>
       </div>
       <div className="card-body">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="mb-3">
             <label htmlFor="subjectName" className="form-label">
               Subject Name
             </label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control${touched.SubjectName && fieldErrors.SubjectName ? " is-invalid" : ""}`}
               id="subjectName"
               name="SubjectName"
               value={formData.SubjectName}
               onChange={handleChange}
-              required
+              onBlur={() => handleBlur("SubjectName")}
             />
+            {touched.SubjectName && fieldErrors.SubjectName && (
+              <div className="invalid-feedback">{fieldErrors.SubjectName[0]}</div>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="subjectCode" className="form-label">
+              Subject Code
+            </label>
+            <input
+              type="text"
+              className={`form-control${touched.SubjectCode && fieldErrors.SubjectCode ? " is-invalid" : ""}`}
+              id="subjectCode"
+              name="SubjectCode"
+              value={formData.SubjectCode}
+              onChange={handleChange}
+              onBlur={() => handleBlur("SubjectCode")}
+              aria-describedby="subjectCodeHelp"
+            />
+            {touched.SubjectCode && fieldErrors.SubjectCode && (
+              <div className="invalid-feedback">{fieldErrors.SubjectCode[0]}</div>
+            )}
+            <div id="subjectCodeHelp" className="form-text">
+              {SUBJECT_CODE_HELP}
+            </div>
           </div>
 
           <div className="mb-3">
             <label htmlFor="etcs" className="form-label">
-              ETCS
+              ECTS
             </label>
             <input
               type="number"
-              className="form-control"
+              className={`form-control${touched.ECTS && fieldErrors.ECTS ? " is-invalid" : ""}`}
               id="etcs"
               name="ECTS"
               value={formData.ECTS}
               onChange={handleChange}
-              required
+              onBlur={() => handleBlur("ECTS")}
             />
+            {touched.ECTS && fieldErrors.ECTS && (
+              <div className="invalid-feedback">{fieldErrors.ECTS[0]}</div>
+            )}
           </div>
 
           <div className="mb-3">
@@ -94,12 +141,12 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               Professor
             </label>
             <select
-              className="form-select"
+              className={`form-select${touched.ProfessorId && fieldErrors.ProfessorId ? " is-invalid" : ""}`}
               id="professor"
               name="ProfessorId"
               value={formData.ProfessorId}
               onChange={handleChange}
-              required
+              onBlur={() => handleBlur("ProfessorId")}
             >
               <option value="">Select professor</option>
               {professors
@@ -110,6 +157,9 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
                   </option>
                 ))}
             </select>
+            {touched.ProfessorId && fieldErrors.ProfessorId && (
+              <div className="invalid-feedback">{fieldErrors.ProfessorId[0]}</div>
+            )}
           </div>
 
           <div className="mb-3 form-check">
