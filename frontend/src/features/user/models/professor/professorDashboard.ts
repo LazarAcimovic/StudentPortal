@@ -98,4 +98,5 @@ export interface ScenarioPanelProps {
   assignedCase: AssignedCase;
   onSuccess: () => void;
   onError: (msg: string) => void;
+  onAccepted?: () => void;
 }

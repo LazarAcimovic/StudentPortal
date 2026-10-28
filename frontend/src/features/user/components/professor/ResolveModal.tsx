@@ -18,18 +18,30 @@ function ResolveModal({
   onResolved: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [acceptedInSession, setAcceptedInSession] = useState(false);
 
   const handleSuccess = () => {
     setError(null);
+    setAcceptedInSession(false);
     onClose();
     onResolved();
   };
 
   const handleError = (msg: string) => setError(msg);
 
+  const handleAccepted = () => {
+    setError(null);
+    setAcceptedInSession(true);
+  };
+
   const handleClose = () => {
     setError(null);
-    onClose();
+    setAcceptedInSession(false);
+    if (acceptedInSession) {
+      onResolved();
+    } else {
+      onClose();
+    }
   };
 
   return (
@@ -62,7 +74,7 @@ function ResolveModal({
 
           <hr className="my-3" />
 
-          {assignedCase.reason === 'AcceptedUnresolved' ? (
+          {assignedCase.reason === 'AcceptedUnresolved' || acceptedInSession ? (
             <ScenarioAPanel
               assignedCase={assignedCase}
               onSuccess={handleSuccess}
@@ -73,6 +85,7 @@ function ResolveModal({
               assignedCase={assignedCase}
               onSuccess={handleSuccess}
               onError={handleError}
+              onAccepted={handleAccepted}
             />
           )}
         </>

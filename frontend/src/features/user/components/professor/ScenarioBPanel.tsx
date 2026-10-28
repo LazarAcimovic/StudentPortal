@@ -6,6 +6,7 @@ function ScenarioBPanel({
   assignedCase,
   onSuccess,
   onError,
+  onAccepted,
 }: ScenarioPanelProps) {
   const [confirmingDeny, setConfirmingDeny] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,7 +23,11 @@ function ScenarioBPanel({
     setIsSubmitting(true);
     try {
       await acceptAppeal(latest.id);
-      onSuccess();
+      if (onAccepted) {
+        onAccepted();
+      } else {
+        onSuccess();
+      }
     } catch {
       onError('Failed to accept appeal. Please try again.');
     } finally {
