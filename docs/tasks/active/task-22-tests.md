@@ -483,11 +483,11 @@ Not in scope: unit-level detection — 23.15.
 Docs to update: none
 Verify: `npm run e2e -- --grep boundary`
 
-- [ ] An appeal goes overdue exactly at the 7-day boundary (advance the clock, refetch the dashboard).
-- [ ] The student submits a second appeal after the first went overdue.
-- [ ] The 24 h deny-undo window closes exactly on time.
-- [ ] Day-8 auto-finalize of the initial window (D-002).
-- [ ] Scenario B end to end: two overdue appeals → admin sees the case → assigns an eligible professor → that professor denies the latest appeal → the grade finalizes and the case shows `Resolved`.
+- [x] An appeal goes overdue exactly at the 7-day boundary (advance the clock, refetch the dashboard).
+- [x] The student submits a second appeal after the first went overdue.
+- [x] The 24 h deny-undo window closes exactly on time.
+- [x] Day-8 auto-finalize of the initial window (D-002).
+- [x] Scenario B end to end: two overdue appeals → admin sees the case → assigns an eligible professor → that professor denies the latest appeal → the grade finalizes and the case shows `Resolved`.
 - Commit: `test(e2e): appeal and escalation time-boundary journeys with the clock-advance endpoint`
 
 #### 22d.7 — Test: Admin journeys
