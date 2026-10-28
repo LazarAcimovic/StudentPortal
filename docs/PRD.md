@@ -389,7 +389,7 @@ A re-runnable `seed.sql` populates the database with:
 - ~3 GradeDrafts for grades not yet confirmed.
 - All seeded users share the plaintext password `Password123!`.
 
-**No row in `seed.sql` is time-sensitive (per D-022).** The seed replays before every integration test, so a backdated timestamp there would leak an overdue or escalated case into every test run. States that depend on elapsed time — overdue appeals, escalation Scenarios A and B, the 24-hour undo window — are produced per test by the backdating helpers described in `Tech-Backend.md` §7, and in manual testing by the test-mode clock endpoint.
+**No row in `seed.sql` is time-sensitive (per D-022).** The seed replays before every integration test, so a backdated timestamp there would leak an overdue or escalated case into every test run. States that depend on elapsed time — overdue appeals, escalation Scenarios A and B, the 24-hour undo window — are produced per test by the backdating helpers described in `Tech-Backend.md` §7, and for manual (in-browser) testing by the dev-only `Migrations/seed-dev-escalations.sql`, which layers those states on top of `seed.sql` (DB §4).
 
 The old seed (from the pre-5-field schema) is replaced wholesale.
 

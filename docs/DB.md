@@ -260,7 +260,7 @@ DELETE FROM "Users";
 COMMIT;
 ```
 
-**No time-sensitive row is seeded (per D-022).** `seed.sql` replays before every integration test, so a backdated `SubmittedAt` or `ReviewedAt` would inject an overdue or escalated case into every test in the suite. Overdue appeals, escalation Scenarios A and B, and the 24-hour undo window are created per test by the backdating helpers on `IntegrationTestBase` (`Tech-Backend.md` §7), and in manual testing by advancing the test-mode clock. The appeals the seed does create are freshly submitted or already reviewed, never mid-deadline.
+**No time-sensitive row is seeded (per D-022).** `seed.sql` replays before every integration test, so a backdated `SubmittedAt` or `ReviewedAt` would inject an overdue or escalated case into every test in the suite. Overdue appeals, escalation Scenarios A and B, and the 24-hour undo window are created per test by the backdating helpers on `IntegrationTestBase` (`Tech-Backend.md` §7); for manual (in-browser) testing, the dev-only companion script `Migrations/seed-dev-escalations.sql` layers those escalated states on top of `seed.sql` and is never loaded by the integration-test fixture. The appeals the seed does create are freshly submitted or already reviewed, never mid-deadline.
 
 Fixed GUID prefixes (as in the pre-reset seed) keep FKs predictable:
 
