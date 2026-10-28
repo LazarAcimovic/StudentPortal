@@ -234,10 +234,10 @@ Not in scope: **seeding escalated cases.** Backdated rows in `seed.sql` would le
 Docs to update: DB §4
 Verify: `psql -f backend/StudentPortal/Migrations/seed.sql` twice in a row, then `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] Every seeded subject gets a `SubjectCode`.
-- [ ] At least two subjects taught by **different** professors share one code, so an eligible professor exists.
-- [ ] The `DELETE` block covers `EscalationAssignments` and `Escalations`, children first.
-- [ ] No seeded appeal or grade carries a backdated `SubmittedAt` / `ReviewedAt` / `ConfirmedAt`.
+- [x] Every seeded subject gets a `SubjectCode`.
+- [x] At least two subjects taught by **different** professors share one code, so an eligible professor exists.
+- [x] The `DELETE` block covers `EscalationAssignments` and `Escalations`, children first.
+- [x] No seeded appeal or grade carries a backdated `SubmittedAt` / `ReviewedAt` / `ConfirmedAt`.
 - Commit: `feat(db): seed SubjectCode across subjects with shared codes for escalation`
 
 ---

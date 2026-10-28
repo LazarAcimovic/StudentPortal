@@ -1,4 +1,4 @@
--- StudentPortal seed data — v2 (5-field grading / draft / appeal schema)
+-- StudentPortal seed data — v3 (escalation schema: SubjectCode on Subjects)
 -- Re-runnable: deletes all rows children-first then reinserts.
 --
 --   psql -U postgres -d StudentPortal -f seed.sql
@@ -8,13 +8,19 @@
 -- 128-bit salt, 256-bit subkey).
 --
 -- Fixed GUID prefixes keep FKs predictable across re-runs:
---   Users         10000000-...-00XX  (01 admin, 02-05 professors, 06-0f students)
---   Subjects      20000000-...-00XX  (01-04 Smith, 05-08 Johnson, 09-0c Davis, 0d-0f Wilson)
---   Enrollments   30000000-...-00XX  (01-1e, 30 rows)
---   Grades        40000000-...-00XX  (01-14, 20 rows)
---   GradeDrafts   50000000-...-00XX  (01-03, 3 rows)
---   Appeals       60000000-...-00XX  (01-09, 9 rows)
---   RefreshTokens 70000000-...       (none seeded — issued at runtime)
+--   Users                10000000-...-00XX  (01 admin, 02-05 professors, 06-0f students)
+--   Subjects             20000000-...-00XX  (01-04 Smith, 05-08 Johnson, 09-0c Davis, 0d-0f Wilson)
+--   Enrollments          30000000-...-00XX  (01-1e, 30 rows)
+--   Grades               40000000-...-00XX  (01-14, 20 rows)
+--   GradeDrafts          50000000-...-00XX  (01-03, 3 rows)
+--   Appeals              60000000-...-00XX  (01-09, 9 rows)
+--   RefreshTokens        70000000-...       (none seeded — issued at runtime)
+--   Escalations          80000000-...       (none seeded — created by backdating helpers)
+--   EscalationAssignments 90000000-...      (none seeded)
+--
+-- SubjectCode shared pairs (eligibility requires a shared code across professors):
+--   MATH-CALC  : Mathematics I (Smith) + Discrete Mathematics (Wilson)
+--   CS-DS      : Data Structures (Johnson) + Algorithms (Wilson)
 --
 -- Grade states covered:
 --   G01, G04, G07, G10, G13, G20  — truly final (student confirmed)
@@ -33,6 +39,8 @@
 
 BEGIN;
 
+DELETE FROM "EscalationAssignments";
+DELETE FROM "Escalations";
 DELETE FROM "Appeals";
 DELETE FROM "GradeDrafts";
 DELETE FROM "Grades";
@@ -115,24 +123,28 @@ INSERT INTO "Users" (
 -- ─── SUBJECTS (15 subjects, ECTS=6 each) ──────────────────────────────────
 -- Smith  (0002): 4 subjects   Johnson (0003): 4 subjects
 -- Davis  (0004): 4 subjects   Wilson  (0005): 3 subjects
+--
+-- Shared SubjectCode pairs (different professors, same code → eligibility for escalation):
+--   MATH-CALC : Mathematics I (Smith) + Discrete Mathematics (Wilson)
+--   CS-DS     : Data Structures (Johnson) + Algorithms (Wilson)
 INSERT INTO "Subjects" (
-  "Id","SubjectName","ECTS","ProfessorId","IsDeleted","CreatedAt"
+  "Id","SubjectName","SubjectCode","ECTS","ProfessorId","IsDeleted","CreatedAt"
 ) VALUES
-  ('20000000-0000-0000-0000-000000000001','Mathematics I',            6,'10000000-0000-0000-0000-000000000002',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-000000000002','Mathematics II',           6,'10000000-0000-0000-0000-000000000002',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-000000000003','Linear Algebra',           6,'10000000-0000-0000-0000-000000000002',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-000000000004','Calculus',                 6,'10000000-0000-0000-0000-000000000002',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-000000000005','Programming Fundamentals', 6,'10000000-0000-0000-0000-000000000003',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-000000000006','Data Structures',          6,'10000000-0000-0000-0000-000000000003',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-000000000007','Software Engineering',     6,'10000000-0000-0000-0000-000000000003',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-000000000008','Web Development',          6,'10000000-0000-0000-0000-000000000003',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-000000000009','Operating Systems',        6,'10000000-0000-0000-0000-000000000004',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-00000000000a','Computer Networks',        6,'10000000-0000-0000-0000-000000000004',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-00000000000b','Distributed Systems',      6,'10000000-0000-0000-0000-000000000004',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-00000000000c','Computer Architecture',    6,'10000000-0000-0000-0000-000000000004',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-00000000000d','Database Systems',         6,'10000000-0000-0000-0000-000000000005',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-00000000000e','Algorithms',               6,'10000000-0000-0000-0000-000000000005',false,'2024-09-01T08:00:00+00'),
-  ('20000000-0000-0000-0000-00000000000f','Discrete Mathematics',     6,'10000000-0000-0000-0000-000000000005',false,'2024-09-01T08:00:00+00');
+  ('20000000-0000-0000-0000-000000000001','Mathematics I',            'MATH-CALC',6,'10000000-0000-0000-0000-000000000002',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-000000000002','Mathematics II',           'MATH-102', 6,'10000000-0000-0000-0000-000000000002',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-000000000003','Linear Algebra',           'MATH-201', 6,'10000000-0000-0000-0000-000000000002',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-000000000004','Calculus',                 'MATH-301', 6,'10000000-0000-0000-0000-000000000002',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-000000000005','Programming Fundamentals', 'CS-101',   6,'10000000-0000-0000-0000-000000000003',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-000000000006','Data Structures',          'CS-DS',    6,'10000000-0000-0000-0000-000000000003',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-000000000007','Software Engineering',     'CS-301',   6,'10000000-0000-0000-0000-000000000003',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-000000000008','Web Development',          'CS-401',   6,'10000000-0000-0000-0000-000000000003',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-000000000009','Operating Systems',        'CS-302',   6,'10000000-0000-0000-0000-000000000004',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-00000000000a','Computer Networks',        'CS-402',   6,'10000000-0000-0000-0000-000000000004',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-00000000000b','Distributed Systems',      'CS-403',   6,'10000000-0000-0000-0000-000000000004',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-00000000000c','Computer Architecture',    'CS-303',   6,'10000000-0000-0000-0000-000000000004',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-00000000000d','Database Systems',         'CS-202',   6,'10000000-0000-0000-0000-000000000005',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-00000000000e','Algorithms',               'CS-DS',    6,'10000000-0000-0000-0000-000000000005',false,'2024-09-01T08:00:00+00'),
+  ('20000000-0000-0000-0000-00000000000f','Discrete Mathematics',     'MATH-CALC',6,'10000000-0000-0000-0000-000000000005',false,'2024-09-01T08:00:00+00');
 
 -- ─── ENROLLMENTS (30 rows) ─────────────────────────────────────────────────
 -- Rows 01-03  Sarah Williams   | 04-06  David Brown      | 07-09  Jessica Taylor
