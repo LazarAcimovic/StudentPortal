@@ -88,3 +88,14 @@ export interface ViewAppealModalProps {
   onClose: () => void;
   onActionDone: () => void;
 }
+
+export interface AssignedCasesSectionProps {
+  assignedCases: AssignedCase[];
+  onRefresh: () => void;
+}
+
+export interface ScenarioPanelProps {
+  assignedCase: AssignedCase;
+  onSuccess: () => void;
+  onError: (msg: string) => void;
+}

@@ -25,3 +25,8 @@ export const FIELDS: { key: keyof FormValues; label: string; max: number }[] = [
   { key: 'practical', label: 'Practical participation', max: 5 },
   { key: 'exam', label: 'Exam', max: 30 },
 ];
+
+export const REASON_LABEL: Record<string, string> = {
+  AcceptedUnresolved: 'Accepted appeal — awaiting re-grade',
+  ChainExhausted: 'Two overdue appeals — awaiting review',
+};

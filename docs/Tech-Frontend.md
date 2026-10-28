@@ -24,7 +24,7 @@
 
 ## 1. Project layout
 
-> **Verified against the working tree at commit `b64d2a6` (2026-10-23); escalations feature added for task 23.12.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
+> **Verified against the working tree at commit `c67f197` (2026-10-28); AssignedCasesSection split into one component per file for task 23.16.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
 
 ```
 frontend/src/
@@ -53,7 +53,10 @@ frontend/src/
                                 EnrollmentsTable, EnrollmentCreateForm,
                                 EscalationsTab
       components/professor/     SubjectsList, StudentsList, GradePanel,
-                                AppealsSection, ViewAppealModal, AssignedCasesSection
+                                AppealsSection, ViewAppealModal,
+                                AssignedCasesSection, AssignedCaseItem,
+                                AppealHistory, ResolveModal,
+                                ScenarioAPanel, ScenarioBPanel
       components/student/       StudentInfoCard, StudyStatsCard, SubjectsCard,
                                 AppealModal, ConfirmGradeModal
       components/profile/       ProfileInfoCard

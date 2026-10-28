@@ -13,7 +13,7 @@ Progress counts **subtasks**, and a subtask counts as done only when every one o
 | Task | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
 | 22 | Tests — backend integration, frontend unit + integration, e2e | 20/38 | 22a–22c essentially done, 6 subtasks part-ticked; **22d not started** | 23 (23.15 owns escalation coverage) | — | [task-22-tests.md](task-22-tests.md) |
-| 23 | Escalation workflow for unresolved appeals | 14/17 | backend + professor/student UI + admin tab + subject form + tests shipped; **the 23.11 split outstanding** | — | 22 | [task-23-escalation.md](task-23-escalation.md) |
+| 23 | Escalation workflow for unresolved appeals | 16/17 | 23.6 has one remaining box (TimeProvider alignment, tracked alongside task 22's 22a.2) | — | 22 | [task-23-escalation.md](task-23-escalation.md) |
 | 25 | Align the shipped UI with the rules settled in the consistency pass | 0/4 | not started | — | 22 (22c.7) | [task-25-ui-alignment.md](task-25-ui-alignment.md) |
 
 ## Order of work

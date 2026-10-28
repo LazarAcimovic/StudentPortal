@@ -185,7 +185,7 @@ Verify: `npm run test -- ProfessorDashboard`
 - [x] Scenario A panel: collapsed summary + editable exam + Confirm → `POST /api/Grade/reconfirm-exam`.
 - [x] Scenario B panel: both overdue texts + Accept / Deny on the latest appeal, with the deny confirmation sub-step.
 - [x] Collapses to stacked cards below `sm`.
-- [ ] Split into one component per file with the reason-label map in the constants folder — **done as 23.16**, tick both in the same commit.
+- [x] Split into one component per file with the reason-label map in the constants folder — **done as 23.16**, tick both in the same commit.
 - Commit: `feat(frontend): professor dashboard assigned cases section with resolve modal`
 
 ---
@@ -271,10 +271,10 @@ Verify: `npm run test -- ProfessorDashboard` and `npm run test -- integration/gr
 
 Completes the open box in 23.11. `AssignedCasesSection.tsx` is 426 lines holding six components and an inline label map, which is the "everything in one file" shape Tech-Frontend §1 does not allow. Tagged `Refactor`, so **no new test is required** (AGENTS §9) — the existing suites are the safety net.
 
-- [ ] `REASON_LABEL` moved into `features/user/constants/professor/constants.ts`, next to `APPEAL_STATUS_BADGE`, and imported by both consumers instead of being defined inline.
-- [ ] `AppealHistory`, `ScenarioAPanel`, `ScenarioBPanel`, `ResolveModal` and `AssignedCaseItem` each move to their own file under `features/user/components/professor/`.
-- [ ] `AssignedCasesSection.tsx` keeps only the section itself and its props type, and imports the five pieces.
-- [ ] Shared prop types move to `features/user/models/professor/`, not duplicated per file.
-- [ ] No file left over ~150 lines.
-- [ ] Both named suites green, `tsc --noEmit` clean, and the last box of 23.11 ticked in the same commit.
+- [x] `REASON_LABEL` moved into `features/user/constants/professor/constants.ts`, next to `APPEAL_STATUS_BADGE`, and imported by both consumers instead of being defined inline.
+- [x] `AppealHistory`, `ScenarioAPanel`, `ScenarioBPanel`, `ResolveModal` and `AssignedCaseItem` each move to their own file under `features/user/components/professor/`.
+- [x] `AssignedCasesSection.tsx` keeps only the section itself and its props type, and imports the five pieces.
+- [x] Shared prop types move to `features/user/models/professor/`, not duplicated per file.
+- [x] No file left over ~150 lines.
+- [x] Both named suites green, `tsc --noEmit` clean, and the last box of 23.11 ticked in the same commit.
 - Commit: `refactor(professor): split AssignedCasesSection into one component per file`
