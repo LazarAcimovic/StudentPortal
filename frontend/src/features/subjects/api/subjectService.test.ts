@@ -79,14 +79,14 @@ describe('subjectService.createSubject', () => {
       SubjectName: 'Databases',
       SubjectCode: 'CS101',
       ECTS: 7,
-      ProfessorId: 3,
+      ProfessorId: '3',
     });
 
     expect(body).toEqual({
       subjectName: 'Databases',
       subjectCode: 'CS101',
       ects: 7,
-      professorId: 3,
+      professorId: '3',
     });
     expect(result?.subjectName).toBe('Databases');
     expect(result?.ects).toBe(7);
@@ -101,7 +101,7 @@ describe('subjectService.createSubject', () => {
       })
     );
 
-    await createSubject({ SubjectName: 'X', SubjectCode: 'SC1', ECTS: 6, ProfessorId: 1 });
+    await createSubject({ SubjectName: 'X', SubjectCode: 'SC1', ECTS: 6, ProfessorId: '1' });
 
     expect(body).not.toBeNull();
     expect(Object.keys(body!).sort()).toEqual(['ects', 'professorId', 'subjectCode', 'subjectName']);
@@ -114,7 +114,7 @@ describe('subjectService.createSubject', () => {
       )
     );
 
-    const result = await createSubject({ SubjectName: '', SubjectCode: '', ECTS: 6, ProfessorId: 1 });
+    const result = await createSubject({ SubjectName: '', SubjectCode: '', ECTS: 6, ProfessorId: '1' });
 
     expect(result).toBeNull();
     expect(console.error).toHaveBeenCalled();
@@ -134,21 +134,21 @@ describe('subjectService.updateSubject', () => {
     );
 
     const result = await updateSubject({
-      Id: 42,
+      Id: '42',
       SubjectName: 'Renamed',
       SubjectCode: 'CS200',
       ECTS: 8,
-      ProfessorId: 7,
+      ProfessorId: '7',
       IsDeleted: false,
     });
 
     expect(seenUrl).toBe('/api/Subject/42');
     expect(body).toEqual({
-      id: 42,
+      id: '42',
       subjectName: 'Renamed',
       subjectCode: 'CS200',
       ects: 8,
-      professorId: 7,
+      professorId: '7',
       isDeleted: false,
     });
     expect(result?.subjectName).toBe('Renamed');
@@ -164,11 +164,11 @@ describe('subjectService.updateSubject', () => {
     );
 
     const result = await updateSubject({
-      Id: 42,
+      Id: '42',
       SubjectName: subjectRow.subjectName,
       SubjectCode: subjectRow.subjectCode,
       ECTS: subjectRow.ects,
-      ProfessorId: subjectRow.professorId,
+      ProfessorId: String(subjectRow.professorId),
       IsDeleted: true,
     });
 
@@ -184,11 +184,11 @@ describe('subjectService.updateSubject', () => {
     );
 
     const result = await updateSubject({
-      Id: 999,
+      Id: '999',
       SubjectName: 'X',
       SubjectCode: 'XX',
       ECTS: 6,
-      ProfessorId: 1,
+      ProfessorId: '1',
       IsDeleted: false,
     });
 
@@ -204,11 +204,11 @@ describe('subjectService.updateSubject', () => {
     );
 
     const result = await updateSubject({
-      Id: 42,
+      Id: '42',
       SubjectName: 'X',
       SubjectCode: 'XX',
       ECTS: 6,
-      ProfessorId: 1,
+      ProfessorId: '1',
       IsDeleted: false,
     });
 

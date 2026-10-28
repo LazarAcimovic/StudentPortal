@@ -25,7 +25,7 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
     SubjectName: "",
     SubjectCode: "",
     ECTS: 0,
-    ProfessorId: 0,
+    ProfessorId: "",
   });
   const [touched, setTouched] = useState<Partial<Record<keyof CreateSubject, boolean>>>({});
 
@@ -40,8 +40,8 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        name === "ECTS" || name === "ProfessorId" ? Number(value) : value,
+      // ECTS is numeric; ProfessorId is a GUID string and must not be coerced.
+      [name]: name === "ECTS" ? Number(value) : value,
     }));
   };
 

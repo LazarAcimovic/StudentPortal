@@ -22,8 +22,8 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
   onCancel,
 }) => {
   const [formData, setFormData] = useState<CreateEnrollment>({
-    StudentId: 0,
-    SubjectId: 0,
+    StudentId: "",
+    SubjectId: "",
   });
 
   // Dodajemo state za filtrirane predmete
@@ -31,9 +31,9 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
     useState<Subject[]>(subjects);
 
   useEffect(() => {
-    if (formData.StudentId > 0) {
+    if (formData.StudentId) {
       const enrolledSubjectIds = enrollments
-        .filter((e) => e.studentId === formData.StudentId)
+        .filter((e) => String(e.studentId) === formData.StudentId)
         .map((e) => e.subjectId);
 
       const filteredSubjects = subjects.filter(
@@ -47,9 +47,10 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
+    // StudentId / SubjectId are GUID strings and must not be coerced with Number().
     setFormData((prev) => ({
       ...prev,
-      [name]: Number(value),
+      [name]: value,
     }));
   };
 

@@ -10,6 +10,6 @@ export interface Enrollment {
 }
 
 export interface CreateEnrollment {
-  StudentId: number;
-  SubjectId: number;
+  StudentId: string; // GUID — never coerce with Number()
+  SubjectId: string; // GUID — never coerce with Number()
 }

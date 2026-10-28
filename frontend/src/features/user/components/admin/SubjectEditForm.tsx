@@ -24,11 +24,11 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
   onCancel,
 }) => {
   const [formData, setFormData] = useState<UpdateSubject>({
-    Id: subject.id,
+    Id: String(subject.id),
     SubjectName: subject.subjectName,
     SubjectCode: subject.subjectCode ?? "",
     ECTS: subject.ects,
-    ProfessorId: subject.professorId,
+    ProfessorId: String(subject.professorId),
     IsDeleted: subject.isDeleted,
   });
   const [touched, setTouched] = useState<Partial<Record<keyof UpdateSubject, boolean>>>({});
@@ -47,7 +47,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
         ...prev,
         [name]: (e.target as HTMLInputElement).checked,
       }));
-    } else if (name === "ProfessorId" || name === "ECTS") {
+    } else if (name === "ECTS") {
       setFormData((prev) => ({ ...prev, [name]: Number(value) }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));

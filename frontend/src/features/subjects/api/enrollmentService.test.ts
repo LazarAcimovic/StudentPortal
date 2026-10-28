@@ -72,9 +72,9 @@ describe('enrollmentService.createEnrollment', () => {
       })
     );
 
-    const result = await createEnrollment({ StudentId: 10, SubjectId: 42 });
+    const result = await createEnrollment({ StudentId: '10', SubjectId: '42' });
 
-    expect(body).toEqual({ studentId: 10, subjectId: 42 });
+    expect(body).toEqual({ studentId: '10', subjectId: '42' });
     expect(result?.id).toBe(1);
   });
 
@@ -87,7 +87,7 @@ describe('enrollmentService.createEnrollment', () => {
       })
     );
 
-    await createEnrollment({ StudentId: 10, SubjectId: 42 });
+    await createEnrollment({ StudentId: '10', SubjectId: '42' });
 
     expect(body).not.toBeNull();
     expect(Object.keys(body!).sort()).toEqual(['studentId', 'subjectId']);
@@ -100,7 +100,7 @@ describe('enrollmentService.createEnrollment', () => {
       )
     );
 
-    const result = await createEnrollment({ StudentId: 0, SubjectId: 42 });
+    const result = await createEnrollment({ StudentId: '0', SubjectId: '42' });
 
     expect(result).toBeNull();
     expect(console.error).toHaveBeenCalled();
@@ -113,7 +113,7 @@ describe('enrollmentService.createEnrollment', () => {
       )
     );
 
-    const result = await createEnrollment({ StudentId: 10, SubjectId: 42 });
+    const result = await createEnrollment({ StudentId: '10', SubjectId: '42' });
 
     expect(result).toBeNull();
   });
