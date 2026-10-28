@@ -447,10 +447,10 @@ Not in scope: journeys.
 Docs to update: none
 Verify: `npm run e2e -- --grep smoke`
 
-- [ ] `playwright/fixtures.ts` with per-role `storageState` seeded by global setup.
-- [ ] Helpers `advanceClock(seconds)` and `resetBackend()`.
-- [ ] `globalSetup.ts`: start docker-compose, migrate, seed, log in each role, save `storageState`.
-- [ ] Smoke test: anonymous visit to `/` renders home.
+- [x] `playwright/fixtures.ts` with per-role `storageState` seeded by global setup.
+- [x] Helpers `advanceClock(seconds)` and `resetBackend()`.
+- [x] `globalSetup.ts`: start docker-compose, migrate, seed, log in each role, save `storageState`.
+- [x] Smoke test: anonymous visit to `/` renders home.
 - Commit: `test(e2e): fixtures, helpers, global setup with storageState, and smoke test`
 
 #### 22d.4 — Test: Auth journeys
