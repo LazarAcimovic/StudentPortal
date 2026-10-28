@@ -144,9 +144,9 @@ Not in scope: applying production fixes — approval first.
 Docs to update: none
 Verify: the suite runs from a clean checkout
 
-- [ ] Run `dotnet test backend/StudentPortal.IntegrationTests --logger "trx;LogFileName=integration-tests.trx"`.
-- [ ] Report: summary line (Total / Passed / Failed / Blocked / Duration), passed count by area, and per failure the fully qualified test name, the PRD section, expected, actual, classification, root cause, proposed fix and files to change; plus blocked-test reasons and requirements covered vs uncovered.
-- [ ] Stop before applying any production fix. Wait for explicit approval, then apply only approved fixes and append a follow-up report.
+- [x] Run `dotnet test backend/StudentPortal.IntegrationTests --logger "trx;LogFileName=integration-tests.trx"`.
+- [x] Report: summary line (Total / Passed / Failed / Blocked / Duration), passed count by area, and per failure the fully qualified test name, the PRD section, expected, actual, classification, root cause, proposed fix and files to change; plus blocked-test reasons and requirements covered vs uncovered.
+- [x] Stop before applying any production fix. Wait for explicit approval, then apply only approved fixes and append a follow-up report.
 
 No commit — handoff step.
 
@@ -395,7 +395,7 @@ Not in scope: production fixes without approval.
 Docs to update: none
 Verify: `npm run test`
 
-- [ ] Run the integration scope and report in chat, same shape as 22a.9.
+- [x] Run the integration scope and report in chat, same shape as 22a.9.
 
 No commit — report-only step.
 
@@ -520,6 +520,6 @@ Not in scope: production fixes without approval.
 Docs to update: none
 Verify: the suite runs from a clean checkout following the README
 
-- [ ] `e2e/README.md`: Docker + `npx playwright install chromium`, the one-command runbook, the test-mode safety guard, how to add a journey.
-- [ ] Run the full suite and report in chat, same shape as 22a.9.
+- [x] `e2e/README.md`: Docker + `npx playwright install chromium`, the one-command runbook, the test-mode safety guard, how to add a journey.
+- [x] Run the full suite and report in chat, same shape as 22a.9.
 - Commit: `docs(e2e): README for Playwright e2e suite`
