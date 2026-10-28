@@ -2,6 +2,7 @@ export type SubjectStatus =
   | 'Not graded'
   | 'Awaiting confirmation'
   | 'Appeal pending'
+  | 'Under admin review'
   | 'Passed'
   | 'Failed';
 
@@ -18,6 +19,7 @@ export interface StudentDashboardSubject {
   professorName: string;
   finalGrade: number | null;
   status: SubjectStatus;
+  isEscalated: boolean;
   appealStatus: string | null;
   canWriteAppeal: boolean;
   canConfirmGrade: boolean;
