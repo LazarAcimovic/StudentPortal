@@ -471,9 +471,9 @@ Not in scope: time boundaries — 22d.6.
 Docs to update: none
 Verify: `npm run e2e -- --grep grading`
 
-- [ ] Professor confirms → student sees it → student confirms.
-- [ ] Professor confirms → student appeals → professor accepts → reconfirm exam.
-- [ ] Professor confirms → student appeals → professor denies.
+- [x] Professor confirms → student sees it → student confirms.
+- [x] Professor confirms → student appeals → professor accepts → reconfirm exam.
+- [x] Professor confirms → student appeals → professor denies.
 - Commit: `test(e2e): grading loop journeys — student-confirm, prof-accept, prof-deny`
 
 #### 22d.6 — Test: Appeal and escalation time-boundary journeys
