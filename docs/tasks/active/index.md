@@ -12,7 +12,7 @@ Progress counts **subtasks**, and a subtask counts as done only when every one o
 
 | Task | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 22 | Tests — backend integration, frontend unit + integration, e2e | 23/38 | 22a–22c essentially done, 6 subtasks part-ticked; **22d in progress** | 23 (23.15 owns escalation coverage) | — | [task-22-tests.md](task-22-tests.md) |
+| 22 | Tests — backend integration, frontend unit + integration, e2e | 24/38 | 22a–22c essentially done, 6 subtasks part-ticked; **22d in progress** | 23 (23.15 owns escalation coverage) | — | [task-22-tests.md](task-22-tests.md) |
 | 25 | Align the shipped UI with the rules settled in the consistency pass | 0/4 | not started | — | 22 (22c.7) | [task-25-ui-alignment.md](task-25-ui-alignment.md) |
 
 ## Order of work

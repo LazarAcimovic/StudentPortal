@@ -460,8 +460,8 @@ Not in scope: grading.
 Docs to update: none
 Verify: `npm run e2e -- --grep auth`
 
-- [ ] Login happy path; wrong password shows the generic error.
-- [ ] Change password → signed out everywhere → the old cookie no longer works.
+- [x] Login happy path; wrong password shows the generic error.
+- [x] Change password → signed out everywhere → the old cookie no longer works.
 - Commit: `test(e2e): auth journey — login and change-password sign-out-everywhere`
 
 #### 22d.5 — Test: Grading loop journeys
