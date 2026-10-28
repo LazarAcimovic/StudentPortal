@@ -49,6 +49,15 @@ function ScenarioAPanel({
   const examVal = parseFloat(exam);
   const isValid = !isNaN(examVal) && examVal >= 0 && examVal <= 30;
 
+  const total = isValid ? fixedSum + examVal : null;
+  const liveGrade = total === null ? null
+    : total <= 50 ? 5
+    : total <= 60 ? 6
+    : total <= 70 ? 7
+    : total <= 80 ? 8
+    : total <= 90 ? 9
+    : 10;
+
   const handleConfirm = async () => {
     if (!isValid) return;
     setIsConfirming(true);
@@ -85,6 +94,11 @@ function ScenarioAPanel({
           onChange={e => setExam(e.target.value)}
         />
       </div>
+      {liveGrade !== null && (
+        <p className="small mb-3">
+          Final grade: <strong>{liveGrade}</strong>
+        </p>
+      )}
       <button
         className="btn btn-success btn-sm"
         onClick={handleConfirm}
@@ -150,7 +164,7 @@ function ScenarioBPanel({
         <div key={a.id} className="p-2 mb-2 rounded border small">
           <div className="d-flex justify-content-between mb-1">
             <span className="fw-semibold text-muted">
-              {i < sorted.length - 1 ? '[OVERDUE] ' : ''}Appeal {i + 1}
+              [OVERDUE] Appeal {i + 1}
             </span>
             <span className="text-muted">{new Date(a.submittedAt).toLocaleDateString()}</span>
           </div>
