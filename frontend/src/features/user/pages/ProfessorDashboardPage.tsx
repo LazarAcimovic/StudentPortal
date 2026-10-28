@@ -8,6 +8,7 @@ import SubjectsList from '../components/professor/SubjectsList';
 import StudentsList from '../components/professor/StudentsList';
 import GradePanel from '../components/professor/GradePanel';
 import AppealsSection from '../components/professor/AppealsSection';
+import AssignedCasesSection from '../components/professor/AssignedCasesSection';
 
 const ProfessorDashboardPage: React.FC = () => {
   const { data, isLoading, error, refresh } = useProfessorDashboard();
@@ -65,6 +66,7 @@ const ProfessorDashboardPage: React.FC = () => {
       </div>
 
       <AppealsSection appeals={data?.appeals ?? []} onRefresh={refresh} />
+      <AssignedCasesSection assignedCases={data?.assignedCases ?? []} onRefresh={refresh} />
     </div>
   );
 };
