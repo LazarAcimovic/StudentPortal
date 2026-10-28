@@ -509,8 +509,8 @@ Not in scope: aggregate maths — 22a.7.
 Docs to update: none
 Verify: `npm run e2e -- --grep dashboard`
 
-- [ ] Student dashboard shows the exact seeded aggregates.
-- [ ] Professor dashboard shows their own subjects, enrolled students and appeals.
+- [x] Student dashboard shows the exact seeded aggregates.
+- [x] Professor dashboard shows their own subjects, enrolled students and appeals.
 - Commit: `test(e2e): dashboard journeys — student and professor seeded-data binding`
 
 #### 22d.9 — Docs: e2e README and the full-suite report
