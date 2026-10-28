@@ -132,10 +132,17 @@ public class GradeRepository : IGradeRepository
     {
         return await _context.Grades
             .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Student)
+            .Include(g => g.Enrollment)
                 .ThenInclude(e => e.Subject)
+                    .ThenInclude(s => s.Professor)
             .Include(g => g.Appeals)
             .Include(g => g.Escalation)
                 .ThenInclude(e => e.Assignments)
+                    .ThenInclude(a => a.AssignedProfessor)
+            .Include(g => g.Escalation)
+                .ThenInclude(e => e.Assignments)
+                    .ThenInclude(a => a.AssignedByAdmin)
             .FirstOrDefaultAsync(g => g.Id == id);
     }
 
