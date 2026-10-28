@@ -283,8 +283,8 @@ Not in scope: production fixes.
 Docs to update: none
 Verify: `npm run test` from `frontend/`
 
-- [ ] `frontend/TESTING.md`: the Vitest / MSW / RTL stack, how to run, how to add a unit test, when to choose unit vs integration.
-- [ ] Report in chat, same shape as 22a.9.
+- [x] `frontend/TESTING.md`: the Vitest / MSW / RTL stack, how to run, how to add a unit test, when to choose unit vs integration.
+- [x] Report in chat, same shape as 22a.9.
 - Commit: `docs(tests): add frontend TESTING.md`
 
 ---
