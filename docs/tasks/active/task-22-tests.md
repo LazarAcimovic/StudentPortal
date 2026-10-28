@@ -422,9 +422,9 @@ Not in scope: writing journeys.
 Docs to update: Tech.md §1 (move `@playwright/test` from "to add" to "installed")
 Verify: `npx playwright --version` from `e2e/`
 
-- [ ] Root `e2e/` with `playwright.config.ts`, `tsconfig.json`, `package.json`. Chromium project only, `baseURL` from env.
-- [ ] `docker-compose.yml` for Postgres 17.
-- [ ] `.env.e2e` with ports and seeded credentials.
+- [x] Root `e2e/` with `playwright.config.ts`, `tsconfig.json`, `package.json`. Chromium project only, `baseURL` from env.
+- [x] `docker-compose.yml` for Postgres 17.
+- [x] `.env.e2e` with ports and seeded credentials.
 - Commit: `test(e2e): scaffold Playwright project with Chromium, Docker Compose, and dotenv wiring`
 
 #### 22d.2 — Backend-endpoint: Test-mode wiring and `/api/__test__/*` behind a safety guard

@@ -53,9 +53,11 @@
 - `babel-plugin-react-compiler` — enables React Compiler for automatic memoisation.
 - TypeScript 5.8, ESLint 9.
 
-### Frontend — to add
+### End-to-end — installed (`e2e/package.json`)
 
-- `@playwright/test` — end-to-end suite. Not yet installed; see `docs/tasks/active/task-22-tests.md` (22d).
+- `@playwright/test 1.64.1` — Playwright + Chromium e2e suite, in its own project under `e2e/` (task 22d). Drives the real frontend, the backend in its `e2e` environment, and a Dockerized `postgres:17`.
+- `dotenv 16.6.1` — loads `e2e/.env.e2e` (ports, URLs, test-mode secret, seeded credentials).
+- Run from `e2e/`: `npm run e2e`. Requires Docker Desktop and `npx playwright install chromium`. See `e2e/README.md`.
 
 ### Explicitly NOT installed (per user direction)
 
