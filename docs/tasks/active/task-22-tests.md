@@ -497,9 +497,9 @@ Not in scope: escalation — 22d.6.
 Docs to update: none
 Verify: `npm run e2e -- --grep admin`
 
-- [ ] Admin creates a student → logs in as that student → sees an empty dashboard.
-- [ ] Admin cannot soft-delete self (control hidden, API returns 403).
-- [ ] Admin creates a subject with a Subject Code and it persists.
+- [x] Admin creates a student → logs in as that student → sees an empty dashboard.
+- [x] Admin cannot soft-delete self (control hidden, API returns 403).
+- [x] Admin creates a subject with a Subject Code and it persists.
 - Commit: `test(e2e): admin journey — create user, subject code, and self-row protection`
 
 #### 22d.8 — Test: Dashboard journeys
