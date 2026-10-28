@@ -150,7 +150,8 @@ public class ProfessorDashboardService : IProfessorDashboardService
         var isOverdue = appeal.Status == AppealStatus.Pending && appeal.SubmittedAt.AddDays(7) < now;
         var canUndoDeny = appeal.Status == AppealStatus.Denied &&
                           appeal.ReviewedAt != null &&
-                          now <= appeal.ReviewedAt.Value.AddHours(24);
+                          now <= appeal.ReviewedAt.Value.AddHours(24) &&
+                          appeal.Grade?.AssignedProfessorId == null;
 
         return new ProfessorAppealRowDto
         {
