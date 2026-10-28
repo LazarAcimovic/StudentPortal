@@ -66,7 +66,8 @@ describe('Navbar — logged-in state', () => {
     expect(logoutMock).toHaveBeenCalled();
     expect(useUserStore.getState().currentUser).toBeNull();
     expect(mockedNavigate).toHaveBeenCalledWith('/login');
-    expect(toastSuccess).toHaveBeenCalled();
+    // UI §11.5: logout fires no toast (the toast list has no logout entry; removed in dc99eea).
+    expect(toastSuccess).not.toHaveBeenCalled();
   });
 
 });

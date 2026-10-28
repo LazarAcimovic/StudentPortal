@@ -59,7 +59,7 @@ describe('LoginPage happy paths', () => {
 });
 
 describe('LoginPage unhappy paths', () => {
-  it('on 401 shows an inline server error and fires an error toast; store untouched', async () => {
+  it('on 401 shows an inline server error above the form; no toast; store untouched', async () => {
     (authService.login as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
       response: { status: 401 },
     });
@@ -71,8 +71,9 @@ describe('LoginPage unhappy paths', () => {
     await ue.type(screen.getByLabelText(/^password$/i), 'badpass');
     await ue.click(screen.getByRole('button', { name: /log in/i }));
 
-    await waitFor(() => expect(toastError).toHaveBeenCalled());
-    expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
+    // UI §5: submit error renders as an inline `alert alert-danger`, not a toast.
+    await waitFor(() => expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument());
+    expect(toastError).not.toHaveBeenCalled();
     expect(useUserStore.getState().currentUser).toBeNull();
   });
 
