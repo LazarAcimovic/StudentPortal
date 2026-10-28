@@ -434,10 +434,10 @@ Not in scope: shipping anything reachable in Production — if any guard layer i
 Docs to update: Tech-Backend §6 (document the test-mode swap and the guard)
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter TestMode`, plus an explicit test asserting the endpoints 404 under `ASPNETCORE_ENVIRONMENT=Production`
 
-- [ ] `Program.cs` swaps `TimeProvider.System` for `FakeTimeProvider` only when `ASPNETCORE_ENVIRONMENT == "e2e"`.
-- [ ] `POST /api/__test__/advance-clock?seconds=N` advances the fake clock.
-- [ ] `POST /api/__test__/reset` truncates and re-seeds the test database.
-- [ ] Four-layer guard, all required simultaneously: environment is `e2e`, a per-build secret header matches, the connection string points at the test database, and the feature flag is on.
+- [x] `Program.cs` swaps `TimeProvider.System` for a controllable `TimeProvider` only when `ASPNETCORE_ENVIRONMENT == "e2e"`.
+- [x] `POST /api/__test__/advance-clock?seconds=N` advances the fake clock.
+- [x] `POST /api/__test__/reset` truncates and re-seeds the test database.
+- [x] Four-layer guard, all required simultaneously: environment is `e2e`, a per-build secret header matches, the connection string points at the test database, and the feature flag is on.
 - Commit: `feat(backend): test-mode TimeProvider swap and /api/__test__ endpoints with production safety guard`
 
 #### 22d.3 — Test: Fixtures, helpers, global setup

@@ -6,12 +6,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
 using StudentPortal.Profiles;
 using StudentPortal.Repositories;
 using StudentPortal.Services;
+using StudentPortal.TestSupport;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,8 +54,34 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<StudentPortalApiContext>(options =>
     options.UseNpgsql(connectionString));
 
-// System clock as the default TimeProvider; tests swap in FakeTimeProvider.
-builder.Services.AddSingleton(TimeProvider.System);
+// ─── Time provider ────────────────────────────────────────────────────────
+// Development and Production use the system clock. The e2e environment swaps in a
+// controllable clock so the Playwright suite can freeze and advance "now" through
+// /api/__test__/advance-clock (Tech-Backend §6, task 22d.2). Four guard layers must
+// ALL hold before test mode activates; three are checked here at boot (environment,
+// feature flag, test-database name), the fourth (a per-build secret header) per request.
+// Any missing layer leaves the system clock in place and the /api/__test__ endpoints
+// unmounted, so nothing changes under Development or Production.
+var isE2EEnvironment = builder.Environment.EnvironmentName == "e2e";
+var testModeEnabled = builder.Configuration.GetValue<bool>("TestMode:Enabled");
+var testDatabaseName = builder.Configuration["TestMode:DatabaseName"];
+string configuredDatabase = null;
+try { configuredDatabase = new NpgsqlConnectionStringBuilder(connectionString).Database; }
+catch { /* malformed connection string → cannot match the test database */ }
+var connectionPointsAtTestDb = !string.IsNullOrWhiteSpace(testDatabaseName)
+    && string.Equals(configuredDatabase, testDatabaseName, StringComparison.OrdinalIgnoreCase);
+var testModeActive = isE2EEnvironment && testModeEnabled && connectionPointsAtTestDb;
+
+if (testModeActive)
+{
+    var e2eClock = new ControllableTimeProvider(DateTimeOffset.UtcNow);
+    builder.Services.AddSingleton<TimeProvider>(e2eClock);
+    builder.Services.AddSingleton(e2eClock);
+}
+else
+{
+    builder.Services.AddSingleton(TimeProvider.System);
+}
 
 // Registracija AutoMappera
 
@@ -161,6 +189,10 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+// Note: in e2e the test database is provisioned (migrate + seed) by the first
+// POST /api/__test__/reset from Playwright's globalSetup, not at boot — so the server
+// starts without touching Postgres and there is no startup ordering race.
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -176,6 +208,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+if (testModeActive)
+{
+    // Mapped only when the three boot-time guard layers hold; the fourth (secret header)
+    // is enforced inside. Absent any layer the routes never exist → 404 (task 22d.2).
+    app.MapTestModeEndpoints(builder.Configuration["TestMode:Secret"]);
+}
 
 app.Run();
 
