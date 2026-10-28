@@ -251,13 +251,13 @@ Verify: `dotnet test backend/StudentPortal.Tests --filter Escalation` and `dotne
 
 This subtask exists because 23.1–23.11 shipped without tests, against AGENTS §9. It is a coverage backfill, so it is tagged `Test`; future subtasks write their tests in the Red step instead.
 
-- [ ] `StudentPortal.Tests/Services/EscalationServiceTests.cs`: Scenario A and B detection at the 7-day boundary (before / at / after), the four status derivations, eligibility excluding the original professor and soft-deleted users, reassignment rejected before the deadline, `CloseIfEscalatedAsync` idempotent.
-- [ ] `StudentPortal.IntegrationTests/Tests/Escalations/`: admin-only access (401 anonymous, 403 for professor and student), assign happy path, `422` for an ineligible professor, `400` for a double assign, reassign before and after the deadline.
-- [ ] Authority matrix: original professor `403` on write once assigned, assigned professor `200`, both `200` on read.
-- [ ] Assigned professor can accept or deny an **already overdue** appeal; the original professor still cannot.
-- [ ] Auto-close: reconfirm-exam and deny both stamp `ResolvedAt`.
-- [ ] An escalated grade contributes no ECTS; once resolved, the grade finalizes and its ECTS counts (D-007, D-021).
-- [ ] One overdue appeal alone does **not** escalate; two do.
+- [x] `StudentPortal.Tests/Services/EscalationServiceTests.cs`: Scenario A and B detection at the 7-day boundary (before / at / after), the four status derivations, eligibility excluding the original professor and soft-deleted users, reassignment rejected before the deadline, `CloseIfEscalatedAsync` idempotent.
+- [x] `StudentPortal.IntegrationTests/Tests/Escalations/`: admin-only access (401 anonymous, 403 for professor and student), assign happy path, `422` for an ineligible professor, `400` for a double assign, reassign before and after the deadline.
+- [x] Authority matrix: original professor `403` on write once assigned, assigned professor `200`, both `200` on read.
+- [x] Assigned professor can accept or deny an **already overdue** appeal; the original professor still cannot.
+- [x] Auto-close: reconfirm-exam and deny both stamp `ResolvedAt`.
+- [x] An escalated grade contributes no ECTS; once resolved, the grade finalizes and its ECTS counts (D-007, D-021).
+- [x] One overdue appeal alone does **not** escalate; two do.
 - Commit: `test(backend): escalation service unit tests and endpoint integration tests`
 
 ---
