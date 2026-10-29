@@ -85,7 +85,7 @@ describe("UserCreateForm submission", () => {
     const onSave = makeOnSave({
       ok: true,
       user: {
-        id: 1,
+        id: '1',
         firstName: "Ana",
         lastName: "Anić",
         email: "ana@example.com",

@@ -84,7 +84,7 @@ export const updateUser = async (
   }
 };
 
-export const deleteUser = async (userId: number): Promise<boolean> => {
+export const deleteUser = async (userId: string): Promise<boolean> => {
   try {
     await apiClient.delete(`${API_ROUTES.USER}/${userId}`);
     return true;

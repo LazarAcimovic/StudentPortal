@@ -194,3 +194,10 @@ The four statuses:
 **Answer:** A create-user request whose email already exists is rejected with `409 Conflict` (never a silent 500), and the SPA renders the message under the Email field. The password rules (12–128 chars; ≥1 upper, lower, digit and special `!@#$%^&*`; no spaces) are validated on **both** layers — Zod on the client, FluentValidation on the server — and the client blocks submit until Zod passes, so the user always sees the (identical) Zod message. A student must have an index number; a professor must not.
 **Lives in:** PRD §6, Tech-Backend §5, UI §8.3, Tech-Frontend §5
 **Why:** The old flow collapsed every failure into a hardcoded "a user with that email may already exist" alert while the backend never checked for duplicates, so a password that failed the server rules was misreported as a duplicate email. An explicit 409, inline per-field errors, and a client mirror of the server rules make the real cause visible and stop the bad request before it is sent.
+
+### D-025 — Can a soft-deleted professor be assigned to a subject?
+
+**Decided:** 2026-10-29 · **Status:** Accepted
+**Answer:** No. Creating a subject with a professor who is missing or `IsDeleted` is rejected: `SubjectService.AddSubjectAsync` returns a failure (controller `400`), and the admin picker omits inactive professors. The create form also validates inline (Create disabled until valid, errors under each field, server errors as a top-of-form alert) instead of a popup, mirroring the create-user form (D-024).
+**Lives in:** PRD §6, Tech-Backend §5, UI §8.4
+**Why:** A soft-deleted user cannot log in (Overview glossary), so assigning them a subject would create a course nobody can grade. The dropdown filter is a convenience; the service check is the authoritative guard, matching the pattern used everywhere else (PRD §6).

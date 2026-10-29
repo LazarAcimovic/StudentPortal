@@ -10,36 +10,39 @@ const nextId = () => id++;
 
 export function makeStudent(overrides: Partial<User> = {}): User {
   return {
-    id: nextId(),
+    id: String(nextId()),
     firstName: 'Ana',
     lastName: 'Anić',
     email: 'ana@example.com',
     indexNumber: 'E/123/22',
     userRole: USER_ROLES.Student,
+    isDeleted: false,
     ...overrides,
   };
 }
 
 export function makeProfessor(overrides: Partial<User> = {}): User {
   return {
-    id: nextId(),
+    id: String(nextId()),
     firstName: 'Petar',
     lastName: 'Petrović',
     email: 'petar@example.com',
     indexNumber: null,
     userRole: USER_ROLES.Professor,
+    isDeleted: false,
     ...overrides,
   };
 }
 
 export function makeAdmin(overrides: Partial<User> = {}): User {
   return {
-    id: nextId(),
+    id: String(nextId()),
     firstName: 'Admin',
     lastName: 'Adminović',
     email: 'admin@example.com',
     indexNumber: null,
     userRole: USER_ROLES.Admin,
+    isDeleted: false,
     ...overrides,
   };
 }

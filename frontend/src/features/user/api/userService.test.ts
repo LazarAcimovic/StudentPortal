@@ -14,7 +14,7 @@ beforeEach(() => {
 });
 
 const studentRow = {
-  id: 10,
+  id: '10',
   firstName: 'Ana',
   lastName: 'Anić',
   email: 'ana@example.com',
@@ -24,7 +24,7 @@ const studentRow = {
 };
 
 const adminRow = {
-  id: 1,
+  id: '1',
   firstName: 'Admin',
   lastName: 'Adminović',
   email: 'admin@example.com',
@@ -172,7 +172,7 @@ describe('userService.updateUser', () => {
     );
 
     const result = await updateUser({
-      Id: 10,
+      Id: '10',
       FirstName: 'Ana2',
       LastName: 'Anić',
       Email: 'ana@example.com',
@@ -182,7 +182,7 @@ describe('userService.updateUser', () => {
 
     expect(seenPath).toBe('/api/User/10');
     expect(body).toEqual({
-      Id: 10,
+      Id: '10',
       FirstName: 'Ana2',
       LastName: 'Anić',
       Email: 'ana@example.com',
@@ -202,7 +202,7 @@ describe('userService.updateUser', () => {
     );
 
     const result = await updateUser({
-      Id: 10,
+      Id: '10',
       FirstName: 'Ana',
       LastName: 'Anić',
       Email: 'ana@example.com',
@@ -220,7 +220,7 @@ describe('userService.updateUser', () => {
     );
 
     const result = await updateUser({
-      Id: 1,
+      Id: '1',
       FirstName: 'Admin',
       LastName: 'Adminović',
       Email: 'admin@example.com',
@@ -238,7 +238,7 @@ describe('userService.updateUser', () => {
     );
 
     const result = await updateUser({
-      Id: 999,
+      Id: '999',
       FirstName: 'X',
       LastName: 'Y',
       Email: 'x@y.com',
@@ -262,7 +262,7 @@ describe('userService.deleteUser', () => {
       })
     );
 
-    const ok = await deleteUser(10);
+    const ok = await deleteUser('10');
 
     expect(called).toBe(1);
     expect(seenPath).toBe('/api/User/10');
@@ -274,7 +274,7 @@ describe('userService.deleteUser', () => {
       http.delete(apiUrl(`${API_ROUTES.USER}/1`), () => new HttpResponse(null, { status: 403 }))
     );
 
-    const ok = await deleteUser(1);
+    const ok = await deleteUser('1');
 
     expect(ok).toBe(false);
     expect(console.error).toHaveBeenCalled();
@@ -285,6 +285,6 @@ describe('userService.deleteUser', () => {
       http.delete(apiUrl(`${API_ROUTES.USER}/999`), () => new HttpResponse(null, { status: 404 }))
     );
 
-    expect(await deleteUser(999)).toBe(false);
+    expect(await deleteUser('999')).toBe(false);
   });
 });

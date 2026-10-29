@@ -68,6 +68,7 @@ describe('SubjectCreateForm — SubjectCode field (UI §8.4)', () => {
 
     await ue.type(screen.getByLabelText(/subject name/i), 'Databases');
     await ue.type(screen.getByLabelText(/subject code/i), 'CS101');
+    await ue.clear(screen.getByLabelText(/ects/i));
     await ue.type(screen.getByLabelText(/ects/i), '6');
     await ue.selectOptions(screen.getByLabelText(/professor/i), ['Ana Anić']);
     await ue.click(screen.getByRole('button', { name: /create/i }));
@@ -85,5 +86,46 @@ describe('SubjectCreateForm — SubjectCode field (UI §8.4)', () => {
     await ue.click(screen.getByRole('button', { name: /create/i }));
 
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('keeps the Create button disabled until the form is valid', async () => {
+    const ue = userEvent.setup();
+    renderForm();
+
+    const createBtn = screen.getByRole('button', { name: /create/i });
+    expect(createBtn).toBeDisabled();
+
+    await ue.type(screen.getByLabelText(/subject name/i), 'Databases');
+    await ue.type(screen.getByLabelText(/subject code/i), 'CS101');
+    await ue.selectOptions(screen.getByLabelText(/professor/i), ['Ana Anić']);
+    // ECTS defaults to 6, so the form is now valid.
+    expect(createBtn).toBeEnabled();
+  });
+
+  it('shows an ECTS required error when the field is cleared', async () => {
+    const ue = userEvent.setup();
+    renderForm();
+
+    await ue.clear(screen.getByLabelText(/ects/i));
+    await ue.tab();
+
+    expect(await screen.findByText(/ects is required/i)).toBeInTheDocument();
+  });
+
+  it('excludes soft-deleted professors from the dropdown', () => {
+    const onSave = vi.fn();
+    render(
+      <SubjectCreateForm
+        professors={[
+          ...professors,
+          { ...professors[0], id: '2', firstName: 'Inactive', lastName: 'Prof', isDeleted: true } as unknown as User,
+        ]}
+        onSave={onSave}
+        onCancel={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole('option', { name: /inactive prof/i })).toBeNull();
+    expect(screen.getByRole('option', { name: /ana anić/i })).toBeInTheDocument();
   });
 });

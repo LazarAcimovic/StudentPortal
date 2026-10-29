@@ -6,10 +6,14 @@ import {
   subjectCreateSchema,
   type SubjectCreateFieldErrors,
 } from "../../utils/subjectSchemas";
+import type {
+  CreateSubjectResult,
+  CreateSubjectFieldErrors,
+} from "../../../subjects/api/subjectService";
 
 interface SubjectCreateFormProps {
   professors: User[];
-  onSave: (newSubject: CreateSubject) => void;
+  onSave: (newSubject: CreateSubject) => Promise<CreateSubjectResult>;
   onCancel: () => void;
 }
 
@@ -24,24 +28,37 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
   const [formData, setFormData] = useState<CreateSubject>({
     SubjectName: "",
     SubjectCode: "",
-    ECTS: 0,
+    ECTS: 6,
     ProfessorId: "",
   });
   const [touched, setTouched] = useState<Partial<Record<keyof CreateSubject, boolean>>>({});
+  const [serverFieldErrors, setServerFieldErrors] = useState<CreateSubjectFieldErrors>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const parsed = subjectCreateSchema.safeParse(formData);
   const fieldErrors: SubjectCreateFieldErrors = parsed.success
     ? {}
     : (parsed.error.flatten().fieldErrors as SubjectCreateFieldErrors);
 
+  // Zod (client) wins when present; otherwise fall back to a server-side message.
+  const errorFor = (field: keyof CreateSubject): string | undefined =>
+    fieldErrors[field]?.[0] ?? serverFieldErrors[field];
+
+  const showError = (field: keyof CreateSubject): string | undefined =>
+    touched[field] ? errorFor(field) : undefined;
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    // A field being edited should drop its stale server error.
+    setServerFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     setFormData((prev) => ({
       ...prev,
-      // ECTS is numeric; ProfessorId is a GUID string and must not be coerced.
-      [name]: name === "ECTS" ? Number(value) : value,
+      // ECTS is numeric; an empty field becomes NaN so Zod reports it as required.
+      // ProfessorId is a GUID string and must not be coerced.
+      [name]: name === "ECTS" ? (value === "" ? NaN : Number(value)) : value,
     }));
   };
 
@@ -49,11 +66,19 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ SubjectName: true, SubjectCode: true, ECTS: true, ProfessorId: true });
+    setServerError(null);
     if (!parsed.success) return;
-    onSave(formData);
+
+    setIsSubmitting(true);
+    const result = await onSave(formData);
+    if (result && !result.ok) {
+      if (result.fieldErrors) setServerFieldErrors(result.fieldErrors);
+      if (result.message) setServerError(result.message);
+    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -63,21 +88,25 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit} noValidate>
+          {serverError && (
+            <div className="alert alert-danger">{serverError}</div>
+          )}
+
           <div className="mb-3">
             <label htmlFor="subjectName" className="form-label">
               Subject Name
             </label>
             <input
               type="text"
-              className={`form-control${touched.SubjectName && fieldErrors.SubjectName ? " is-invalid" : ""}`}
+              className={`form-control${showError("SubjectName") ? " is-invalid" : ""}`}
               id="subjectName"
               name="SubjectName"
               value={formData.SubjectName}
               onChange={handleChange}
               onBlur={() => handleBlur("SubjectName")}
             />
-            {touched.SubjectName && fieldErrors.SubjectName && (
-              <div className="invalid-feedback">{fieldErrors.SubjectName[0]}</div>
+            {showError("SubjectName") && (
+              <div className="invalid-feedback">{showError("SubjectName")}</div>
             )}
           </div>
 
@@ -87,7 +116,7 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
             </label>
             <input
               type="text"
-              className={`form-control${touched.SubjectCode && fieldErrors.SubjectCode ? " is-invalid" : ""}`}
+              className={`form-control${showError("SubjectCode") ? " is-invalid" : ""}`}
               id="subjectCode"
               name="SubjectCode"
               value={formData.SubjectCode}
@@ -95,8 +124,8 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
               onBlur={() => handleBlur("SubjectCode")}
               aria-describedby="subjectCodeHelp"
             />
-            {touched.SubjectCode && fieldErrors.SubjectCode && (
-              <div className="invalid-feedback">{fieldErrors.SubjectCode[0]}</div>
+            {showError("SubjectCode") && (
+              <div className="invalid-feedback">{showError("SubjectCode")}</div>
             )}
             <div id="subjectCodeHelp" className="form-text">
               {SUBJECT_CODE_HELP}
@@ -104,20 +133,20 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
           </div>
 
           <div className="mb-3">
-            <label htmlFor="etcs" className="form-label">
+            <label htmlFor="ects" className="form-label">
               ECTS
             </label>
             <input
               type="number"
-              className={`form-control${touched.ECTS && fieldErrors.ECTS ? " is-invalid" : ""}`}
-              id="etcs"
+              className={`form-control${showError("ECTS") ? " is-invalid" : ""}`}
+              id="ects"
               name="ECTS"
-              value={formData.ECTS}
+              value={Number.isNaN(formData.ECTS) ? "" : formData.ECTS}
               onChange={handleChange}
               onBlur={() => handleBlur("ECTS")}
             />
-            {touched.ECTS && fieldErrors.ECTS && (
-              <div className="invalid-feedback">{fieldErrors.ECTS[0]}</div>
+            {showError("ECTS") && (
+              <div className="invalid-feedback">{showError("ECTS")}</div>
             )}
           </div>
 
@@ -126,7 +155,7 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
               Professor
             </label>
             <select
-              className={`form-select${touched.ProfessorId && fieldErrors.ProfessorId ? " is-invalid" : ""}`}
+              className={`form-select${showError("ProfessorId") ? " is-invalid" : ""}`}
               id="professor"
               name="ProfessorId"
               value={formData.ProfessorId}
@@ -135,15 +164,15 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
             >
               <option value="">Select professor</option>
               {professors
-                .filter((p) => p.userRole === USER_ROLES.Professor)
+                .filter((p) => p.userRole === USER_ROLES.Professor && !p.isDeleted)
                 .map((prof) => (
                   <option key={prof.id} value={prof.id}>
                     {prof.firstName} {prof.lastName}
                   </option>
                 ))}
             </select>
-            {touched.ProfessorId && fieldErrors.ProfessorId && (
-              <div className="invalid-feedback">{fieldErrors.ProfessorId[0]}</div>
+            {showError("ProfessorId") && (
+              <div className="invalid-feedback">{showError("ProfessorId")}</div>
             )}
           </div>
 
@@ -155,8 +184,12 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
             >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              Create
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={!parsed.success || isSubmitting}
+            >
+              {isSubmitting ? "Creating…" : "Create"}
             </button>
           </div>
         </form>

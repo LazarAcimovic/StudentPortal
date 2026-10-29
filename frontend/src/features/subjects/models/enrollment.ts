@@ -1,9 +1,9 @@
 export interface Enrollment {
-  id: number;
-  studentId: number;
+  id: string;
+  studentId: string;
   studentFirstName: string;
   studentLastName: string;
-  subjectId: number;
+  subjectId: string;
   subjectName: string;
   enrolledAt: Date;
   isDeleted?: boolean;

@@ -1,7 +1,7 @@
 import type { UserRole } from "../constants/constants";
 
 export interface User {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -21,7 +21,7 @@ export interface CreateUser {
 }
 
 export interface UpdateUser {
-  Id: number;
+  Id: string;
   FirstName: string;
   LastName: string;
   UserRole: UserRole;

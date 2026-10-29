@@ -5,11 +5,11 @@ import type { Subject } from '../../../../features/subjects/models/subject';
 
 const subjects: Subject[] = [
   {
-    id: 1,
+    id: '1',
     subjectName: 'Databases',
     subjectCode: 'CS101',
     ects: 6,
-    professorId: 7,
+    professorId: '7',
     professorFirstName: 'Petar',
     professorLastName: 'Petrović',
     isDeleted: false,

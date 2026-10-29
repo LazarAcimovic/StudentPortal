@@ -35,9 +35,10 @@ public class SubjectService : ISubjectService
     public async Task<SubjectDto> AddSubjectAsync(SubjectCreateDto subjectDto)
     {
       
-        var professorExists = await _userRepository.GetUserByIdAsync(subjectDto.ProfessorId);
-        if (professorExists == null)
+        var professor = await _userRepository.GetUserByIdAsync(subjectDto.ProfessorId);
+        if (professor == null || professor.IsDeleted)
         {
+            // A soft-deleted (inactive) user cannot be assigned as a subject's professor.
             return null;
         }
 

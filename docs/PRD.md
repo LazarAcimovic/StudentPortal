@@ -372,6 +372,7 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 - Password hashing stays as PBKDF2-SHA512 at 100 000 iterations (current implementation). A README note calls out that this is below OWASP 2023 guidance and is acceptable for a learning project.
 - Input validation on all auth, admin, grade entry, and appeal DTOs uses FluentValidation (automatic 400 responses on invalid payloads).
 - Admin create-user (`POST /api/User`) rejects a **duplicate email** with `409 Conflict`, never a generic 500: `Users.Email` is unique and `UserService.AddUserAsync` checks it before insert. The SPA surfaces the message under the Email field rather than guessing. Password rules are validated on both layers — Zod on the client and FluentValidation on the server (per D-024).
+- Creating a subject (`POST /api/Subject`) rejects a **soft-deleted professor**: `SubjectService.AddSubjectAsync` returns a failure (controller `400`) when the chosen professor is missing or `IsDeleted`, and the admin UI omits inactive professors from the picker (per D-025).
 
 ---
 

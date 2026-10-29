@@ -10,8 +10,8 @@ import {
 
 interface UsersTableProps {
   users: User[];
-  currentUserId: number;
-  onDeleteUser: (userId: number) => void;
+  currentUserId: string;
+  onDeleteUser: (userId: string) => void;
   onStartEdit: (user: User) => void;
 }
 

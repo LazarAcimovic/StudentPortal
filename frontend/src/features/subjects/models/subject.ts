@@ -1,9 +1,9 @@
 export interface Subject {
-  id: number;
+  id: string;
   subjectName: string;
   subjectCode: string;
   ects: number;
-  professorId: number;
+  professorId: string;
   professorFirstName: string;
   professorLastName: string;
   createdAt?: Date;

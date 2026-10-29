@@ -88,8 +88,11 @@ describe('subjectService.createSubject', () => {
       ects: 7,
       professorId: '3',
     });
-    expect(result?.subjectName).toBe('Databases');
-    expect(result?.ects).toBe(7);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.subject.subjectName).toBe('Databases');
+      expect(result.subject.ects).toBe(7);
+    }
   });
 
   it('sends subjectCode/subjectName/ects/professorId and nothing else', async () => {
@@ -107,7 +110,7 @@ describe('subjectService.createSubject', () => {
     expect(Object.keys(body!).sort()).toEqual(['ects', 'professorId', 'subjectCode', 'subjectName']);
   });
 
-  it('returns null (and logs) on a 400 validation error', async () => {
+  it('maps a 400 validation error into per-field messages', async () => {
     server.use(
       http.post(apiUrl(API_ROUTES.SUBJECT), () =>
         HttpResponse.json({ errors: { SubjectName: ['Required'] } }, { status: 400 })
@@ -116,8 +119,7 @@ describe('subjectService.createSubject', () => {
 
     const result = await createSubject({ SubjectName: '', SubjectCode: '', ECTS: 6, ProfessorId: '1' });
 
-    expect(result).toBeNull();
-    expect(console.error).toHaveBeenCalled();
+    expect(result).toEqual({ ok: false, fieldErrors: { SubjectName: 'Required' } });
   });
 });
 

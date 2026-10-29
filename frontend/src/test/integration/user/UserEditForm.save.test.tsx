@@ -11,7 +11,7 @@ import type { User as AdminUser } from '../../../shared/models/User';
 
 function u(overrides: Partial<AdminUser>): AdminUser {
   return {
-    id: overrides.id ?? 1,
+    id: overrides.id ?? '1',
     firstName: overrides.firstName ?? 'Fn',
     lastName: overrides.lastName ?? 'Ln',
     email: overrides.email ?? 'ok@example.com',

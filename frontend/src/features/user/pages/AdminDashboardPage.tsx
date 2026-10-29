@@ -6,6 +6,7 @@ import { createEnrollment, getAllEnrollments } from "../../subjects/api/enrollme
 import { getAllUsers, addUser, deleteUser } from "../api/userService";
 import type { AddUserResult } from "../api/userService";
 import { getAllSubjects, createSubject, updateSubject } from "../../subjects/api/subjectService";
+import type { CreateSubjectResult } from "../../subjects/api/subjectService";
 import type { User, CreateUser } from "../../../shared/models/User";
 import type {
   Subject,
@@ -92,7 +93,7 @@ const AdminDashboardPage: React.FC = () => {
     setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
     setEditingUser(null);
   };
-  const handleDeleteUser = async (userId: number) => {
+  const handleDeleteUser = async (userId: string) => {
     const isSuccess = await deleteUser(userId);
 
     if (isSuccess) {
@@ -103,16 +104,18 @@ const AdminDashboardPage: React.FC = () => {
       alert("Failed to delete user.");
     }
   };
-  const handleCreateSubject = async (newSubject: CreateSubject) => {
-    const createdSubject = await createSubject(newSubject);
+  const handleCreateSubject = async (
+    newSubject: CreateSubject
+  ): Promise<CreateSubjectResult> => {
+    const result = await createSubject(newSubject);
 
-    if (createdSubject) {
-      setSubjects([...subjects, createdSubject]);
+    if (result.ok) {
+      setSubjects([...subjects, result.subject]);
       setIsCreatingSubject(false);
-      console.log("Created new subject:", createdSubject);
-    } else {
-      alert("Failed to create subject.");
     }
+
+    // The form renders any errors inline; it just needs the result back.
+    return result;
   };
   const handleUpdateSubject = async (updatedSubject: UpdateSubject) => {
     const updatedSubjectData = await updateSubject(updatedSubject);
@@ -141,7 +144,7 @@ const AdminDashboardPage: React.FC = () => {
       alert("Failed to create enrollment.");
     }
   };
-  const handleDeleteEnrollment = (enrollmentId: number) => {
+  const handleDeleteEnrollment = (enrollmentId: string) => {
     setEnrollments(
       enrollments.map((e) =>
         e.id === enrollmentId ? { ...e, isDeleted: true } : e

@@ -19,11 +19,11 @@ const professors: User[] = [
 ];
 
 const subject: Subject = {
-  id: 42,
+  id: '42',
   subjectName: 'Databases',
   subjectCode: 'CS101',
   ects: 6,
-  professorId: 7,
+  professorId: '7',
   professorFirstName: 'Petar',
   professorLastName: 'Petrović',
   isDeleted: false,
