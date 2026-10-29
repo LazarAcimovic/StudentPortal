@@ -2,9 +2,9 @@
 import type {
   CreateEnrollment,
   Enrollment,
-} from "../../../../models/EnrollmentModel";
-import type { User } from "../../../../models/UserModel";
-import type { Subject } from "../../../../models/SubjectModel";
+} from "../../../../features/subjects/models/enrollment";
+import type { User } from "../../../../shared/models/User";
+import type { Subject } from "../../../../features/subjects/models/subject";
 
 interface EnrollmentCreateFormProps {
   students: User[];

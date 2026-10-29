@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SubjectCreateForm from './SubjectCreateForm';
-import type { User } from '../../../../models/UserModel';
+import type { User } from '../../../../shared/models/User';
 import { USER_ROLES } from '../../../../shared/constants/constants';
 
 const professors: User[] = [

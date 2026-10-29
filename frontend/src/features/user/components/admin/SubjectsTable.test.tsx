@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import SubjectsTable from './SubjectsTable';
-import type { Subject } from '../../../../models/SubjectModel';
+import type { Subject } from '../../../../features/subjects/models/subject';
 
 const subjects: Subject[] = [
   {

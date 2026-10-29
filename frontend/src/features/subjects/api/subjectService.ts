@@ -3,7 +3,7 @@ import type {
   Subject,
   CreateSubject,
   UpdateSubject,
-} from "../../../models/SubjectModel";
+} from "../models/subject";
 import { API_ROUTES } from "../../../config/constants";
 
 export const getAllSubjects = async (): Promise<Subject[] | null> => {

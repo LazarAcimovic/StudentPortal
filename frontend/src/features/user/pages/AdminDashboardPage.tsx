@@ -5,16 +5,16 @@ import { USER_ROLES } from "../../../shared/constants/constants";
 import { createEnrollment, getAllEnrollments } from "../../subjects/api/enrollmentService";
 import { getAllUsers, addUser, deleteUser } from "../api/userService";
 import { getAllSubjects, createSubject, updateSubject } from "../../subjects/api/subjectService";
-import type { User, CreateUser } from "../../../models/UserModel";
+import type { User, CreateUser } from "../../../shared/models/User";
 import type {
   Subject,
   CreateSubject,
   UpdateSubject,
-} from "../../../models/SubjectModel";
+} from "../../subjects/models/subject";
 import type {
   Enrollment,
   CreateEnrollment,
-} from "../../../models/EnrollmentModel";
+} from "../../subjects/models/enrollment";
 import Modal from "../../../components/ui/Modal";
 import UsersTable from "../components/admin/UsersTable";
 import UserEditForm from "../../../components/ui/UserEditForm";

@@ -2,7 +2,7 @@ import apiClient from "../../../shared/api/axiosClient";
 import type {
   Enrollment,
   CreateEnrollment,
-} from "../../../models/EnrollmentModel";
+} from "../models/enrollment";
 import { API_ROUTES } from "../../../config/constants";
 
 export const getAllEnrollments = async (): Promise<Enrollment[] | null> => {

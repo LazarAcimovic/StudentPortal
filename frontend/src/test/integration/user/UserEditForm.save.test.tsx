@@ -7,7 +7,7 @@ import UserEditForm from '../../../components/ui/UserEditForm';
 import { USER_ROLES } from '../../../shared/constants/constants';
 import { server } from '../../server';
 import { renderAt } from '../../helpers/renderWithProviders';
-import type { User as AdminUser } from '../../../models/UserModel';
+import type { User as AdminUser } from '../../../shared/models/User';
 
 function u(overrides: Partial<AdminUser>): AdminUser {
   return {

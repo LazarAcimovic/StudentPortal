@@ -1,6 +1,6 @@
 ﻿import React, { useState } from "react";
-import type { CreateSubject } from "../../../../models/SubjectModel";
-import type { User } from "../../../../models/UserModel";
+import type { CreateSubject } from "../../../../features/subjects/models/subject";
+import type { User } from "../../../../shared/models/User";
 import { USER_ROLES } from "../../../../shared/constants/constants";
 import {
   subjectCreateSchema,

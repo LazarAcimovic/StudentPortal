@@ -7,7 +7,7 @@ import UserEditForm from '../../../components/ui/UserEditForm';
 import ProfileInfoCard from '../components/profile/ProfileInfoCard';
 import { APP_ROUTES } from '../../../config/constants';
 import { AXIOS_CANCELED_ERROR_CODE } from '../../../shared/constants/constants';
-import type { User } from '../../../models/UserModel';
+import type { User } from '../../../shared/models/User';
 
 const MyProfilePage: React.FC = () => {
   const { currentUser, setCurrentUser } = useUserStore();

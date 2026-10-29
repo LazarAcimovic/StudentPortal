@@ -1,7 +1,7 @@
 import React from 'react';
 import { USER_ROLES, ROLE_LABELS } from '../../../../shared/constants/constants';
 import { formatDate } from '../../utils/dateUtils';
-import type { User } from '../../../../models/UserModel';
+import type { User } from '../../../../shared/models/User';
 
 interface ProfileInfoCardProps {
   user: User;

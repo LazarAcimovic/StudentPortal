@@ -12,7 +12,6 @@ Progress counts subtasks; a subtask counts as done only when every one of its bo
 
 | Campaign | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 01 | Remove the pre-feature-sliced frontend leftovers | 5/7 | R01.1, R01.7 remaining | — | — | [refactor-01-legacy-frontend-cleanup.md](refactor-01-legacy-frontend-cleanup.md) |
 
 Campaigns have their own number sequence (`refactor-01`, `refactor-02`, …), independent of task numbers. New campaigns follow [`../TEMPLATE.md`](../TEMPLATE.md).
 

@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import type { Enrollment } from "../../../../models/EnrollmentModel";
+import type { Enrollment } from "../../../../features/subjects/models/enrollment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,

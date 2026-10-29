@@ -1,6 +1,6 @@
 ﻿import React, { useState } from "react";
-import type { Subject, UpdateSubject } from "../../../../models/SubjectModel";
-import type { User } from "../../../../models/UserModel";
+import type { Subject, UpdateSubject } from "../../../../features/subjects/models/subject";
+import type { User } from "../../../../shared/models/User";
 import { USER_ROLES } from "../../../../shared/constants/constants";
 import {
   subjectEditSchema,

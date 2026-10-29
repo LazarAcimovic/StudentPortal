@@ -1,5 +1,5 @@
 ﻿import React, { useState } from "react";
-import type { CreateUser } from "../../../../models/UserModel";
+import type { CreateUser } from "../../../../shared/models/User";
 import { USER_ROLES } from "../../../../shared/constants/constants";
 import PasswordInput from "../../../../components/ui/PasswordInput";
 

@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import type { User } from "../../../../models/UserModel";
+import type { User } from "../../../../shared/models/User";
 import { USER_ROLES } from "../../../../shared/constants/constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
