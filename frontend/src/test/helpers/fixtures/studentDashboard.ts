@@ -133,3 +133,35 @@ export const dashboardTrulyFinal: StudentDashboardData = {
     }),
   ],
 };
+
+export const dashboardAwaitingReconfirmation: StudentDashboardData = {
+  ...emptyStudentDashboard,
+  subjects: [
+    makeSubject({
+      enrollmentId: 'e-reconfirm',
+      subjectName: 'Web Development',
+      professorName: 'Emily Johnson',
+      finalGrade: 7,
+      status: 'Awaiting re-confirmation',
+      appealStatus: 'Appeal accepted',
+      canWriteAppeal: false,
+      canConfirmGrade: false,
+    }),
+  ],
+};
+
+export const dashboardTrulyFinalAfterAccept: StudentDashboardData = {
+  ...emptyStudentDashboard,
+  subjects: [
+    makeSubject({
+      enrollmentId: 'e-final-accepted',
+      subjectName: 'Web Development',
+      professorName: 'Emily Johnson',
+      finalGrade: 8,
+      status: 'Passed',
+      appealStatus: 'Appeal accepted',
+      canWriteAppeal: false,
+      canConfirmGrade: false,
+    }),
+  ],
+};

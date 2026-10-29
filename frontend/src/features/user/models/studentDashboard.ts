@@ -2,6 +2,7 @@ export type SubjectStatus =
   | 'Not graded'
   | 'Awaiting confirmation'
   | 'Appeal pending'
+  | 'Awaiting re-confirmation'
   | 'Under admin review'
   | 'Passed'
   | 'Failed';

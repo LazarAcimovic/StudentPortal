@@ -83,10 +83,14 @@ public class StudentDashboardService : IStudentDashboardService
         if (IsGradeTrulyFinal(grade, appeals, now))
         {
             row.Status = grade.FinalGrade >= 6 ? "Passed" : "Failed";
-            if (appeals.Any(a => a.Status == AppealStatus.Accepted))
-                row.AppealStatus = "Appeal accepted";
-            else if (appeals.Any(a => a.Status == AppealStatus.Denied))
-                row.AppealStatus = "Appeal denied";
+            var latestResolvedAppeal = appeals
+                .Where(a => a.Status == AppealStatus.Accepted || a.Status == AppealStatus.Denied)
+                .OrderByDescending(a => a.SubmittedAt)
+                .FirstOrDefault();
+            if (latestResolvedAppeal != null)
+                row.AppealStatus = latestResolvedAppeal.Status == AppealStatus.Accepted
+                    ? "Appeal accepted"
+                    : "Appeal denied";
             return row;
         }
 
@@ -125,7 +129,7 @@ public class StudentDashboardService : IStudentDashboardService
         // Accepted appeal awaiting re-confirm (within 7 days)
         if (acceptedAppeal != null)
         {
-            row.Status = "Appeal pending";
+            row.Status = "Awaiting re-confirmation";
             row.AppealStatus = "Appeal accepted";
             row.PendingAppealId = acceptedAppeal.Id;
             return row;

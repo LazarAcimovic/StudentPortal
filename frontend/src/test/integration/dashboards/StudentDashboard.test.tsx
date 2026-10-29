@@ -9,6 +9,8 @@ import {
   dashboardPendingAppeal,
   dashboardAppealDenied,
   dashboardTrulyFinal,
+  dashboardAwaitingReconfirmation,
+  dashboardTrulyFinalAfterAccept,
   dashboardUnderAdminReview,
   emptyStudentDashboard,
   makeSubject,
@@ -83,6 +85,18 @@ describe('StudentDashboardPage aggregates (§5.5)', () => {
     {
       label: 'Truly final — no action buttons',
       fx: dashboardTrulyFinal,
+      expectStatus: /Passed/i,
+      expectButtons: [],
+    },
+    {
+      label: 'Appeal accepted, awaiting re-confirm — yellow badge + Appeal accepted badge, no buttons',
+      fx: dashboardAwaitingReconfirmation,
+      expectStatus: /Awaiting re-confirmation/i,
+      expectButtons: [],
+    },
+    {
+      label: 'Truly final after accept — Passed + Appeal accepted badge, no buttons',
+      fx: dashboardTrulyFinalAfterAccept,
       expectStatus: /Passed/i,
       expectButtons: [],
     },

@@ -50,6 +50,11 @@ export const STATUS_BADGE_MAP: Record<SubjectStatus, React.ReactElement> = {
     { className: 'badge rounded-pill bg-info text-dark' },
     'Appeal pending'
   ),
+  'Awaiting re-confirmation': React.createElement(
+    'span',
+    { className: 'badge rounded-pill bg-warning text-dark' },
+    'Awaiting re-confirmation'
+  ),
   'Under admin review': React.createElement(
     'span',
     { className: 'badge rounded-pill text-white', style: { backgroundColor: '#6f42c1' } },

@@ -177,10 +177,11 @@ What the student sees during each state:
 | Fresh confirm, window live | 🟡 Awaiting confirmation | **Write appeal** + **Confirm grade** |
 | Pending appeal (initial or post-overdue) | 🔵 Appeal pending | *(none)* |
 | Appeal denied, grade truly final | 🟢 Passed / 🔴 Failed + 🔴 Appeal denied badge | *(none)* |
-| Appeal accepted, prof hasn't re-confirmed yet | 🔵 Appeal pending | *(none)* |
+| Appeal accepted, prof hasn't re-confirmed yet | 🟡 Awaiting re-confirmation + 🟢 Appeal accepted badge | *(none)* |
 | Overdue chain, window live | 🟡 Awaiting confirmation | **Write appeal** (fresh window) |
 | Escalated to the admin (§4.8) | 🟣 Under admin review | *(none)* |
-| Truly final (any route) | 🟢 Passed / 🔴 Failed | *(none)* |
+| Truly final, no appeals submitted | 🟢 Passed / 🔴 Failed | *(none)* |
+| Truly final, appeal(s) submitted | 🟢 Passed / 🔴 Failed + outcome badge (🟢 Appeal accepted / 🔴 Appeal denied) | *(none)* |
 
 ### 4.7 Earned ECTS rule
 A grade contributes its subject's ECTS to **Earned ECTS** only when the grade is **truly final** AND the final grade is ≥ 6. A grade becomes truly final in exactly these cases:
@@ -281,7 +282,7 @@ Responsiveness: at <576 px (`sm` breakpoint) the three columns stack vertically 
   - **Passed Exams** — count of truly-final grades with `FinalGrade >= 6`.
   - **Non-passed Exams** — count of truly-final grades with `FinalGrade = 5`, **plus** every enrollment with no truly-final grade yet (per D-006).
   - **Earned ECTS** — sum of `Subject.ECTS` across truly-final passed grades (§4.7).
-- **My Subjects**: table — Subject name, Professor name, Final grade (or `—` if not graded yet), Status (`Passed` / `Failed` / `Not graded` / `Awaiting confirmation` / `Appeal pending` / `Under admin review`, plus a secondary `Appeal denied` badge if applicable), Action column (either **Write appeal** button, **Confirm grade** button, both, or nothing — see §4.1 and §4.8).
+- **My Subjects**: table — Subject name, Professor name, Final grade (or `—` if not graded yet), Status (`Passed` / `Failed` / `Not graded` / `Awaiting confirmation` / `Appeal pending` / `Awaiting re-confirmation` / `Under admin review`, plus a secondary outcome badge when the grade is truly final after an appeal — `Appeal accepted` or `Appeal denied` — or an `Appeal accepted` badge alongside `Awaiting re-confirmation`), Action column (either **Write appeal** button, **Confirm grade** button, both, or nothing — see §4.1 and §4.8).
 - Responsiveness: at <576 px (`sm`) the subjects table becomes stacked cards.
 - The old **Students** link and page are removed. The dashboard is the only student view.
 
