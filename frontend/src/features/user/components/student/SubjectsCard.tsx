@@ -2,6 +2,7 @@ import React from 'react';
 import type { StudentDashboardSubject } from '../../models/studentDashboard';
 import {
   APPEAL_DENIED_STATUS,
+  APPEAL_ACCEPTED_STATUS,
   SUBJECT_ACTION_LAYOUT,
   STATUS_BADGE_MAP,
 } from '../../constants/student/constants';
@@ -19,6 +20,9 @@ function StatusBadge({
       {STATUS_BADGE_MAP[status]}
       {appealStatus === APPEAL_DENIED_STATUS && (
         <span className="badge rounded-pill bg-danger ms-1">Appeal denied</span>
+      )}
+      {appealStatus === APPEAL_ACCEPTED_STATUS && (
+        <span className="badge rounded-pill bg-success ms-1">Appeal accepted</span>
       )}
     </>
   );

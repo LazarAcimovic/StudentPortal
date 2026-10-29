@@ -7,6 +7,7 @@ export const STUDENT_DASHBOARD_INITIAL_ERROR: string | null = null;
 export const STUDENT_DASHBOARD_INITIAL_REFRESH_KEY = 0;
 
 export const APPEAL_DENIED_STATUS = 'Appeal denied' as const;
+export const APPEAL_ACCEPTED_STATUS = 'Appeal accepted' as const;
 
 export const APPEAL_MAX_LENGTH = 1000;
 export const APPEAL_MODAL_INITIAL_STATE = null;

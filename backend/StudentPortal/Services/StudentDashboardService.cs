@@ -83,7 +83,9 @@ public class StudentDashboardService : IStudentDashboardService
         if (IsGradeTrulyFinal(grade, appeals, now))
         {
             row.Status = grade.FinalGrade >= 6 ? "Passed" : "Failed";
-            if (appeals.Any(a => a.Status == AppealStatus.Denied))
+            if (appeals.Any(a => a.Status == AppealStatus.Accepted))
+                row.AppealStatus = "Appeal accepted";
+            else if (appeals.Any(a => a.Status == AppealStatus.Denied))
                 row.AppealStatus = "Appeal denied";
             return row;
         }
@@ -124,6 +126,7 @@ public class StudentDashboardService : IStudentDashboardService
         if (acceptedAppeal != null)
         {
             row.Status = "Appeal pending";
+            row.AppealStatus = "Appeal accepted";
             row.PendingAppealId = acceptedAppeal.Id;
             return row;
         }
