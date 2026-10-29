@@ -1,4 +1,4 @@
-import type { CreateUser, User, UpdateUser } from "../../../models/UserModel";
+import type { CreateUser, User, UpdateUser } from "../../../shared/models/User";
 import apiClient from "../../../shared/api/axiosClient";
 import { API_ROUTES } from "../../../config/constants";
 
