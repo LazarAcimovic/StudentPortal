@@ -46,6 +46,9 @@ public class UserService : IUserService
 
     public async Task<UserDto> AddUserAsync(AdminCreateUserDto userDto)
     {
+        var existing = await _userRepository.FindByEmailAsync(userDto.Email);
+        if (existing != null)
+            throw new EmailAlreadyExistsException("A user with this email already exists.");
 
         var hashedPassword = PasswordHashHandler.HashPassword(userDto.Password);
         userDto.Password = hashedPassword;

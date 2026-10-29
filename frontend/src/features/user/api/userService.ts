@@ -1,6 +1,15 @@
+import axios from "axios";
 import type { CreateUser, User, UpdateUser } from "../../../shared/models/User";
 import apiClient from "../../../shared/api/axiosClient";
 import { API_ROUTES } from "../../../config/constants";
+
+// Field-keyed messages, PascalCase to match the create form field names and the
+// ASP.NET ValidationProblemDetails `errors` map (Email, Password, …).
+export type AddUserFieldErrors = Partial<Record<string, string>>;
+
+export type AddUserResult =
+  | { ok: true; user: User }
+  | { ok: false; fieldErrors?: AddUserFieldErrors; message?: string };
 
 export const getAllUsers = async (): Promise<User[] | null> => {
   try {
@@ -12,13 +21,43 @@ export const getAllUsers = async (): Promise<User[] | null> => {
   }
 };
 
-export const addUser = async (userData: CreateUser): Promise<User | null> => {
+export const addUser = async (
+  userData: CreateUser
+): Promise<AddUserResult> => {
   try {
     const response = await apiClient.post<User>(API_ROUTES.USER, userData);
-    return response.data;
+    return { ok: true, user: response.data };
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      const { status, data } = error.response;
+
+      // Duplicate email → 409 Conflict (body is a plain string message).
+      if (status === 409) {
+        const message =
+          typeof data === "string" && data
+            ? data
+            : "A user with this email already exists.";
+        return { ok: false, fieldErrors: { Email: message } };
+      }
+
+      // FluentValidation → 400 with a field-keyed `errors` map.
+      if (
+        status === 400 &&
+        data &&
+        typeof data === "object" &&
+        "errors" in data
+      ) {
+        const errors = (data as { errors: Record<string, string[]> }).errors;
+        const fieldErrors: AddUserFieldErrors = {};
+        for (const [field, messages] of Object.entries(errors)) {
+          if (messages?.length) fieldErrors[field] = messages[0];
+        }
+        return { ok: false, fieldErrors };
+      }
+    }
+
     console.error("Error creating user:", error);
-    return null;
+    return { ok: false, message: "Failed to create user. Please try again." };
   }
 };
 

@@ -4,6 +4,7 @@ import { USER_ROLES } from "../../../shared/constants/constants";
 
 import { createEnrollment, getAllEnrollments } from "../../subjects/api/enrollmentService";
 import { getAllUsers, addUser, deleteUser } from "../api/userService";
+import type { AddUserResult } from "../api/userService";
 import { getAllSubjects, createSubject, updateSubject } from "../../subjects/api/subjectService";
 import type { User, CreateUser } from "../../../shared/models/User";
 import type {
@@ -74,18 +75,18 @@ const AdminDashboardPage: React.FC = () => {
       </div>
     );
   }
-  const handleCreateUser = async (newUser: CreateUser) => {
-    const createdUser = await addUser(newUser);
+  const handleCreateUser = async (
+    newUser: CreateUser
+  ): Promise<AddUserResult> => {
+    const result = await addUser(newUser);
 
-    if (createdUser) {
-      setUsers([...users, createdUser]);
+    if (result.ok) {
+      setUsers([...users, result.user]);
       setIsCreatingUser(false);
-      console.log("Created new user:", createdUser);
-    } else {
-      alert(
-        "Failed to create user. A user with that email may already exist."
-      );
     }
+
+    // The form renders any errors inline; it just needs the result back.
+    return result;
   };
   const handleUserSaved = (updatedUser: User) => {
     setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));

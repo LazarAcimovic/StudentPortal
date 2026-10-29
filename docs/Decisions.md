@@ -187,3 +187,10 @@ The four statuses:
 **Answer:** No. `seed.sql` contains no time-sensitive row. Overdue appeals, escalation Scenarios A and B, and the 24-hour undo window are produced per test by the backdating helpers on `IntegrationTestBase`, and in manual testing by the test-mode clock endpoint.
 **Lives in:** PRD §7, Tech-Backend §7
 **Why:** The seed replays before every integration test, so one backdated row would inject an overdue or escalated case into every test in the suite and silently corrupt unrelated dashboard assertions.
+
+### D-024 — How does admin create-user report a duplicate email and validate the password?
+
+**Decided:** 2026-10-29 · **Status:** Accepted
+**Answer:** A create-user request whose email already exists is rejected with `409 Conflict` (never a silent 500), and the SPA renders the message under the Email field. The password rules (12–128 chars; ≥1 upper, lower, digit and special `!@#$%^&*`; no spaces) are validated on **both** layers — Zod on the client, FluentValidation on the server — and the client blocks submit until Zod passes, so the user always sees the (identical) Zod message. A student must have an index number; a professor must not.
+**Lives in:** PRD §6, Tech-Backend §5, UI §8.3, Tech-Frontend §5
+**Why:** The old flow collapsed every failure into a hardcoded "a user with that email may already exist" alert while the backend never checked for duplicates, so a password that failed the server rules was misreported as a duplicate email. An explicit 409, inline per-field errors, and a client mirror of the server rules make the real cause visible and stop the bad request before it is sent.

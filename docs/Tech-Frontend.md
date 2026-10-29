@@ -299,6 +299,8 @@ const fieldErrors = validation.success ? {} : (validation.error.flatten().fieldE
 
 Submit flow: mark all touched → bail if invalid → set `isSubmitting` → service call → `setServerError` on failure → navigate or toast on success.
 
+A mutation that can fail **per field** — e.g. create-user, where a duplicate email returns `409` — resolves to a structured result (`{ ok: true, … } | { ok: false, fieldErrors?, message? }`) that the form maps onto the offending field (`fieldErrors`) or the top-of-form alert (`message`), instead of a toast. See `features/user/api/userService.ts` (`addUser`).
+
 ---
 
 ## 6. Styling

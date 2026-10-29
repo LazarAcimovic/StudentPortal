@@ -132,6 +132,7 @@ Each validator covers non-null / non-empty, length bounds, email format (`EmailA
 - Appeal DTO: text length ≤ 1000.
 - Password DTOs: 12–128 characters.
 - `SubjectCreateDto` / `SubjectUpdateDto`: `SubjectCode` required, 1–20 characters (D-015 — the column is `varchar(50)` for migration headroom, but 20 is the contract).
+- `AdminCreateUserDto`: password 12–128 characters with complexity (≥1 upper, ≥1 lower, ≥1 digit, ≥1 of `!@#$%^&*`, no spaces). **Email uniqueness is not a FluentValidation rule** — FluentValidation cannot read the database; `UserService.AddUserAsync` checks the store and throws `EmailAlreadyExistsException`, which the controller returns as `409 Conflict` (per D-024).
 
 ---
 

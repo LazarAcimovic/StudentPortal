@@ -2,43 +2,100 @@
 import type { CreateUser } from "../../../../shared/models/User";
 import { USER_ROLES } from "../../../../shared/constants/constants";
 import PasswordInput from "../../../../components/ui/PasswordInput";
+import { createUserSchema } from "../../utils/userSchemas";
+import type { AddUserResult, AddUserFieldErrors } from "../../api/userService";
 
 interface UserCreateFormProps {
-  onSave: (newUser: CreateUser) => void;
+  onSave: (newUser: CreateUser) => Promise<AddUserResult>;
   onCancel: () => void;
 }
 
-const UserCreateForm: React.FC<UserCreateFormProps> = ({
-  onSave,
-  onCancel,
-}) => {
-  const [formData, setFormData] = useState<CreateUser>({
-    FirstName: "",
-    LastName: "",
-    Email: "",
-    Password: "",
-    UserRole: USER_ROLES.Student,
-    IndexNumber: "",
-  });
+const INITIAL_VALUES: CreateUser = {
+  FirstName: "",
+  LastName: "",
+  Email: "",
+  Password: "",
+  UserRole: USER_ROLES.Student,
+  IndexNumber: "",
+};
+
+const INITIAL_TOUCHED: Record<keyof CreateUser, boolean> = {
+  FirstName: false,
+  LastName: false,
+  Email: false,
+  Password: false,
+  UserRole: false,
+  IndexNumber: false,
+};
+
+const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSave, onCancel }) => {
+  const [values, setValues] = useState<CreateUser>(INITIAL_VALUES);
+  const [touched, setTouched] =
+    useState<Record<keyof CreateUser, boolean>>(INITIAL_TOUCHED);
+  const [serverFieldErrors, setServerFieldErrors] = useState<AddUserFieldErrors>(
+    {}
+  );
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const parseResult = createUserSchema.safeParse(values);
+  const fieldErrors = parseResult.success
+    ? {}
+    : parseResult.error.flatten().fieldErrors;
+
+  // Zod (client) wins when present; otherwise fall back to a server-side message.
+  const errorFor = (field: keyof CreateUser): string | undefined =>
+    fieldErrors[field]?.[0] ?? serverFieldErrors[field];
+
+  const showError = (field: keyof CreateUser): string | undefined =>
+    touched[field] ? errorFor(field) : undefined;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    // A field being edited should drop its stale server error.
+    setServerFieldErrors((prev) => ({ ...prev, [name]: undefined }));
+
     if (e.target instanceof HTMLSelectElement) {
-      setFormData((prev) => ({
+      const role = Number(value);
+      setValues((prev) => ({
         ...prev,
-        [name]: Number(value),
-        ...(Number(value) === USER_ROLES.Professor && { IndexNumber: undefined }),
+        UserRole: role as CreateUser["UserRole"],
+        ...(role === USER_ROLES.Professor && { IndexNumber: "" }),
       }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setValues((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setTouched((prev) => ({ ...prev, [e.target.name]: true }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    setTouched({
+      FirstName: true,
+      LastName: true,
+      Email: true,
+      Password: true,
+      UserRole: true,
+      IndexNumber: true,
+    });
+    setServerError(null);
+
+    if (!parseResult.success) return;
+
+    setIsSubmitting(true);
+    const result = await onSave(parseResult.data as CreateUser);
+    if (!result.ok) {
+      if (result.fieldErrors) setServerFieldErrors(result.fieldErrors);
+      if (result.message) setServerError(result.message);
+    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -47,49 +104,71 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
         <h5>Create New User</h5>
       </div>
       <div className="card-body">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
+          {serverError && (
+            <div className="alert alert-danger">{serverError}</div>
+          )}
+
           <div className="mb-3">
             <label htmlFor="firstName" className="form-label">
               First Name
             </label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control${
+                showError("FirstName") ? " is-invalid" : ""
+              }`}
               id="firstName"
               name="FirstName"
-              value={formData.FirstName}
+              value={values.FirstName}
               onChange={handleChange}
-              required
+              onBlur={handleBlur}
             />
+            {showError("FirstName") && (
+              <div className="invalid-feedback">{showError("FirstName")}</div>
+            )}
           </div>
+
           <div className="mb-3">
             <label htmlFor="lastName" className="form-label">
               Last Name
             </label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control${
+                showError("LastName") ? " is-invalid" : ""
+              }`}
               id="lastName"
               name="LastName"
-              value={formData.LastName}
+              value={values.LastName}
               onChange={handleChange}
-              required
+              onBlur={handleBlur}
             />
+            {showError("LastName") && (
+              <div className="invalid-feedback">{showError("LastName")}</div>
+            )}
           </div>
+
           <div className="mb-3">
             <label htmlFor="email" className="form-label">
               Email
             </label>
             <input
               type="email"
-              className="form-control"
+              className={`form-control${
+                showError("Email") ? " is-invalid" : ""
+              }`}
               id="email"
               name="Email"
-              value={formData.Email}
+              value={values.Email}
               onChange={handleChange}
-              required
+              onBlur={handleBlur}
             />
+            {showError("Email") && (
+              <div className="invalid-feedback">{showError("Email")}</div>
+            )}
           </div>
+
           <div className="mb-3">
             <label htmlFor="password" className="form-label">
               Password
@@ -97,12 +176,19 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
             <PasswordInput
               id="password"
               name="Password"
-              value={formData.Password}
+              value={values.Password}
               onChange={handleChange}
+              onBlur={handleBlur}
               autoComplete="new-password"
-              required
+              isInvalid={!!showError("Password")}
             />
+            {showError("Password") && (
+              <div className="invalid-feedback d-block">
+                {showError("Password")}
+              </div>
+            )}
           </div>
+
           <div className="mb-3">
             <label htmlFor="userRole" className="form-label">
               Role
@@ -111,31 +197,39 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
               className="form-select"
               id="userRole"
               name="UserRole"
-              value={formData.UserRole}
+              value={values.UserRole}
               onChange={handleChange}
-              required
+              onBlur={handleBlur}
             >
               <option value={USER_ROLES.Student}>Student</option>
               <option value={USER_ROLES.Professor}>Professor</option>
             </select>
           </div>
 
-          {formData.UserRole === USER_ROLES.Student && (
+          {values.UserRole === USER_ROLES.Student && (
             <div className="mb-3">
               <label htmlFor="indexNumber" className="form-label">
                 Index Number
               </label>
               <input
                 type="text"
-                className="form-control"
+                className={`form-control${
+                  showError("IndexNumber") ? " is-invalid" : ""
+                }`}
                 id="indexNumber"
                 name="IndexNumber"
-                value={formData.IndexNumber || ""}
+                value={values.IndexNumber || ""}
                 onChange={handleChange}
-                required
+                onBlur={handleBlur}
               />
+              {showError("IndexNumber") && (
+                <div className="invalid-feedback">
+                  {showError("IndexNumber")}
+                </div>
+              )}
             </div>
           )}
+
           <div className="d-flex justify-content-end">
             <button
               type="button"
@@ -144,8 +238,12 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({
             >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              Create
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting || !parseResult.success}
+            >
+              {isSubmitting ? "Creating…" : "Create"}
             </button>
           </div>
         </form>

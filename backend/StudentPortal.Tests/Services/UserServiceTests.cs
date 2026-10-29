@@ -54,6 +54,27 @@ public class UserServiceTests
             PasswordHashHandler.VerifyPassword("SuperSecret!", u.UserPassword)));
     }
 
+    [Fact]
+    public async Task AddUserAsync_WhenEmailAlreadyExists_ThrowsAndDoesNotPersist()
+    {
+        // DB enforces a unique index on Users.Email; the service rejects the duplicate
+        // up front so the API can return a clean 409 instead of a generic 500.
+        var existing = MakeUser(email: "taken@example.com");
+        _userRepo.FindByEmailAsync("taken@example.com").Returns(existing);
+
+        var sut = CreateSut();
+
+        await Assert.ThrowsAsync<EmailAlreadyExistsException>(() =>
+            sut.AddUserAsync(new AdminCreateUserDto
+            {
+                FirstName = "New", LastName = "Student",
+                Email = "taken@example.com", Password = "SuperSecret!",
+                IndexNumber = "2026/0001", UserRole = RoleEnum.Student,
+            }));
+
+        await _userRepo.DidNotReceiveWithAnyArgs().AddUserAsync(default);
+    }
+
     // ---------- UpdateProfileAsync (self-service) ----------
 
     [Fact]

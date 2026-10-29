@@ -75,6 +75,10 @@ namespace StudentPortal.Controllers
 
                 return CreatedAtAction(nameof(GetUserById), new { id = newUser.Id }, newUser);
             }
+            catch (EmailAlreadyExistsException ex)
+            {
+                return Conflict(ex.Message);
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");

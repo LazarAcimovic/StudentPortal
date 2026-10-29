@@ -371,6 +371,7 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 - No rate limiting, no account lockout — explicitly out of scope.
 - Password hashing stays as PBKDF2-SHA512 at 100 000 iterations (current implementation). A README note calls out that this is below OWASP 2023 guidance and is acceptable for a learning project.
 - Input validation on all auth, admin, grade entry, and appeal DTOs uses FluentValidation (automatic 400 responses on invalid payloads).
+- Admin create-user (`POST /api/User`) rejects a **duplicate email** with `409 Conflict`, never a generic 500: `Users.Email` is unique and `UserService.AddUserAsync` checks it before insert. The SPA surfaces the message under the Email field rather than guessing. Password rules are validated on both layers — Zod on the client and FluentValidation on the server (per D-024).
 
 ---
 

@@ -88,25 +88,73 @@ describe('userService.addUser', () => {
     const result = await addUser(createDto);
 
     expect(body).toEqual(createDto);
-    expect(result?.email).toBe('ana@example.com');
+    expect(result).toEqual({ ok: true, user: studentRow });
   });
 
-  it('returns null (and logs) on a 400 validation error', async () => {
+  it('maps a 400 validation error into per-field messages', async () => {
     server.use(
       http.post(apiUrl(API_ROUTES.USER), () =>
-        HttpResponse.json({ errors: { Email: ['Required'] } }, { status: 400 })
+        HttpResponse.json(
+          { errors: { Password: ['Password must be at least 12 characters.'] } },
+          { status: 400 }
+        )
       )
     );
 
     const result = await addUser({
       FirstName: 'Ana',
       LastName: 'Anić',
-      Email: '',
+      Email: 'ana@example.com',
+      Password: 'short',
+      UserRole: USER_ROLES.Student,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      fieldErrors: { Password: 'Password must be at least 12 characters.' },
+    });
+  });
+
+  it('maps a 409 duplicate email onto the Email field', async () => {
+    server.use(
+      http.post(apiUrl(API_ROUTES.USER), () =>
+        HttpResponse.json('A user with this email already exists.', { status: 409 })
+      )
+    );
+
+    const result = await addUser({
+      FirstName: 'Ana',
+      LastName: 'Anić',
+      Email: 'taken@example.com',
       Password: 'TempPass!2024',
       UserRole: USER_ROLES.Student,
     });
 
-    expect(result).toBeNull();
+    expect(result).toEqual({
+      ok: false,
+      fieldErrors: { Email: 'A user with this email already exists.' },
+    });
+  });
+
+  it('returns a generic message (and logs) on an unexpected 500', async () => {
+    server.use(
+      http.post(apiUrl(API_ROUTES.USER), () =>
+        HttpResponse.json({ title: 'boom' }, { status: 500 })
+      )
+    );
+
+    const result = await addUser({
+      FirstName: 'Ana',
+      LastName: 'Anić',
+      Email: 'ana@example.com',
+      Password: 'TempPass!2024',
+      UserRole: USER_ROLES.Student,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      message: 'Failed to create user. Please try again.',
+    });
     expect(console.error).toHaveBeenCalled();
   });
 });

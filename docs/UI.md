@@ -383,6 +383,8 @@ Below `md`: cards per user.
 - Index number — required if role=Student, hidden otherwise.
 - Password — required, 12–128 chars. **With show/hide toggle:** `<input type={show ? 'text' : 'password'}>` paired with a `[btn btn-outline-secondary]` showing an inline SVG eye icon that toggles state.
 
+**Validation is inline, never a popup.** Each field shows a Bootstrap `invalid-feedback` message once it has been touched (the same touched-on-blur pattern as the login page, §5); there is no `alert()`. The Create button stays disabled until the form is valid. A server-side **duplicate email** (`409`) renders under the Email field; any other server error renders as a top-of-form `alert alert-danger` (per D-024).
+
 **Edit user flow** uses the reusable `<UserEditForm scope='admin' user={row} callerRole={ADMIN}>` (see §11.6) opened inside the shared `<Modal>` (§11.1). Field visibility follows the matrix in §11.6 — `IndexNumber` shows only when the target is a Student; `UserRole` and `IsDeleted` are **hidden** when the target is another Admin. **Admin's own row in the Users table renders no Edit button** (no self-edit from admin dashboard — he uses `/profile`, see §9).
 
 ### 8.4 Subjects tab
