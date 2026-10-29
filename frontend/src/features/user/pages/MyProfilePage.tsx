@@ -83,7 +83,7 @@ const MyProfilePage: React.FC = () => {
 
       <ProfileInfoCard user={profileUser} />
 
-      <div className="d-flex gap-2">
+      <div className="d-flex flex-column flex-sm-row gap-2">
         <button
           className="btn btn-primary"
           onClick={() => setEditOpen(true)}

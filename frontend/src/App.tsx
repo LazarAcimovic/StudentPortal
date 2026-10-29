@@ -93,7 +93,9 @@ function App() {
   return (
     <>
       <Navbar />
-      <Outlet />
+      <div className="flex-grow-1">
+        <Outlet />
+      </div>
       <ToastContainer position="top-right" autoClose={4000} />
     </>
   );

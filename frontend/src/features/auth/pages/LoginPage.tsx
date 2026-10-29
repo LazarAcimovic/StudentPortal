@@ -69,9 +69,8 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
+    <div className="container h-100 d-flex justify-content-center align-items-center">
+      <div className=" col-10 col-sm-8 col-md-8 col-lg-6 col-xl-5 mx-auto">
           <div className="card">
             <div className="card-header text-center">
               <h3>Login</h3>
@@ -131,7 +130,6 @@ const LoginPage: React.FC = () => {
               </form>
             </div>
           </div>
-        </div>
       </div>
     </div>
   );
