@@ -13,6 +13,7 @@ const ConfirmGradeModal: React.FC<Props> = ({ modalState, onClose, onConfirm }) 
     open={modalState !== null}
     onClose={onClose}
     title="Confirm grade"
+    blurBackdrop
     footer={
       <>
         <button
