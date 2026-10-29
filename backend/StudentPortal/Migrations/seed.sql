@@ -8,7 +8,8 @@
 -- 128-bit salt, 256-bit subkey).
 --
 -- Fixed GUID prefixes keep FKs predictable across re-runs:
---   Users                10000000-...-00XX  (01 admin, 02-05 professors, 06-0f students)
+--   Users                10000000-...-00XX  (01 admin, 02-05 professors, 06-0f students,
+--                                           10 soft-deleted student, 11 admin #2)
 --   Subjects             20000000-...-00XX  (01-04 Smith, 05-08 Johnson, 09-0c Davis, 0d-0f Wilson)
 --   Enrollments          30000000-...-00XX  (01-1e, 30 rows)
 --   Grades               40000000-...-00XX  (01-14, 20 rows)
@@ -49,7 +50,7 @@ DELETE FROM "Enrollments";
 DELETE FROM "Subjects";
 DELETE FROM "Users";
 
--- ─── USERS (1 admin + 4 professors + 10 students) ─────────────────────────
+-- ─── USERS (2 admins + 4 professors + 11 students, 1 soft-deleted) ─────────
 INSERT INTO "Users" (
   "Id","FirstName","LastName","Email","UserPassword",
   "IndexNumber","IsDeleted","UserRole","CreatedAt"
@@ -118,7 +119,22 @@ INSERT INTO "Users" (
   ('10000000-0000-0000-0000-00000000000f',
    'Liam','Clark','liam.clark@student.edu',
    'AQAAAAIAAYagAAAAEFYs++5b/7gnchHZ9/9SZ7h7Ii9qyuQXNOBD4j8jSu5eI6hNSYhG0jAij+6klaSo9Q==',
-   'SW-010-2024',false,'Student','2024-09-05T08:00:00+00');
+   'SW-010-2024',false,'Student','2024-09-05T08:00:00+00'),
+
+  -- Admin #2 (active) — exercises the Admin→Admin edit matrix (UI §5.9: UserRole/IsDeleted
+  -- hidden when the target is another Admin). The original admin's own row has no Edit button.
+  ('10000000-0000-0000-0000-000000000011',
+   'Jane','Roberts','jane.roberts@uni.edu',
+   'AQAAAAIAAYagAAAAEKIzF5k/n5N0AMPcPu5bjZuhTcSTcONR3e3G65CFMs4dEBCjUT4xLAfIZ4MP0d5b0w==',
+   NULL,false,'Admin','2024-09-01T08:00:00+00'),
+
+  -- Soft-deleted (Inactive) student — cannot log in (PRD §6 / glossary); surfaces the
+  -- "Inactive" status badge in the admin Users tab. Deliberately has no enrollments,
+  -- grades or drafts, so it affects no dashboard, count or eligibility query.
+  ('10000000-0000-0000-0000-000000000010',
+   'Thomas','Lee','thomas.lee@student.edu',
+   'AQAAAAIAAYagAAAAEKIzF5k/n5N0AMPcPu5bjZuhTcSTcONR3e3G65CFMs4dEBCjUT4xLAfIZ4MP0d5b0w==',
+   'SW-011-2024',true,'Student','2024-09-05T08:00:00+00');
 
 -- ─── SUBJECTS (15 subjects, ECTS=6 each) ──────────────────────────────────
 -- Smith  (0002): 4 subjects   Johnson (0003): 4 subjects
