@@ -49,6 +49,7 @@ const MyProfilePage: React.FC = () => {
         email: fresh.email,
         indexNumber: fresh.indexNumber,
         userRole: fresh.userRole,
+        isDeleted: false,
         createdAt: fresh.createdAt,
       });
     } catch {

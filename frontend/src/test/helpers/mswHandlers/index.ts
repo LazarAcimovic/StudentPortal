@@ -2,11 +2,15 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 
 export const API_PREFIX = '/api';
 
+// The exact body type HttpResponse.json accepts; fixtures are loosely typed, so
+// the handlers below cast their payload to it.
+type JsonInput = Parameters<typeof HttpResponse.json>[0];
+
 export function apiUrl(path: string): string {
   return `${API_PREFIX}${path}`;
 }
 
-export function problemJson(status: number, message = 'error'): HttpResponse {
+export function problemJson(status: number, message = 'error') {
   return HttpResponse.json({ title: 'An error occurred.', message }, { status });
 }
 import { API_ROUTES } from '../../../config/constants';
@@ -53,25 +57,25 @@ export function refreshHandler(status: 204 | 401 = 204): HttpHandler {
 
 export function studentDashboardHandler(payload: unknown): HttpHandler {
   return http.get(`/api${API_ROUTES.STUDENT_ME_DASHBOARD}`, () =>
-    HttpResponse.json(payload)
+    HttpResponse.json(payload as JsonInput)
   );
 }
 
 export function professorDashboardHandler(payload: unknown): HttpHandler {
   return http.get(`/api${API_ROUTES.PROFESSOR_ME_DASHBOARD}`, () =>
-    HttpResponse.json(payload)
+    HttpResponse.json(payload as JsonInput)
   );
 }
 
 export function escalationCasesHandler(payload: unknown): HttpHandler {
   return http.get(`/api${API_ROUTES.ESCALATION}`, () =>
-    HttpResponse.json(payload)
+    HttpResponse.json(payload as JsonInput)
   );
 }
 
 export function eligibleProfessorsHandler(payload: unknown): HttpHandler {
   return http.get(`/api${API_ROUTES.ESCALATION_ELIGIBLE_PROFESSORS}`, () =>
-    HttpResponse.json(payload)
+    HttpResponse.json(payload as JsonInput)
   );
 }
 

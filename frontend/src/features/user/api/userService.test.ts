@@ -210,7 +210,7 @@ describe('userService.updateUser', () => {
       IsDeleted: true,
     });
 
-    expect((body as Record<string, unknown>).IsDeleted).toBe(true);
+    expect(body!.IsDeleted).toBe(true);
     expect(result?.isDeleted).toBe(true);
   });
 

@@ -8,6 +8,7 @@ import type {
 export const emptyProfessorDashboard: ProfessorDashboardData = {
   subjects: [],
   appeals: [],
+  assignedCases: [],
 };
 
 export function makeStudentRow(
@@ -64,4 +65,5 @@ export const singleSubjectWithStudent: ProfessorDashboardData = {
     }),
   ],
   appeals: [],
+  assignedCases: [],
 };

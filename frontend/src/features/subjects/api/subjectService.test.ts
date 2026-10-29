@@ -174,7 +174,7 @@ describe('subjectService.updateSubject', () => {
       IsDeleted: true,
     });
 
-    expect((body as Record<string, unknown>).isDeleted).toBe(true);
+    expect(body!.isDeleted).toBe(true);
     expect(result?.isDeleted).toBe(true);
   });
 

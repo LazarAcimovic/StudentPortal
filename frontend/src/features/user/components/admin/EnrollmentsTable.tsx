@@ -48,7 +48,7 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
                 </td>
                 <td>{enrollment.subjectName}</td>
                 <td>
-                  <StatusBadge isDeleted={enrollment.isDeleted} />
+                  <StatusBadge isDeleted={enrollment.isDeleted ?? false} />
                 </td>
                 <td>{new Date(enrollment.enrolledAt).toLocaleDateString()}</td>
               </tr>
@@ -65,7 +65,7 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
                 <div className="fw-bold text-break">
                   {enrollment.studentFirstName} {enrollment.studentLastName}
                 </div>
-                <StatusBadge isDeleted={enrollment.isDeleted} />
+                <StatusBadge isDeleted={enrollment.isDeleted ?? false} />
               </div>
               <div className="text-break mb-1">
                 Subject: {enrollment.subjectName}
