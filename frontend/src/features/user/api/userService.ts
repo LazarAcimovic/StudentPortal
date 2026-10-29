@@ -1,8 +1,6 @@
 import type { CreateUser, User, UpdateUser } from "../../../models/UserModel";
-import { USER_ROLES } from "../../../shared/constants/constants";
 import apiClient from "../../../shared/api/axiosClient";
 import { API_ROUTES } from "../../../config/constants";
-import { MOCK_STUDENTS } from "../../../services/data/studentMock";
 
 export const getAllUsers = async (): Promise<User[] | null> => {
   try {
@@ -55,32 +53,4 @@ export const deleteUser = async (userId: number): Promise<boolean> => {
     console.error("Error deleting user:", error);
     return false;
   }
-};
-
-export const createStudent = (newUser: CreateUser): User | Error => {
-  const existingUser = MOCK_STUDENTS.find((u) => u.Email === newUser.Email);
-  if (existingUser) {
-    return new Error("A user with that email already exists.");
-  }
-
-  const newUserId =
-    MOCK_STUDENTS.length > 0
-      ? Math.max(...MOCK_STUDENTS.map((u) => u.Id)) + 1
-      : 1;
-
-  const student: User = {
-    Id: newUserId,
-    FirstName: newUser.FirstName,
-    LastName: newUser.LastName,
-    Email: newUser.Email,
-    UserPassword: newUser.UserPassword,
-    IndexNumber: newUser.IndexNumber,
-    UserRole: USER_ROLES.Student,
-    IsDeleted: false,
-    CreatedAt: new Date(),
-  };
-
-  MOCK_STUDENTS.push(student);
-
-  return student;
 };

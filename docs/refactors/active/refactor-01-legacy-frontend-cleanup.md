@@ -62,10 +62,10 @@ Verify: `npm run test` and `npx tsc --noEmit`
 
 6 files: `adminMock`, `enrollmentsMock`, `gradeMock`, `professorsMock`, `studentMock`, `subjectsMock`.
 
-- [ ] `grep -rn "services/data" frontend/src` — record the hit count.
-- [ ] Any live consumer re-pointed at `src/test/helpers/fixtures/`.
-- [ ] `src/services/` deleted (it holds nothing else).
-- [ ] Full frontend suite green, typecheck clean.
+- [x] `grep -rn "services/data" frontend/src` — record the hit count. (1 hit: `userService.ts:5`)
+- [x] Any live consumer re-pointed at `src/test/helpers/fixtures/`. (`createStudent` was dead code — removed entirely; import dropped)
+- [x] `src/services/` deleted (it holds nothing else).
+- [x] Full frontend suite green, typecheck clean. (48 files, 300 tests passed)
 - Commit: `refactor(frontend): remove mock data services superseded by MSW fixtures`
 
 ---
@@ -77,10 +77,10 @@ Not in scope: `src/pages/HomePage.tsx`, which stays.
 Docs to update: none yet — see R01.6
 Verify: `npm run test` and `npx tsc --noEmit`
 
-- [ ] `grep -rn "pages/dashboard\|pages/login" frontend/src` returns nothing live.
-- [ ] `src/pages/dashboard/` and `src/pages/login/` deleted.
-- [ ] `src/providers/router.tsx` references only surviving pages.
-- [ ] Full frontend suite green, typecheck clean.
+- [x] `grep -rn "pages/dashboard\|pages/login" frontend/src` returns nothing live.
+- [x] `src/pages/dashboard/` and `src/pages/login/` deleted.
+- [x] `src/providers/router.tsx` references only surviving pages.
+- [x] Full frontend suite green, typecheck clean.
 - Commit: `refactor(frontend): remove superseded page folders`
 
 ---
@@ -111,8 +111,8 @@ Not in scope: `components/ui/` and `components/shared/`.
 Docs to update: none yet — see R01.6
 Verify: `npx tsc --noEmit`
 
-- [ ] Confirm the folder is empty (or holds only a `.gitkeep`).
-- [ ] Deleted.
+- [x] Confirm the folder is empty (or holds only a `.gitkeep`).
+- [x] Deleted.
 - Commit: `refactor(frontend): remove empty components/common folder`
 
 ---
