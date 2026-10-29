@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { getAllEnrollments, createEnrollment } from './enrollmentService';
 import { server } from '../../../test/server';
-import { apiUrl } from '../../../test/mswOverrides';
+import { apiUrl } from '../../../test/helpers/mswHandlers';
 import { API_ROUTES } from '../../../config/constants';
 import * as navLib from '../../../lib/navigation';
 

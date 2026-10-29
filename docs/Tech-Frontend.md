@@ -24,7 +24,7 @@
 
 ## 1. Project layout
 
-> **Verified against the working tree at commit `c67f197` (2026-10-28); AssignedCasesSection split into one component per file for task 23.16.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
+> **Verified against the working tree at commit `85f802b` (2026-10-29); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
 
 ```
 frontend/src/
@@ -66,7 +66,7 @@ frontend/src/
       models/professor/         professorDashboard.ts, gradePanel.ts
       pages/                    StudentDashboardPage, ProfessorDashboardPage,
                                 AdminDashboardPage, MyProfilePage, ChangePasswordPage
-      utils/                    dateUtils.ts, profileSchemas.ts, gradeUtils.ts
+      utils/                    dateUtils.ts, profileSchemas.ts, gradeUtils.ts, subjectSchemas.ts
       index.ts
     grades/
       api/gradeService.ts       POST /api/Grade/confirm, /reconfirm-exam, /student-confirm
@@ -83,6 +83,7 @@ frontend/src/
     subjects/
       api/subjectService.ts
       api/enrollmentService.ts
+      models/                   enrollment.ts, subject.ts
       index.ts
     escalations/
       api/escalationService.ts   getCases, getEligibleProfessors, assign, reassign
@@ -108,8 +109,6 @@ frontend/src/
 **Where things go.** All three dashboards and every role-specific component live under `features/user/`, grouped by role in `components/<role>/`. `features/grades`, `features/appeals` and `features/subjects` own their **services, models and hooks** but no pages — the pages that use them are the dashboards under `features/user/pages/`. This is deliberate: a dashboard is a *user's* view, not a grade's view.
 
 **Barrels.** Every feature exports its public surface via `index.ts`. Imports go through the barrel, not deep paths.
-
-**Legacy folders — do not extend, do not import from.** `src/models/`, `src/services/data/*Mock.ts`, `src/pages/dashboard/`, `src/pages/login/`, and the duplicate `src/test/renderWithProviders.tsx` / `src/test/time.ts` predate the feature-sliced layout. New code never lands there; removal is tracked as its own task.
 
 ### 1.1 Professor dashboard payload — read before coding
 

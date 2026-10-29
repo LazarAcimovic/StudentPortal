@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from './renderWithProviders';
+import { renderWithProviders } from './helpers/renderWithProviders';
 
 describe('smoke', () => {
   it('renderWithProviders mounts a component and jest-dom matchers are live', () => {

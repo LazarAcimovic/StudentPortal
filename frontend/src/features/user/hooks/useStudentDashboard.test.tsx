@@ -3,7 +3,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { http, HttpResponse, delay } from 'msw';
 import { useStudentDashboard } from './useStudentDashboard';
 import { server } from '../../../test/server';
-import { apiUrl } from '../../../test/mswOverrides';
+import { apiUrl } from '../../../test/helpers/mswHandlers';
 import { API_ROUTES } from '../../../config/constants';
 import { makeStudentDashboardPayload } from '../../../test/factories';
 import * as navLib from '../../../lib/navigation';

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
 import RoleGate from './RoleGate';
-import { renderWithProviders } from '../../test/renderWithProviders';
+import { renderWithProviders } from '../../test/helpers/renderWithProviders';
 import { USER_ROLES } from '../../shared/constants/constants';
 import { makeAdmin, makeProfessor, makeStudent } from '../../test/factories';
 

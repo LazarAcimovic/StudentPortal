@@ -94,12 +94,12 @@ Verify: `npm run test` and `npx tsc --noEmit`
 
 `src/test/renderWithProviders.tsx` and `src/test/time.ts` duplicate the `src/test/helpers/` versions; `src/test/mswOverrides.ts` predates `helpers/mswHandlers/`.
 
-- [ ] `grep -rn "test/renderWithProviders\|test/time'\|mswOverrides" frontend/src` — record the hit count.
-- [ ] Every importer re-pointed at the `helpers/` version.
-- [ ] If the two copies differ, keep the `helpers/` one and note the difference in the commit message.
-- [ ] `mswOverrides.ts` folded into `helpers/mswHandlers/`.
-- [ ] The three root-level duplicates deleted.
-- [ ] Full frontend suite green, typecheck clean.
+- [x] `grep -rn "test/renderWithProviders\|test/time'\|mswOverrides" frontend/src` — record the hit count.
+- [x] Every importer re-pointed at the `helpers/` version.
+- [x] If the two copies differ, keep the `helpers/` one and note the difference in the commit message.
+- [x] `mswOverrides.ts` folded into `helpers/mswHandlers/`.
+- [x] The three root-level duplicates deleted.
+- [x] Full frontend suite green, typecheck clean.
 - Commit: `refactor(test): consolidate duplicate render, time and MSW helpers`
 
 ---
@@ -124,9 +124,9 @@ Not in scope: code.
 Docs to update: Tech-Frontend §1
 Verify: `node scripts/check-docs.mjs`
 
-- [ ] Layout block regenerated from a real `git ls-files frontend/src` listing.
-- [ ] The "Legacy folders — do not extend, do not import from" paragraph removed, since nothing it named survives.
-- [ ] `verified at <sha>` marker updated to the commit that finished R01.5.
+- [x] Layout block regenerated from a real `git ls-files frontend/src` listing.
+- [x] The "Legacy folders — do not extend, do not import from" paragraph removed, since nothing it named survives.
+- [x] `verified at <sha>` marker updated to the commit that finished R01.5.
 - Commit: `docs(tech): refresh the frontend layout block after the legacy cleanup`
 
 ---

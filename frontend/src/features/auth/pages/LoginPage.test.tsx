@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithProviders } from '../../../test/renderWithProviders';
+import { renderWithProviders } from '../../../test/helpers/renderWithProviders';
 import { useUserStore } from '../../../store/user/useUserStore';
 import { USER_ROLES } from '../../../shared/constants/constants';
 import { makeStudent, makeProfessor, makeAdmin } from '../../../test/factories';

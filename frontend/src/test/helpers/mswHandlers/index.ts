@@ -1,4 +1,14 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+
+export const API_PREFIX = '/api';
+
+export function apiUrl(path: string): string {
+  return `${API_PREFIX}${path}`;
+}
+
+export function problemJson(status: number, message = 'error'): HttpResponse {
+  return HttpResponse.json({ title: 'An error occurred.', message }, { status });
+}
 import { API_ROUTES } from '../../../config/constants';
 import { seededStudent } from '../fixtures/users';
 import type { User as StoreUser } from '../../../shared/models/User';

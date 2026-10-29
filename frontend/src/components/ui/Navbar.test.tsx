@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithProviders } from '../../test/renderWithProviders';
+import { renderWithProviders } from '../../test/helpers/renderWithProviders';
 import { makeAdmin, makeStudent } from '../../test/factories';
 import { useUserStore } from '../../store/user/useUserStore';
 
