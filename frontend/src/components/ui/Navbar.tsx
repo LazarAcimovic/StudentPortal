@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../store/user/useUserStore";
 import { USER_ROLES } from "../../shared/constants/constants";
 import { APP_ROUTES } from "../../config/constants";
@@ -53,16 +53,28 @@ const Navbar: React.FC = () => {
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               {currentUser && (
-                <li className="nav-item">
-                  <NavLink
-                    className={({ isActive }) =>
-                      isActive ? "nav-link active" : "nav-link"
-                    }
-                    to={getDashboardLink()}
-                  >
-                    Dashboard
-                  </NavLink>
-                </li>
+                <>
+                  <li className="nav-item">
+                    <NavLink
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
+                      }
+                      to={getDashboardLink()}
+                    >
+                      Dashboard
+                    </NavLink>
+                  </li>
+                  <li className="nav-item">
+                    <NavLink
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
+                      }
+                      to={APP_ROUTES.PROFILE}
+                    >
+                      My Profile
+                    </NavLink>
+                  </li>
+                </>
               )}
             </ul>
             <ul className="navbar-nav">
@@ -76,12 +88,6 @@ const Navbar: React.FC = () => {
                     Welcome, {currentUser.firstName}
                   </button>
                   <ul className="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <Link className="dropdown-item" to={APP_ROUTES.PROFILE}>
-                        My Profile
-                      </Link>
-                    </li>
-                    <li><hr className="dropdown-divider" /></li>
                     <li>
                       <button className="dropdown-item" onClick={handleLogout}>
                         Logout
