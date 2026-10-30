@@ -35,6 +35,7 @@ frontend/src/
   providers/
     router.tsx                  createBrowserRouter config
     authGuard.tsx               <AuthGuard>
+    RoleHomeRedirect.tsx        <RoleGate> fallback: sends a mismatched role to its own dashboard
   components/
     ui/                         Modal.tsx, Navbar.tsx, PasswordInput.tsx, UserEditForm.tsx
     shared/                     RoleGate.tsx
@@ -274,13 +275,14 @@ Rules for Pattern B:
 Response interceptor:
 
 - On `401` and `!config._retry`: set `_retry = true`, call `POST /api/Account/Refresh` (serialised through a module-scoped `refreshPromise` so a burst of 401s triggers exactly one refresh), then retry the original request.
-- On refresh failure **or** on `403`: call `clearAuthSession({ redirectToLogin: true })` — clears the user store, fire-and-forget `POST /api/Account/Logout`, navigate to `/login` via the navigation singleton.
+- On refresh failure (the retried `401`): call `clearAuthSession({ redirectToLogin: true })` — clears the user store and navigates to `/login` via the navigation singleton.
+- On `403`: **do not touch the session** — reject the promise so the caller handles it. A `403` is an authorization failure (authenticated, wrong role), not an authentication failure; clearing the session on `403` logged users out of a still-valid session whenever a request their role could not make slipped through (per D-029).
 
 **Routing:**
 
 - `createBrowserRouter` + `<RouterProvider/>`.
-- Protected routes wrap `<AuthGuard>`, which reads `currentUser` + `isHydrating`, renders a spinner while hydrating, and `<Navigate to={APP_ROUTES.AUTH_LOGIN} state={withAuthRedirect(location)} replace/>` when unauthenticated.
-- Role-restricted routes additionally wrap `<RoleGate roles={[USER_ROLES.ADMIN]}>`.
+- Protected routes wrap `<AuthGuard>`, which reads `currentUser` + `isHydrating`, renders a spinner while hydrating, and `<Navigate to={APP_ROUTES.AUTH_LOGIN} replace/>` when unauthenticated.
+- Role-restricted routes additionally wrap `<RoleGate allowed={USER_ROLES.Admin} fallback={<RoleHomeRedirect/>}>`. The fallback (`providers/RoleHomeRedirect.tsx`) redirects a mismatched role to its **own** dashboard, so a role never mounts another role's page and never fires the requests the backend answers with `403` (per D-030). The three dashboard routes are gated; `/profile` and `/profile/change-password` stay open to any authenticated user.
 - Imperative navigation from non-components uses `lib/navigation.ts`, registered by `App.tsx`'s first `useEffect`.
 
 ---

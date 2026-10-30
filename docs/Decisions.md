@@ -222,3 +222,17 @@ The four statuses:
 **Answer:** Every non-deleted subject assigned to the professor (`Subject.ProfessorId`), including a subject with no enrolled students yet. `ProfessorDashboardService` lists the professor's subjects and attaches enrollment rows to each, rather than deriving the subject list from enrollments.
 **Lives in:** PRD §5.4, UI §7.1
 **Why:** The dashboard was built by grouping the professor's enrollments by subject, so a freshly created subject with no students produced no group and never appeared — while the admin Subjects tab (which lists all subjects) did show it. "My Subjects" means the subjects the professor teaches, independent of whether anyone is enrolled.
+
+### D-029 — Does a `403` response log the user out?
+
+**Decided:** 2026-10-30 · **Status:** Accepted
+**Answer:** No. The axios response interceptor no longer calls `clearAuthSession` on `403`; it rejects the promise and leaves the session untouched. Only a failed silent refresh (the retried `401`) clears the session. A `403` is surfaced to the caller to handle (e.g. an error toast).
+**Lives in:** Tech-Frontend §4
+**Why:** `403 Forbidden` means the caller is authenticated but not authorized for *that* resource (wrong role), not that their session is invalid. Treating it as a logout desynced the frontend from a still-valid backend session: `currentUser` was nulled while the httpOnly cookies stayed valid, so any request a role could not make (e.g. the admin dashboard's `GET /api/User` reached by a student via the Back button) dumped the user onto a stale login form without ever clicking logout. Addressed together with D-030, which stops the forbidden request from being fired at all.
+
+### D-030 — What happens when a user opens a route meant for another role?
+
+**Decided:** 2026-10-30 · **Status:** Accepted
+**Answer:** They are redirected to **their own** dashboard. The three role-specific dashboard routes wrap `<RoleGate allowed={…} fallback={<RoleHomeRedirect/>}>`; on a role mismatch the gate renders the fallback, which `<Navigate replace>`s to the caller's own dashboard (`providers/RoleHomeRedirect.tsx`). `/profile` and `/profile/change-password` remain open to any authenticated user. `AuthGuard` (authentication) is unchanged and still wraps all of them.
+**Lives in:** Tech-Frontend §4
+**Why:** Without a role gate, a logged-in student could mount `/admin-dashboard` (only authentication was checked), which fired admin-only requests the backend answered with `403`. Redirecting at the route boundary means the forbidden page — and its requests — never run, which is the clean complement to D-029.
