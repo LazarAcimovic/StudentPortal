@@ -55,11 +55,11 @@ const LoginPage: React.FC = () => {
       setCurrentUser(user);
 
       if (user.userRole === USER_ROLES.Admin) {
-        navigate(APP_ROUTES.ADMIN_DASHBOARD);
+        navigate(APP_ROUTES.ADMIN_DASHBOARD, { replace: true });
       } else if (user.userRole === USER_ROLES.Professor) {
-        navigate(APP_ROUTES.PROFESSOR_DASHBOARD);
+        navigate(APP_ROUTES.PROFESSOR_DASHBOARD, { replace: true });
       } else {
-        navigate(APP_ROUTES.STUDENT_DASHBOARD);
+        navigate(APP_ROUTES.STUDENT_DASHBOARD, { replace: true });
       }
     } catch {
       setServerError("Invalid email or password");
