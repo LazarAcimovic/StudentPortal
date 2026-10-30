@@ -25,11 +25,9 @@ axiosClient.interceptors.response.use(
         return Promise.reject(error);
       }
 
-    if (error.response?.status === 403) {
-      clearAuthSession({ redirectToLogin: true });
-      return Promise.reject(error);
-    }
-
+    // A 403 means the caller is authenticated but not authorized for THIS
+    // resource (wrong role). It is NOT an authentication failure, so the
+    // session must stay intact — surface the error to the caller (per D-029).
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 

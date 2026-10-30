@@ -113,15 +113,17 @@ describe('axiosClient interceptor — silent 401 refresh', () => {
 });
 
 describe('axiosClient interceptor — 403 and other errors', () => {
-  it('on 403 calls clearAuthSession and rejects', async () => {
+  it('on 403 does NOT clear the session and rejects with the 403 (per D-029)', async () => {
     const clearSpy = vi.spyOn(authLib, 'clearAuthSession');
 
     server.use(
       http.get(apiUrl(PROTECTED_PATH), () => new HttpResponse(null, { status: 403 }))
     );
 
-    await expect(axiosClient.get(PROTECTED_PATH)).rejects.toBeDefined();
-    expect(clearSpy).toHaveBeenCalledWith({ redirectToLogin: true });
+    await expect(axiosClient.get(PROTECTED_PATH)).rejects.toMatchObject({
+      response: { status: 403 },
+    });
+    expect(clearSpy).not.toHaveBeenCalled();
   });
 
   it('rethrows non-401/403 errors unchanged (e.g. 500)', async () => {
