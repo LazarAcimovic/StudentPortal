@@ -8,7 +8,6 @@ import {
 
 interface EnrollmentsTableProps {
   enrollments: Enrollment[];
-  onDeleteEnrollment: (enrollmentId: string) => void;
 }
 
 function StatusBadge({ isDeleted }: { isDeleted: boolean }) {

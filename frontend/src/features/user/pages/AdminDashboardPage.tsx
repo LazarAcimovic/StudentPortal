@@ -3,6 +3,7 @@ import { useUserStore } from "../../../store/user/useUserStore";
 import { USER_ROLES } from "../../../shared/constants/constants";
 
 import { createEnrollment, getAllEnrollments } from "../../subjects/api/enrollmentService";
+import type { CreateEnrollmentResult } from "../../subjects/api/enrollmentService";
 import { getAllUsers, addUser, deleteUser } from "../api/userService";
 import type { AddUserResult } from "../api/userService";
 import { getAllSubjects, createSubject, updateSubject } from "../../subjects/api/subjectService";
@@ -132,24 +133,17 @@ const AdminDashboardPage: React.FC = () => {
     return result;
   };
 
-  const handleCreateEnrollment = async (newEnrollment: CreateEnrollment) => {
-    const createdEnrollment = await createEnrollment(newEnrollment);
+  const handleCreateEnrollment = async (
+    newEnrollment: CreateEnrollment
+  ): Promise<CreateEnrollmentResult> => {
+    const result = await createEnrollment(newEnrollment);
 
-    if (createdEnrollment) {
-      setEnrollments([...enrollments, createdEnrollment]);
+    if (result.ok) {
+      setEnrollments([...enrollments, result.enrollment]);
       setIsCreatingEnrollment(false);
-      console.log("Created new enrollment:", createdEnrollment);
-    } else {
-      alert("Failed to create enrollment.");
     }
-  };
-  const handleDeleteEnrollment = (enrollmentId: string) => {
-    setEnrollments(
-      enrollments.map((e) =>
-        e.id === enrollmentId ? { ...e, isDeleted: true } : e
-      )
-    );
-    console.log("Deleted enrollment with ID:", enrollmentId);
+
+    return result;
   };
   const renderContent = () => {
     switch (activeTab) {
@@ -265,10 +259,7 @@ const AdminDashboardPage: React.FC = () => {
                     Create New Enrollment
                   </button>
                 </div>
-                <EnrollmentsTable
-                  enrollments={enrollments}
-                  onDeleteEnrollment={handleDeleteEnrollment}
-                />
+                <EnrollmentsTable enrollments={enrollments} />
               </>
             )}
           </>

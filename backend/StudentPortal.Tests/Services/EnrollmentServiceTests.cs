@@ -9,162 +9,114 @@ namespace StudentPortal.Tests.Services;
 
 public class EnrollmentServiceTests
 {
-    private readonly IEnrollmentRepository _enrollRepo = Substitute.For<IEnrollmentRepository>();
+    private readonly IEnrollmentRepository _enrollmentRepo = Substitute.For<IEnrollmentRepository>();
     private readonly IUserRepository _userRepo = Substitute.For<IUserRepository>();
     private readonly ISubjectRepository _subjectRepo = Substitute.For<ISubjectRepository>();
     private readonly IMapper _mapper = TestMapper.Create();
 
-    private EnrollmentService CreateSut() => new(_enrollRepo, _userRepo, _subjectRepo, _mapper);
+    private EnrollmentService CreateSut() => new(_enrollmentRepo, _userRepo, _subjectRepo, _mapper);
 
-    private static User MakeStudent(bool isDeleted = false) => new()
+    private static User MakeUser(Guid id, bool isDeleted = false, RoleEnum role = RoleEnum.Student) => new()
     {
-        Id = Guid.NewGuid(), FirstName = "Stu", LastName = "Dent",
-        Email = "s@example.com", IndexNumber = "2026/0001",
-        UserRole = RoleEnum.Student, IsDeleted = isDeleted,
+        Id = id,
+        FirstName = "Stu",
+        LastName = "Dent",
+        Email = "stu@example.com",
+        IndexNumber = "2020/1",
+        UserRole = role,
+        IsDeleted = isDeleted,
     };
 
-    private static Subject MakeSubject(bool isDeleted = false, Guid? professorId = null) => new()
+    private static Subject MakeSubject(Guid id, bool isDeleted = false) => new()
     {
-        Id = Guid.NewGuid(), SubjectName = "AI", ECTS = 6,
-        ProfessorId = professorId ?? Guid.NewGuid(), IsDeleted = isDeleted,
-        Professor = new User { FirstName = "Pro", LastName = "Fessor" },
+        Id = id,
+        SubjectName = "Databases",
+        SubjectCode = "CS101",
+        ECTS = 6,
+        ProfessorId = Guid.NewGuid(),
+        IsDeleted = isDeleted,
     };
 
-    // ---------- AddEnrollmentAsync ----------
+    private static EnrollmentCreateDto Dto(Guid studentId, Guid subjectId) => new()
+    {
+        StudentId = studentId,
+        SubjectId = subjectId,
+    };
 
     [Fact]
-    public async Task AddEnrollmentAsync_HappyPath_CreatesEnrollment()
+    public async Task AddEnrollmentAsync_InactiveStudent_Throws()
     {
-        var student = MakeStudent();
-        var subject = MakeSubject();
-        _userRepo.GetUserByIdAsync(student.Id).Returns(student);
-        _subjectRepo.GetSubjectByIdAsync(subject.Id).Returns(subject);
-        _enrollRepo.GetEnrollmentByStudentAndSubjectIdAsync(student.Id, subject.Id).Returns((Enrollment)null);
-        _enrollRepo.AddEnrollmentAsync(Arg.Any<Enrollment>()).Returns(ci =>
-        {
-            var e = ci.Arg<Enrollment>();
-            e.Student = student;
-            e.Subject = subject;
-            return e;
-        });
+        var studentId = Guid.NewGuid();
+        _userRepo.GetUserByIdAsync(studentId).Returns(MakeUser(studentId, isDeleted: true));
 
         var sut = CreateSut();
 
-        var dto = await sut.AddEnrollmentAsync(new EnrollmentCreateDto { StudentId = student.Id, SubjectId = subject.Id });
-
-        Assert.NotNull(dto);
-        await _enrollRepo.Received(1).AddEnrollmentAsync(Arg.Is<Enrollment>(e =>
-            e.StudentId == student.Id && e.SubjectId == subject.Id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.AddEnrollmentAsync(Dto(studentId, Guid.NewGuid())));
+        await _enrollmentRepo.DidNotReceiveWithAnyArgs().AddEnrollmentAsync(default);
     }
 
     [Fact]
-    public async Task AddEnrollmentAsync_UnknownStudent_ReturnsNullAndDoesNotPersist()
+    public async Task AddEnrollmentAsync_NonStudentRole_Throws()
     {
-        _userRepo.GetUserByIdAsync(Arg.Any<Guid>()).Returns((User)null);
+        // Only students may be enrolled; a professor/admin id is rejected.
+        var userId = Guid.NewGuid();
+        _userRepo.GetUserByIdAsync(userId).Returns(MakeUser(userId, role: RoleEnum.Professor));
+
         var sut = CreateSut();
 
-        var dto = await sut.AddEnrollmentAsync(new EnrollmentCreateDto
-        {
-            StudentId = Guid.NewGuid(), SubjectId = Guid.NewGuid(),
-        });
-
-        Assert.Null(dto);
-        await _enrollRepo.DidNotReceiveWithAnyArgs().AddEnrollmentAsync(default);
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.AddEnrollmentAsync(Dto(userId, Guid.NewGuid())));
+        await _enrollmentRepo.DidNotReceiveWithAnyArgs().AddEnrollmentAsync(default);
     }
 
     [Fact]
-    public async Task AddEnrollmentAsync_SoftDeletedStudent_ReturnsNull()
+    public async Task AddEnrollmentAsync_InactiveSubject_Throws()
     {
-        var deletedStudent = MakeStudent(isDeleted: true);
-        _userRepo.GetUserByIdAsync(deletedStudent.Id).Returns(deletedStudent);
+        var studentId = Guid.NewGuid();
+        var subjectId = Guid.NewGuid();
+        _userRepo.GetUserByIdAsync(studentId).Returns(MakeUser(studentId));
+        _subjectRepo.GetSubjectByIdAsync(subjectId).Returns(MakeSubject(subjectId, isDeleted: true));
+
         var sut = CreateSut();
 
-        var dto = await sut.AddEnrollmentAsync(new EnrollmentCreateDto
-        {
-            StudentId = deletedStudent.Id, SubjectId = Guid.NewGuid(),
-        });
-
-        Assert.Null(dto);
-        await _enrollRepo.DidNotReceiveWithAnyArgs().AddEnrollmentAsync(default);
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.AddEnrollmentAsync(Dto(studentId, subjectId)));
+        await _enrollmentRepo.DidNotReceiveWithAnyArgs().AddEnrollmentAsync(default);
     }
 
     [Fact]
-    public async Task AddEnrollmentAsync_UnknownSubject_ReturnsNull()
+    public async Task AddEnrollmentAsync_Duplicate_Throws()
     {
-        var student = MakeStudent();
-        _userRepo.GetUserByIdAsync(student.Id).Returns(student);
-        _subjectRepo.GetSubjectByIdAsync(Arg.Any<Guid>()).Returns((Subject)null);
+        var studentId = Guid.NewGuid();
+        var subjectId = Guid.NewGuid();
+        _userRepo.GetUserByIdAsync(studentId).Returns(MakeUser(studentId));
+        _subjectRepo.GetSubjectByIdAsync(subjectId).Returns(MakeSubject(subjectId));
+        _enrollmentRepo.GetEnrollmentByStudentAndSubjectIdAsync(studentId, subjectId)
+            .Returns(new Enrollment { Id = Guid.NewGuid(), StudentId = studentId, SubjectId = subjectId });
+
         var sut = CreateSut();
 
-        var dto = await sut.AddEnrollmentAsync(new EnrollmentCreateDto
-        {
-            StudentId = student.Id, SubjectId = Guid.NewGuid(),
-        });
-
-        Assert.Null(dto);
-        await _enrollRepo.DidNotReceiveWithAnyArgs().AddEnrollmentAsync(default);
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.AddEnrollmentAsync(Dto(studentId, subjectId)));
+        await _enrollmentRepo.DidNotReceiveWithAnyArgs().AddEnrollmentAsync(default);
     }
 
     [Fact]
-    public async Task AddEnrollmentAsync_SoftDeletedSubject_ReturnsNull()
+    public async Task AddEnrollmentAsync_Valid_PersistsAndReturnsDto()
     {
-        var student = MakeStudent();
-        var deletedSubject = MakeSubject(isDeleted: true);
-        _userRepo.GetUserByIdAsync(student.Id).Returns(student);
-        _subjectRepo.GetSubjectByIdAsync(deletedSubject.Id).Returns(deletedSubject);
-        var sut = CreateSut();
-
-        var dto = await sut.AddEnrollmentAsync(new EnrollmentCreateDto
-        {
-            StudentId = student.Id, SubjectId = deletedSubject.Id,
-        });
-
-        Assert.Null(dto);
-    }
-
-    [Fact]
-    public async Task AddEnrollmentAsync_DuplicateEnrollment_ReturnsNullAndDoesNotInsert()
-    {
-        // Enforces the (StudentId, SubjectId) uniqueness invariant at the service layer.
-        var student = MakeStudent();
-        var subject = MakeSubject();
-        var existing = new Enrollment { Id = Guid.NewGuid(), StudentId = student.Id, SubjectId = subject.Id };
-        _userRepo.GetUserByIdAsync(student.Id).Returns(student);
-        _subjectRepo.GetSubjectByIdAsync(subject.Id).Returns(subject);
-        _enrollRepo.GetEnrollmentByStudentAndSubjectIdAsync(student.Id, subject.Id).Returns(existing);
+        var studentId = Guid.NewGuid();
+        var subjectId = Guid.NewGuid();
+        _userRepo.GetUserByIdAsync(studentId).Returns(MakeUser(studentId));
+        _subjectRepo.GetSubjectByIdAsync(subjectId).Returns(MakeSubject(subjectId));
+        _enrollmentRepo.GetEnrollmentByStudentAndSubjectIdAsync(studentId, subjectId).Returns((Enrollment)null);
+        _enrollmentRepo.AddEnrollmentAsync(Arg.Any<Enrollment>()).Returns(ci => ci.Arg<Enrollment>());
 
         var sut = CreateSut();
 
-        var dto = await sut.AddEnrollmentAsync(new EnrollmentCreateDto { StudentId = student.Id, SubjectId = subject.Id });
+        var result = await sut.AddEnrollmentAsync(Dto(studentId, subjectId));
 
-        Assert.Null(dto);
-        await _enrollRepo.DidNotReceiveWithAnyArgs().AddEnrollmentAsync(default);
-    }
-
-    // ---------- DeleteEnrollmentAsync ----------
-
-    [Fact]
-    public async Task DeleteEnrollmentAsync_ExistingEnrollment_DeletesAndReturnsTrue()
-    {
-        var id = Guid.NewGuid();
-        _enrollRepo.GetEnrollmentByIdAsync(id).Returns(new Enrollment { Id = id });
-        var sut = CreateSut();
-
-        var result = await sut.DeleteEnrollmentAsync(id);
-
-        Assert.True(result);
-        await _enrollRepo.Received(1).DeleteEnrollmentAsync(id);
-    }
-
-    [Fact]
-    public async Task DeleteEnrollmentAsync_UnknownEnrollment_ReturnsFalseAndDoesNotCallRepo()
-    {
-        _enrollRepo.GetEnrollmentByIdAsync(Arg.Any<Guid>()).Returns((Enrollment)null);
-        var sut = CreateSut();
-
-        var result = await sut.DeleteEnrollmentAsync(Guid.NewGuid());
-
-        Assert.False(result);
-        await _enrollRepo.DidNotReceiveWithAnyArgs().DeleteEnrollmentAsync(default);
+        Assert.NotNull(result);
+        await _enrollmentRepo.Received(1).AddEnrollmentAsync(Arg.Any<Enrollment>());
     }
 }

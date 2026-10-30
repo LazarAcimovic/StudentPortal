@@ -208,3 +208,10 @@ The four statuses:
 **Answer:** No, with one exception. `UpdateSubjectAsync` rejects reassigning a subject to a missing or soft-deleted professor (`400`), but allows **keeping** the subject's current professor even if that professor later became inactive. The edit form mirrors this: the current professor stays selectable, other inactive professors are hidden, and the form validates inline (Save disabled until valid, server errors shown, no `alert()`).
 **Lives in:** PRD §6, Tech-Backend §5, UI §8.4
 **Why:** Extends D-025 to the edit path, which previously did no professor validation at all (you could reassign to an inactive professor, or to an invalid id → 500). The keep-current exception avoids blocking an unrelated edit (e.g. a rename) just because the assigned professor was since deactivated — reassignment is a deliberate separate action.
+
+### D-027 — Can an enrollment be edited or deleted, and what makes one valid?
+
+**Decided:** 2026-10-29 · **Status:** Accepted
+**Answer:** Enrollments are create-only — there is **no edit and no delete** in the UI. Creating one requires an active user with the Student role and an active subject, and rejects a duplicate (same student and subject); `AddEnrollmentAsync` throws a specific `InvalidOperationException` for each case, returned as `400` and shown inline. The student picker lists active students only and the subject picker excludes already-enrolled and inactive subjects.
+**Lives in:** PRD §6, Tech-Backend §5, UI §8.5
+**Why:** Supersedes the earlier "delete / recreate" note in UI §8.5: the delete was never wired to the backend (a local-only stub) and the product decision is that enrollments are permanent. Distinct server messages replace a single generic alert so a duplicate and an inactive student are no longer indistinguishable to the admin.

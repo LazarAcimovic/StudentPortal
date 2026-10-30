@@ -401,13 +401,13 @@ Create / Edit subject fields, in this order:
 
 ### 8.5 Enrollments tab
 
-Table columns (desktop): Student, Subject, Enrolled At, Action.
+Table columns (desktop): Student, Subject, Enrolled At.
 
-Create form fields:
-- Student — select (students only).
-- Subject — select.
+Create form fields, inline-validated like §8.4 (Create disabled until both are chosen; a server error renders as a top-of-form `alert alert-danger`):
+- Student — select of **active students only** (soft-deleted users are excluded).
+- Subject — select, excluding subjects the chosen student is already enrolled in and any inactive subject.
 
-No edit (delete / recreate instead).
+Enrollments are **create-only: there is no edit and no delete** (per D-027). A duplicate (same student and subject), an inactive student or subject, or a non-student is rejected by the server with a specific `400` message shown inline.
 
 ### 8.6 Escalations tab
 

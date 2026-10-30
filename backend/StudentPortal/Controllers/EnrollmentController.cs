@@ -63,11 +63,11 @@ namespace StudentPortal.Controllers
             try
             {
                 var newEnrollment = await _enrollmentService.AddEnrollmentAsync(enrollmentDto);
-                if (newEnrollment == null)
-                {
-                    return BadRequest("Enrollment could not be created. Student or subject might not exist or enrollment already exists.");
-                }
                 return CreatedAtAction(nameof(GetEnrollmentById), new { id = newEnrollment.Id }, newEnrollment);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {

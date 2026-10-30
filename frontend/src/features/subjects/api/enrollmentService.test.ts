@@ -75,7 +75,8 @@ describe('enrollmentService.createEnrollment', () => {
     const result = await createEnrollment({ StudentId: '10', SubjectId: '42' });
 
     expect(body).toEqual({ studentId: '10', subjectId: '42' });
-    expect(result?.id).toBe(1);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.enrollment.id).toBe(1);
   });
 
   it('does NOT send any field other than studentId/subjectId', async () => {
@@ -93,7 +94,7 @@ describe('enrollmentService.createEnrollment', () => {
     expect(Object.keys(body!).sort()).toEqual(['studentId', 'subjectId']);
   });
 
-  it('returns null (and logs) on a 400 validation error', async () => {
+  it('maps a 400 validation error into per-field messages', async () => {
     server.use(
       http.post(apiUrl(API_ROUTES.ENROLLMENT), () =>
         HttpResponse.json({ errors: { StudentId: ['Required'] } }, { status: 400 })
@@ -102,19 +103,21 @@ describe('enrollmentService.createEnrollment', () => {
 
     const result = await createEnrollment({ StudentId: '0', SubjectId: '42' });
 
-    expect(result).toBeNull();
-    expect(console.error).toHaveBeenCalled();
+    expect(result).toEqual({ ok: false, fieldErrors: { StudentId: 'Required' } });
   });
 
-  it('returns null on 409 Conflict (duplicate enrollment)', async () => {
+  it('surfaces a 400 domain message (e.g. duplicate enrollment)', async () => {
     server.use(
       http.post(apiUrl(API_ROUTES.ENROLLMENT), () =>
-        HttpResponse.json({ title: 'duplicate' }, { status: 409 })
+        HttpResponse.json('This student is already enrolled in that subject.', { status: 400 })
       )
     );
 
     const result = await createEnrollment({ StudentId: '10', SubjectId: '42' });
 
-    expect(result).toBeNull();
+    expect(result).toEqual({
+      ok: false,
+      message: 'This student is already enrolled in that subject.',
+    });
   });
 });

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using StudentPortal.Dtos;
 using StudentPortal.Models.Entities;
+using StudentPortal.Models.Enums;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Services;
@@ -36,23 +37,21 @@ public class EnrollmentService : IEnrollmentService
     {
      
         var student = await _userRepository.GetUserByIdAsync(enrollmentDto.StudentId);
-        if (student == null || student.IsDeleted)
+        if (student == null || student.IsDeleted || student.UserRole != RoleEnum.Student)
         {
-            return null;
+            throw new InvalidOperationException("The selected student is not available.");
         }
 
-        
         var subject = await _subjectRepository.GetSubjectByIdAsync(enrollmentDto.SubjectId);
         if (subject == null || subject.IsDeleted)
         {
-            return null;
+            throw new InvalidOperationException("The selected subject is not available.");
         }
 
-     
         var existingEnrollment = await _enrollmentRepository.GetEnrollmentByStudentAndSubjectIdAsync(enrollmentDto.StudentId, enrollmentDto.SubjectId);
         if (existingEnrollment != null)
         {
-            return null; 
+            throw new InvalidOperationException("This student is already enrolled in that subject.");
         }
 
         var newEnrollment = _mapper.Map<Enrollment>(enrollmentDto);

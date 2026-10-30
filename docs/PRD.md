@@ -373,6 +373,7 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 - Input validation on all auth, admin, grade entry, and appeal DTOs uses FluentValidation (automatic 400 responses on invalid payloads).
 - Admin create-user (`POST /api/User`) rejects a **duplicate email** with `409 Conflict`, never a generic 500: `Users.Email` is unique and `UserService.AddUserAsync` checks it before insert. The SPA surfaces the message under the Email field rather than guessing. Password rules are validated on both layers — Zod on the client and FluentValidation on the server (per D-024).
 - Creating a subject (`POST /api/Subject`) rejects a **soft-deleted professor**: `SubjectService.AddSubjectAsync` returns a failure (controller `400`) when the chosen professor is missing or `IsDeleted`, and the admin UI omits inactive professors from the picker (per D-025). Editing a subject (`PUT /api/Subject/{id}`) enforces the same rule, except the subject may keep its current professor even if that professor later became inactive (per D-026).
+- Enrolling a student (`POST /api/Enrollment`) requires an **active Student** and an **active subject** and rejects a duplicate (the student is already enrolled in that subject); each failure returns `400` with a specific message. Enrollments cannot be edited or deleted (per D-027).
 
 ---
 
