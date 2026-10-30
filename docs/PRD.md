@@ -261,7 +261,7 @@ Four tabs: **Users**, **Subjects**, **Enrollments**, **Escalations**.
 
 ### 5.4 Professor dashboard (`/professor-dashboard`)
 Three selection columns:
-1. **My Subjects** — selectable list.
+1. **My Subjects** — selectable list of **every subject assigned to the professor**, including a subject with no enrolled students yet (per D-028).
 2. **Students in <subject>** — selectable list of students enrolled in the selected subject.
 3. **Grade for <student>** — the grading UI (see §3.3 and §5.6 below).
 

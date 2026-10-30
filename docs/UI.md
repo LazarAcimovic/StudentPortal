@@ -274,7 +274,7 @@ Reusable `<Modal>`:
 
 Do not use a bare `col-lg-4`: it jumps straight from one column to three and skips the two-column stage.
 
-- **Column 1 — My Subjects**: `list-group` of selectable subjects. The selected subject has `active` class.
+- **Column 1 — My Subjects**: `list-group` of selectable subjects — every subject the professor teaches, including student-less ones (per D-028). The selected subject has `active` class.
 - **Column 2 — Students in {subject}**: `list-group` of students enrolled in the selected subject. The selected student has `active` class.
 - **Column 3 — Grade for {student}**: the grading panel (§7.2).
 

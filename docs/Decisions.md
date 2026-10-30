@@ -215,3 +215,10 @@ The four statuses:
 **Answer:** Enrollments are create-only — there is **no edit and no delete** in the UI. Creating one requires an active user with the Student role and an active subject, and rejects a duplicate (same student and subject); `AddEnrollmentAsync` throws a specific `InvalidOperationException` for each case, returned as `400` and shown inline. The student picker lists active students only and the subject picker excludes already-enrolled and inactive subjects.
 **Lives in:** PRD §6, Tech-Backend §5, UI §8.5
 **Why:** Supersedes the earlier "delete / recreate" note in UI §8.5: the delete was never wired to the backend (a local-only stub) and the product decision is that enrollments are permanent. Distinct server messages replace a single generic alert so a duplicate and an inactive student are no longer indistinguishable to the admin.
+
+### D-028 — Which subjects appear on the professor dashboard?
+
+**Decided:** 2026-10-30 · **Status:** Accepted
+**Answer:** Every non-deleted subject assigned to the professor (`Subject.ProfessorId`), including a subject with no enrolled students yet. `ProfessorDashboardService` lists the professor's subjects and attaches enrollment rows to each, rather than deriving the subject list from enrollments.
+**Lives in:** PRD §5.4, UI §7.1
+**Why:** The dashboard was built by grouping the professor's enrollments by subject, so a freshly created subject with no students produced no group and never appeared — while the admin Subjects tab (which lists all subjects) did show it. "My Subjects" means the subjects the professor teaches, independent of whether anyone is enrolled.

@@ -10,8 +10,9 @@ public class ProfessorDashboardServiceTests
     private readonly IEnrollmentRepository _enrollRepo = Substitute.For<IEnrollmentRepository>();
     private readonly IAppealRepository _appealRepo = Substitute.For<IAppealRepository>();
     private readonly IGradeRepository _gradeRepo = Substitute.For<IGradeRepository>();
+    private readonly ISubjectRepository _subjectRepo = Substitute.For<ISubjectRepository>();
 
-    private ProfessorDashboardService CreateSut() => new(_enrollRepo, _appealRepo, _gradeRepo, TimeProvider.System);
+    private ProfessorDashboardService CreateSut() => new(_enrollRepo, _appealRepo, _gradeRepo, _subjectRepo, TimeProvider.System);
 
     private static Subject MakeSubject(string name = "Databases", int ects = 6) => new()
     {
@@ -34,6 +35,26 @@ public class ProfessorDashboardServiceTests
             SubjectId = subject.Id, Subject = subject,
             Grade = grade, GradeDraft = draft,
         };
+    }
+
+    [Fact]
+    public async Task GetDashboardAsync_IncludesSubjectWithNoEnrollments()
+    {
+        // Regression: a freshly created subject with no enrolled students must still
+        // appear on its professor's dashboard (previously it was grouped out).
+        var profId = Guid.NewGuid();
+        var subject = MakeSubject("Programiranje 3");
+        _subjectRepo.GetSubjectsByProfessorIdAsync(profId).Returns(new List<Subject> { subject });
+        _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment>());
+        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
+
+        var sut = CreateSut();
+
+        var dto = await sut.GetDashboardAsync(profId);
+
+        Assert.Single(dto.Subjects);
+        Assert.Equal("Programiranje 3", dto.Subjects[0].SubjectName);
+        Assert.Empty(dto.Subjects[0].Students);
     }
 
     [Fact]
