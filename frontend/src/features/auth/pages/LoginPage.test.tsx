@@ -54,7 +54,7 @@ describe('LoginPage happy paths', () => {
     await waitFor(() => expect(authService.login).toHaveBeenCalledTimes(1));
     expect(authService.login).toHaveBeenCalledWith({ email: user.email, password: 'secret-pass' });
     expect(useUserStore.getState().currentUser).toEqual(user);
-    await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith(expectedRoute));
+    await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith(expectedRoute, { replace: true }));
   });
 });
 

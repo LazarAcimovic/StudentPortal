@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
       await logout();
     } finally {
       clearCurrentUser();
-      navigate(APP_ROUTES.AUTH_LOGIN);
+      navigate(APP_ROUTES.AUTH_LOGIN, { replace: true });
     }
   };
 

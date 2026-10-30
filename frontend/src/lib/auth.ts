@@ -18,7 +18,7 @@ export function clearAuthSession(options: ClearAuthSessionOptions = {}): void {
     cb();
   }
   if (options.redirectToLogin) {
-    navigate(APP_ROUTES.AUTH_LOGIN);
+    navigate(APP_ROUTES.AUTH_LOGIN, { replace: true });
   } 
 }
 

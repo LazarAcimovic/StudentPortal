@@ -36,7 +36,7 @@ describe('clearAuthSession', () => {
 
     clearAuthSession({ redirectToLogin: true });
 
-    expect(navSpy).toHaveBeenCalledWith(APP_ROUTES.AUTH_LOGIN);
+    expect(navSpy).toHaveBeenCalledWith(APP_ROUTES.AUTH_LOGIN, { replace: true });
   });
 
   it('does not navigate when redirectToLogin is omitted', () => {
@@ -66,7 +66,7 @@ describe('withAuthRedirect (401 wrapper)', () => {
     });
 
     expect(result).toBeNull();
-    expect(navSpy).toHaveBeenCalledWith(APP_ROUTES.AUTH_LOGIN);
+    expect(navSpy).toHaveBeenCalledWith(APP_ROUTES.AUTH_LOGIN, { replace: true });
   });
 
   it('re-throws non-401 errors', async () => {
