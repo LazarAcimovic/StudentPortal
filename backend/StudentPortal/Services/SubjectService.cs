@@ -56,6 +56,14 @@ public class SubjectService : ISubjectService
             return null;
         }
 
+        // A subject may keep its current professor even if that professor later
+        // became inactive, but it may not be reassigned to a missing or inactive one.
+        var professor = await _userRepository.GetUserByIdAsync(subjectDto.ProfessorId);
+        if (professor == null)
+            throw new InvalidOperationException("The selected professor does not exist.");
+        if (professor.IsDeleted && subjectDto.ProfessorId != subjectToUpdate.ProfessorId)
+            throw new InvalidOperationException("The selected professor is inactive.");
+
         _mapper.Map(subjectDto, subjectToUpdate);
 
         await _subjectRepository.UpdateSubjectAsync(subjectToUpdate);

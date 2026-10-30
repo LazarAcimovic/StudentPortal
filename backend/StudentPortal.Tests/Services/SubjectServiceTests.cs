@@ -76,4 +76,50 @@ public class SubjectServiceTests
         Assert.NotNull(result);
         await _subjectRepo.Received(1).AddSubjectAsync(Arg.Any<Subject>());
     }
+
+    [Fact]
+    public async Task UpdateSubjectAsync_ReassignToInactiveProfessor_ThrowsAndDoesNotPersist()
+    {
+        var subjectId = Guid.NewGuid();
+        var currentProfId = Guid.NewGuid();
+        var newInactiveProfId = Guid.NewGuid();
+        _subjectRepo.GetSubjectByIdAsync(subjectId).Returns(new Subject
+        {
+            Id = subjectId, SubjectName = "DB", SubjectCode = "CS101", ECTS = 6, ProfessorId = currentProfId,
+        });
+        _userRepo.GetUserByIdAsync(newInactiveProfId).Returns(MakeProfessor(newInactiveProfId, isDeleted: true));
+
+        var sut = CreateSut();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.UpdateSubjectAsync(subjectId, new SubjectUpdateDto
+            {
+                Id = subjectId, SubjectName = "DB", SubjectCode = "CS101", ECTS = 6,
+                ProfessorId = newInactiveProfId, IsDeleted = false,
+            }));
+        await _subjectRepo.DidNotReceiveWithAnyArgs().UpdateSubjectAsync(default);
+    }
+
+    [Fact]
+    public async Task UpdateSubjectAsync_KeepsCurrentProfessorEvenIfInactive_Succeeds()
+    {
+        var subjectId = Guid.NewGuid();
+        var profId = Guid.NewGuid();
+        _subjectRepo.GetSubjectByIdAsync(subjectId).Returns(new Subject
+        {
+            Id = subjectId, SubjectName = "DB", SubjectCode = "CS101", ECTS = 6, ProfessorId = profId,
+        });
+        _userRepo.GetUserByIdAsync(profId).Returns(MakeProfessor(profId, isDeleted: true));
+
+        var sut = CreateSut();
+
+        var result = await sut.UpdateSubjectAsync(subjectId, new SubjectUpdateDto
+        {
+            Id = subjectId, SubjectName = "DB renamed", SubjectCode = "CS101", ECTS = 6,
+            ProfessorId = profId, IsDeleted = false,
+        });
+
+        Assert.NotNull(result);
+        await _subjectRepo.Received(1).UpdateSubjectAsync(Arg.Any<Subject>());
+    }
 }

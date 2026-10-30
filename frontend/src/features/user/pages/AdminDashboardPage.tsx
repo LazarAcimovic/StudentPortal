@@ -6,7 +6,7 @@ import { createEnrollment, getAllEnrollments } from "../../subjects/api/enrollme
 import { getAllUsers, addUser, deleteUser } from "../api/userService";
 import type { AddUserResult } from "../api/userService";
 import { getAllSubjects, createSubject, updateSubject } from "../../subjects/api/subjectService";
-import type { CreateSubjectResult } from "../../subjects/api/subjectService";
+import type { CreateSubjectResult, UpdateSubjectResult } from "../../subjects/api/subjectService";
 import type { User, CreateUser } from "../../../shared/models/User";
 import type {
   Subject,
@@ -117,20 +117,19 @@ const AdminDashboardPage: React.FC = () => {
     // The form renders any errors inline; it just needs the result back.
     return result;
   };
-  const handleUpdateSubject = async (updatedSubject: UpdateSubject) => {
-    const updatedSubjectData = await updateSubject(updatedSubject);
+  const handleUpdateSubject = async (
+    updatedSubject: UpdateSubject
+  ): Promise<UpdateSubjectResult> => {
+    const result = await updateSubject(updatedSubject);
 
-    if (updatedSubjectData) {
+    if (result.ok) {
       setSubjects(
-        subjects.map((s) =>
-          s.id === updatedSubjectData.id ? updatedSubjectData : s
-        )
+        subjects.map((s) => (s.id === result.subject.id ? result.subject : s))
       );
       setEditingSubject(null);
-      console.log("Updated subject:", updatedSubjectData);
-    } else {
-      alert("Failed to update subject.");
     }
+
+    return result;
   };
 
   const handleCreateEnrollment = async (newEnrollment: CreateEnrollment) => {

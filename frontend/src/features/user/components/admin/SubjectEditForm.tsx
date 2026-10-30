@@ -6,11 +6,15 @@ import {
   subjectEditSchema,
   type SubjectEditFieldErrors,
 } from "../../utils/subjectSchemas";
+import type {
+  UpdateSubjectResult,
+  CreateSubjectFieldErrors,
+} from "../../../subjects/api/subjectService";
 
 interface SubjectEditFormProps {
   subject: Subject;
   professors: User[];
-  onSave: (updatedSubject: UpdateSubject) => void;
+  onSave: (updatedSubject: UpdateSubject) => Promise<UpdateSubjectResult>;
   onCancel: () => void;
 }
 
@@ -32,23 +36,34 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
     IsDeleted: subject.isDeleted,
   });
   const [touched, setTouched] = useState<Partial<Record<keyof UpdateSubject, boolean>>>({});
+  const [serverFieldErrors, setServerFieldErrors] = useState<CreateSubjectFieldErrors>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const parsed = subjectEditSchema.safeParse(formData);
   const fieldErrors: SubjectEditFieldErrors = parsed.success
     ? {}
     : (parsed.error.flatten().fieldErrors as SubjectEditFieldErrors);
 
+  const errorFor = (field: keyof UpdateSubject): string | undefined =>
+    (fieldErrors as Record<string, string[] | undefined>)[field]?.[0] ??
+    serverFieldErrors[field];
+
+  const showError = (field: keyof UpdateSubject): string | undefined =>
+    touched[field] ? errorFor(field) : undefined;
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
+    setServerFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     if (type === "checkbox") {
       setFormData((prev) => ({
         ...prev,
         [name]: (e.target as HTMLInputElement).checked,
       }));
     } else if (name === "ECTS") {
-      setFormData((prev) => ({ ...prev, [name]: Number(value) }));
+      setFormData((prev) => ({ ...prev, ECTS: value === "" ? NaN : Number(value) }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -58,7 +73,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({
       SubjectName: true,
@@ -67,8 +82,16 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
       ProfessorId: true,
       IsDeleted: true,
     });
+    setServerError(null);
     if (!parsed.success) return;
-    onSave(formData);
+
+    setIsSubmitting(true);
+    const result = await onSave(formData);
+    if (result && !result.ok) {
+      if (result.fieldErrors) setServerFieldErrors(result.fieldErrors);
+      if (result.message) setServerError(result.message);
+    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -78,21 +101,25 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit} noValidate>
+          {serverError && (
+            <div className="alert alert-danger">{serverError}</div>
+          )}
+
           <div className="mb-3">
             <label htmlFor="subjectName" className="form-label">
               Subject Name
             </label>
             <input
               type="text"
-              className={`form-control${touched.SubjectName && fieldErrors.SubjectName ? " is-invalid" : ""}`}
+              className={`form-control${showError("SubjectName") ? " is-invalid" : ""}`}
               id="subjectName"
               name="SubjectName"
               value={formData.SubjectName}
               onChange={handleChange}
               onBlur={() => handleBlur("SubjectName")}
             />
-            {touched.SubjectName && fieldErrors.SubjectName && (
-              <div className="invalid-feedback">{fieldErrors.SubjectName[0]}</div>
+            {showError("SubjectName") && (
+              <div className="invalid-feedback">{showError("SubjectName")}</div>
             )}
           </div>
 
@@ -102,7 +129,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
             </label>
             <input
               type="text"
-              className={`form-control${touched.SubjectCode && fieldErrors.SubjectCode ? " is-invalid" : ""}`}
+              className={`form-control${showError("SubjectCode") ? " is-invalid" : ""}`}
               id="subjectCode"
               name="SubjectCode"
               value={formData.SubjectCode}
@@ -110,8 +137,8 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               onBlur={() => handleBlur("SubjectCode")}
               aria-describedby="subjectCodeHelp"
             />
-            {touched.SubjectCode && fieldErrors.SubjectCode && (
-              <div className="invalid-feedback">{fieldErrors.SubjectCode[0]}</div>
+            {showError("SubjectCode") && (
+              <div className="invalid-feedback">{showError("SubjectCode")}</div>
             )}
             <div id="subjectCodeHelp" className="form-text">
               {SUBJECT_CODE_HELP}
@@ -119,20 +146,20 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
           </div>
 
           <div className="mb-3">
-            <label htmlFor="etcs" className="form-label">
+            <label htmlFor="ects" className="form-label">
               ECTS
             </label>
             <input
               type="number"
-              className={`form-control${touched.ECTS && fieldErrors.ECTS ? " is-invalid" : ""}`}
-              id="etcs"
+              className={`form-control${showError("ECTS") ? " is-invalid" : ""}`}
+              id="ects"
               name="ECTS"
-              value={formData.ECTS}
+              value={Number.isNaN(formData.ECTS) ? "" : formData.ECTS}
               onChange={handleChange}
               onBlur={() => handleBlur("ECTS")}
             />
-            {touched.ECTS && fieldErrors.ECTS && (
-              <div className="invalid-feedback">{fieldErrors.ECTS[0]}</div>
+            {showError("ECTS") && (
+              <div className="invalid-feedback">{showError("ECTS")}</div>
             )}
           </div>
 
@@ -141,7 +168,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               Professor
             </label>
             <select
-              className={`form-select${touched.ProfessorId && fieldErrors.ProfessorId ? " is-invalid" : ""}`}
+              className={`form-select${showError("ProfessorId") ? " is-invalid" : ""}`}
               id="professor"
               name="ProfessorId"
               value={formData.ProfessorId}
@@ -150,15 +177,20 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
             >
               <option value="">Select professor</option>
               {professors
-                .filter((p) => p.userRole === USER_ROLES.Professor)
+                .filter(
+                  (p) =>
+                    p.userRole === USER_ROLES.Professor &&
+                    // offer active professors, plus the current one even if inactive
+                    (!p.isDeleted || String(p.id) === formData.ProfessorId)
+                )
                 .map((prof) => (
                   <option key={prof.id} value={prof.id}>
                     {prof.firstName} {prof.lastName}
                   </option>
                 ))}
             </select>
-            {touched.ProfessorId && fieldErrors.ProfessorId && (
-              <div className="invalid-feedback">{fieldErrors.ProfessorId[0]}</div>
+            {showError("ProfessorId") && (
+              <div className="invalid-feedback">{showError("ProfessorId")}</div>
             )}
           </div>
 
@@ -184,8 +216,12 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
             >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              Save Changes
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={!parsed.success || isSubmitting}
+            >
+              {isSubmitting ? "Saving…" : "Save Changes"}
             </button>
           </div>
         </form>

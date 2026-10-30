@@ -395,9 +395,9 @@ Create / Edit subject fields, in this order:
 - Subject Name — required, 1–100 chars.
 - **Subject Code** — required, 1–20 chars (per D-015), label `"Subject Code"`, placed directly below Subject Name. Help text: "Subjects sharing a code are the same course taught by different professors." Without it the subject has no eligible substitute professor, so an escalated case on it cannot be assigned (PRD §4.8).
 - ECTS — required, integer 1–30, default 6.
-- Professor — select populated from `/api/User?role=Professor`. **Soft-deleted (inactive) professors are excluded** from the list; an inactive user cannot be assigned a subject (per D-025).
+- Professor — select populated from `/api/User?role=Professor`. **Soft-deleted (inactive) professors are excluded** from the list; an inactive user cannot be assigned a subject (per D-025). On the **edit** form the subject's current professor stays selectable even if inactive, but the subject cannot be reassigned to a different inactive one (per D-026).
 
-**Validation is inline, never a popup** (same pattern as §5 / §8.3): each field shows a Bootstrap `invalid-feedback` once touched, the Create button stays disabled until the form is valid, and a server error renders as a top-of-form `alert alert-danger` — no `alert()`.
+**Validation is inline, never a popup** (same pattern as §5 / §8.3), on both the create and edit forms: each field shows a Bootstrap `invalid-feedback` once touched, the Create / Save Changes button stays disabled until the form is valid, and a server error (e.g. an inactive professor on edit) renders as a top-of-form `alert alert-danger` — no `alert()`.
 
 ### 8.5 Enrollments tab
 

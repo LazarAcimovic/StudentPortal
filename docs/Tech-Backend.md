@@ -134,6 +134,7 @@ Each validator covers non-null / non-empty, length bounds, email format (`EmailA
 - `SubjectCreateDto` / `SubjectUpdateDto`: `SubjectCode` required, 1–20 characters (D-015 — the column is `varchar(50)` for migration headroom, but 20 is the contract).
 - `AdminCreateUserDto`: password 12–128 characters with complexity (≥1 upper, ≥1 lower, ≥1 digit, ≥1 of `!@#$%^&*`, no spaces). **Email uniqueness is not a FluentValidation rule** — FluentValidation cannot read the database; `UserService.AddUserAsync` checks the store and throws `EmailAlreadyExistsException`, which the controller returns as `409 Conflict` (per D-024).
 - `SubjectCreateDto`: beyond field validation, `SubjectService.AddSubjectAsync` requires the `ProfessorId` to resolve to an **active** user — a missing or soft-deleted professor yields a failure that the controller returns as `400` (per D-025).
+- `SubjectUpdateDto`: `UpdateSubjectAsync` enforces the same active-professor rule, except it allows keeping the subject's current professor even if inactive; a disallowed reassignment throws `InvalidOperationException`, which the controller returns as `400` (per D-026).
 
 ---
 

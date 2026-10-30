@@ -201,3 +201,10 @@ The four statuses:
 **Answer:** No. Creating a subject with a professor who is missing or `IsDeleted` is rejected: `SubjectService.AddSubjectAsync` returns a failure (controller `400`), and the admin picker omits inactive professors. The create form also validates inline (Create disabled until valid, errors under each field, server errors as a top-of-form alert) instead of a popup, mirroring the create-user form (D-024).
 **Lives in:** PRD §6, Tech-Backend §5, UI §8.4
 **Why:** A soft-deleted user cannot log in (Overview glossary), so assigning them a subject would create a course nobody can grade. The dropdown filter is a convenience; the service check is the authoritative guard, matching the pattern used everywhere else (PRD §6).
+
+### D-026 — Can editing a subject assign it to an inactive professor?
+
+**Decided:** 2026-10-29 · **Status:** Accepted
+**Answer:** No, with one exception. `UpdateSubjectAsync` rejects reassigning a subject to a missing or soft-deleted professor (`400`), but allows **keeping** the subject's current professor even if that professor later became inactive. The edit form mirrors this: the current professor stays selectable, other inactive professors are hidden, and the form validates inline (Save disabled until valid, server errors shown, no `alert()`).
+**Lives in:** PRD §6, Tech-Backend §5, UI §8.4
+**Why:** Extends D-025 to the edit path, which previously did no professor validation at all (you could reassign to an inactive professor, or to an invalid id → 500). The keep-current exception avoids blocking an unrelated edit (e.g. a rename) just because the assigned professor was since deactivated — reassignment is a deliberate separate action.

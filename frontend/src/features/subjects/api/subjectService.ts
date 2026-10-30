@@ -15,6 +15,10 @@ export type CreateSubjectResult =
   | { ok: true; subject: Subject }
   | { ok: false; fieldErrors?: CreateSubjectFieldErrors; message?: string };
 
+export type UpdateSubjectResult =
+  | { ok: true; subject: Subject }
+  | { ok: false; fieldErrors?: CreateSubjectFieldErrors; message?: string };
+
 export const getAllSubjects = async (): Promise<Subject[] | null> => {
   try {
     const response = await apiClient.get<Subject[]>(API_ROUTES.SUBJECT);
@@ -74,7 +78,7 @@ export const createSubject = async (
 
 export const updateSubject = async (
   updatedSubject: UpdateSubject
-): Promise<Subject | null> => {
+): Promise<UpdateSubjectResult> => {
   try {
     const dataToSend = {
       id: updatedSubject.Id,
@@ -89,9 +93,36 @@ export const updateSubject = async (
       `${API_ROUTES.SUBJECT}/${updatedSubject.Id}`,
       dataToSend
     );
-    return response.data;
+    return { ok: true, subject: response.data };
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      const { status, data } = error.response;
+
+      if (
+        status === 400 &&
+        data &&
+        typeof data === "object" &&
+        "errors" in data
+      ) {
+        const errors = (data as { errors: Record<string, string[]> }).errors;
+        const fieldErrors: CreateSubjectFieldErrors = {};
+        for (const [field, messages] of Object.entries(errors)) {
+          if (messages?.length) fieldErrors[field] = messages[0];
+        }
+        return { ok: false, fieldErrors };
+      }
+
+      // 400 (e.g. inactive professor) and 404 carry a plain string message.
+      if (status === 400 || status === 404) {
+        const message =
+          typeof data === "string" && data
+            ? data
+            : "Subject could not be updated. Please check the provided data.";
+        return { ok: false, message };
+      }
+    }
+
     console.error("Error updating subject:", error);
-    return null;
+    return { ok: false, message: "Failed to update subject. Please try again." };
   }
 };

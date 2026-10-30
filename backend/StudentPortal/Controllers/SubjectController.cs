@@ -121,15 +121,21 @@ namespace StudentPortal.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSubject(Guid id, [FromBody] SubjectUpdateDto subjectDto)
         {
-            var updatedSubject = await _subjectService.UpdateSubjectAsync(id, subjectDto);
-
-            if (updatedSubject == null)
+            try
             {
-                return NotFound($"Subject with ID {id} not found or update failed.");
-            }
+                var updatedSubject = await _subjectService.UpdateSubjectAsync(id, subjectDto);
 
-            // Nema potrebe za _mapper.Map(), jer servis već vraća ažurirani entitet
-            return Ok(updatedSubject);
+                if (updatedSubject == null)
+                {
+                    return NotFound($"Subject with ID {id} not found or update failed.");
+                }
+
+                return Ok(updatedSubject);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE: api/subject/{id}

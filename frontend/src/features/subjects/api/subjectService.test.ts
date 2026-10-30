@@ -153,7 +153,8 @@ describe('subjectService.updateSubject', () => {
       professorId: '7',
       isDeleted: false,
     });
-    expect(result?.subjectName).toBe('Renamed');
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.subject.subjectName).toBe('Renamed');
   });
 
   it('supports the soft-delete path (IsDeleted: true) — delete is modeled as an update', async () => {
@@ -175,7 +176,8 @@ describe('subjectService.updateSubject', () => {
     });
 
     expect(body!.isDeleted).toBe(true);
-    expect(result?.isDeleted).toBe(true);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.subject.isDeleted).toBe(true);
   });
 
   it('returns null (and logs) on 404 Not Found', async () => {
@@ -194,8 +196,7 @@ describe('subjectService.updateSubject', () => {
       IsDeleted: false,
     });
 
-    expect(result).toBeNull();
-    expect(console.error).toHaveBeenCalled();
+    expect(result.ok).toBe(false);
   });
 
   it('returns null when the admin lacks permission (403)', async () => {
@@ -214,6 +215,6 @@ describe('subjectService.updateSubject', () => {
       IsDeleted: false,
     });
 
-    expect(result).toBeNull();
+    expect(result.ok).toBe(false);
   });
 });

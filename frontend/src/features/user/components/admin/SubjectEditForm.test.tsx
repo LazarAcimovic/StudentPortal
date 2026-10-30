@@ -93,4 +93,31 @@ describe('SubjectEditForm — SubjectCode field (UI §8.4)', () => {
     await ue.click(screen.getByRole('button', { name: /save changes/i }));
     expect(onSave).not.toHaveBeenCalled();
   });
+
+  it('disables Save Changes once a required field is cleared', async () => {
+    const ue = userEvent.setup();
+    renderForm();
+    const save = screen.getByRole('button', { name: /save changes/i });
+    expect(save).toBeEnabled();
+    const input = screen.getByLabelText(/subject code/i);
+    await ue.tripleClick(input);
+    await ue.keyboard('{Delete}');
+    expect(save).toBeDisabled();
+  });
+
+  it('excludes other inactive professors but keeps the current (even if inactive)', () => {
+    render(
+      <SubjectEditForm
+        subject={{ ...subject, professorId: '7' }}
+        professors={[
+          { id: '7', firstName: 'Petar', lastName: 'Petrović', userRole: USER_ROLES.Professor, isDeleted: true, indexNumber: null } as unknown as User,
+          { id: '9', firstName: 'Inactive', lastName: 'Prof', userRole: USER_ROLES.Professor, isDeleted: true, indexNumber: null } as unknown as User,
+        ]}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('option', { name: /petar petrović/i })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /inactive prof/i })).toBeNull();
+  });
 });
