@@ -8,7 +8,10 @@ import StudentDashboardPage from '../features/user/pages/StudentDashboardPage';
 import MyProfilePage from '../features/user/pages/MyProfilePage';
 import ChangePasswordPage from '../features/user/pages/ChangePasswordPage';
 import AuthGuard from './authGuard';
+import RoleGate from '../components/shared/RoleGate';
+import RoleHomeRedirect from './RoleHomeRedirect';
 import { APP_ROUTES } from '../config/constants';
+import { USER_ROLES } from '../shared/constants/constants';
 
 export const router = createBrowserRouter([
   {
@@ -28,15 +31,27 @@ export const router = createBrowserRouter([
         children: [
           {
             path: APP_ROUTES.ADMIN_DASHBOARD.slice(1),
-            element: <AdminDashboardPage />,
+            element: (
+              <RoleGate allowed={USER_ROLES.Admin} fallback={<RoleHomeRedirect />}>
+                <AdminDashboardPage />
+              </RoleGate>
+            ),
           },
           {
             path: APP_ROUTES.PROFESSOR_DASHBOARD.slice(1),
-            element: <ProfessorDashboardPage />,
+            element: (
+              <RoleGate allowed={USER_ROLES.Professor} fallback={<RoleHomeRedirect />}>
+                <ProfessorDashboardPage />
+              </RoleGate>
+            ),
           },
           {
             path: APP_ROUTES.STUDENT_DASHBOARD.slice(1),
-            element: <StudentDashboardPage />,
+            element: (
+              <RoleGate allowed={USER_ROLES.Student} fallback={<RoleHomeRedirect />}>
+                <StudentDashboardPage />
+              </RoleGate>
+            ),
           },
           {
             path: APP_ROUTES.PROFILE.slice(1),
