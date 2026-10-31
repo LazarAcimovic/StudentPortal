@@ -144,7 +144,51 @@ public class GradeRepository : IGradeRepository
             .Include(g => g.Escalation)
                 .ThenInclude(e => e.Assignments)
                     .ThenInclude(a => a.AssignedByAdmin)
+            .OrderBy(g => g.Enrollment.Student.LastName)
+            .ThenBy(g => g.Enrollment.Student.FirstName)
+            .ThenBy(g => g.Id)
             .ToListAsync();
+    }
+
+    public async Task<(IReadOnlyList<Grade> Items, int TotalCount)> GetPagedWithEscalationDetailsAsync(
+        DateTime now, int page, int pageSize)
+    {
+        var baseQuery = _context.Grades
+            .AsNoTracking()
+            .Where(g =>
+                g.Escalation != null
+                || (g.FinalizedAt == null
+                    && g.Appeals.Any(a =>
+                        a.Status == AppealStatus.Accepted
+                        && a.ReviewedAt.HasValue
+                        && a.ReviewedAt.Value.AddDays(7) < now))
+                || (g.FinalizedAt == null
+                    && g.Appeals.Count(a =>
+                        a.Status == AppealStatus.Pending
+                        && a.SubmittedAt.AddDays(7) < now) >= 2));
+
+        var totalCount = await baseQuery.CountAsync();
+
+        var items = await baseQuery
+            .OrderBy(g => g.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .AsSplitQuery()
+            .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Student)
+            .Include(g => g.Enrollment)
+                .ThenInclude(e => e.Subject)
+                    .ThenInclude(s => s.Professor)
+            .Include(g => g.Appeals)
+            .Include(g => g.Escalation)
+                .ThenInclude(e => e.Assignments)
+                    .ThenInclude(a => a.AssignedProfessor)
+            .Include(g => g.Escalation)
+                .ThenInclude(e => e.Assignments)
+                    .ThenInclude(a => a.AssignedByAdmin)
+            .ToListAsync();
+
+        return (items, totalCount);
     }
 
     public async Task<Grade?> GetByIdWithEscalationDetailsAsync(Guid id)

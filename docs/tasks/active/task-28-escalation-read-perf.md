@@ -62,10 +62,10 @@ Not in scope: the frontend wiring (28.4).
 Docs to update: Tech-Backend §2
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Escalations`
 
-- [ ] `GET /escalations` accepts `page` and `pageSize` (15 default, 20 / 50 allowed, clamped) and returns `{ items, totalCount }`, where the count is the number of candidate cases.
-- [ ] Ordering is stable across requests so page boundaries don't shift.
-- [ ] The status is computed only for the rows on the requested page.
-- [ ] An integration test asserts the count and a page slice.
+- [x] `GET /escalations` accepts `page` and `pageSize` (15 default, 20 / 50 allowed, clamped) and returns `{ items, totalCount }`, where the count is the number of candidate cases.
+- [x] Ordering is stable across requests so page boundaries don't shift.
+- [x] The status is computed only for the rows on the requested page.
+- [x] An integration test asserts the count and a page slice.
 - Commit: `feat(admin): server-side pagination for the escalations endpoint`
 
 ---

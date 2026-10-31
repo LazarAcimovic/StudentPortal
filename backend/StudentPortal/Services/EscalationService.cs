@@ -40,6 +40,24 @@ public class EscalationService : IEscalationService
         return result;
     }
 
+    public async Task<PagedResultDto<EscalatedCaseDto>> GetPagedCasesAsync(DateTime now, int page, int pageSize)
+    {
+        var (grades, totalCount) = await _gradeRepository.GetPagedWithEscalationDetailsAsync(now, page, pageSize);
+        var items = grades
+            .Select(g => BuildCaseDto(g, now))
+            .Where(dto => dto != null)
+            .Cast<EscalatedCaseDto>()
+            .ToList();
+
+        return new PagedResultDto<EscalatedCaseDto>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
     public async Task<IEnumerable<UserDto>> GetEligibleProfessorsAsync(Guid gradeId)
     {
         var grade = await _gradeRepository.GetByIdWithEscalationDetailsAsync(gradeId);

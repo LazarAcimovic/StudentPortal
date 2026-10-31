@@ -20,12 +20,19 @@ public class EscalationController : ControllerBase
         _timeProvider = timeProvider;
     }
 
+    private static readonly int[] AllowedPageSizes = [15, 20, 50];
+
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EscalatedCaseDto>>> GetAllCases()
+    public async Task<ActionResult<PagedResultDto<EscalatedCaseDto>>> GetAllCases(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 15)
     {
+        if (page < 1) page = 1;
+        if (!AllowedPageSizes.Contains(pageSize)) pageSize = 15;
+
         var now = _timeProvider.GetUtcNow().UtcDateTime;
-        var cases = await _escalationService.GetAllCasesAsync(now);
-        return Ok(cases);
+        var result = await _escalationService.GetPagedCasesAsync(now, page, pageSize);
+        return Ok(result);
     }
 
     [HttpGet("eligible-professors")]

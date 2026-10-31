@@ -72,7 +72,7 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 9. `AddAuthorization(...)` with policies `AdminOnly`, `ProfessorOnly`, `StudentOnly`.
 10. `AddCors(...)` with `WithOrigins(configuredOrigins).AllowAnyHeader().WithMethods(...).AllowCredentials()`.
 
-**Escalations endpoint — server-side pagination (per D-032):** `GET /api/Escalation` accepts `page` (1-based, default 1) and `pageSize` (default 15, allowed values 15 / 20 / 50). The repository filters to candidate grades only (DB §6.3) before paging; the response envelope carries `items`, `page`, `pageSize`, and `totalCount`.
+**Escalations endpoint — server-side pagination (per D-032):** `GET /api/Escalation` accepts `page` (1-based, default 1) and `pageSize` (default 15, allowed values 15 / 20 / 50; any other value is clamped to 15). The controller delegates to `IEscalationService.GetPagedCasesAsync(now, page, pageSize)`, which calls `IGradeRepository.GetPagedWithEscalationDetailsAsync(now, page, pageSize)` → `(IReadOnlyList<Grade> Items, int TotalCount)`. The repository runs the same candidate-grade filter (DB §6.3), issues a `CountAsync` on the base query, then applies `OrderBy(g => g.Id)` / `Skip` / `Take` / includes. Status is computed only for the page's rows. The response envelope carries `items`, `page`, `pageSize`, and `totalCount`.
 
 **EF Core read conventions for escalation paths:** Multi-`Include` escalation queries use `AsSplitQuery()` to avoid a Cartesian result set. `AsNoTracking()` is applied on pure-read paths (list reads, detail reads). Mutate-then-update paths (assign, reassign) must **not** carry `AsNoTracking()`, because EF's change tracker must follow the entity.
 

@@ -130,8 +130,8 @@ public class EscalationResolutionTests : IntegrationTestBase
         var response = await admin.GetAsync("/api/Escalation");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var cases = await response.Content.ReadFromJsonAsync<List<EscalatedCaseDto>>();
-        cases.Should().NotContain(c => c.GradeId == grade.Id,
+        var paged = await response.Content.ReadFromJsonAsync<PagedResultDto<EscalatedCaseDto>>();
+        paged!.Items.Should().NotContain(c => c.GradeId == grade.Id,
             "PRD §4.8 — a single overdue pending appeal does not meet the ChainExhausted threshold");
     }
 
@@ -148,8 +148,8 @@ public class EscalationResolutionTests : IntegrationTestBase
         var response = await admin.GetAsync("/api/Escalation");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var cases = await response.Content.ReadFromJsonAsync<List<EscalatedCaseDto>>();
-        cases.Should().Contain(c => c.GradeId == grade.Id,
+        var paged = await response.Content.ReadFromJsonAsync<PagedResultDto<EscalatedCaseDto>>();
+        paged!.Items.Should().Contain(c => c.GradeId == grade.Id,
             "PRD §4.8 — two overdue pending appeals trigger ChainExhausted escalation");
     }
 }

@@ -31,8 +31,8 @@ public class EscalationCandidateFilterTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK,
             await response.Content.ReadAsStringAsync());
 
-        var cases = await response.Content.ReadFromJsonAsync<List<EscalatedCaseDto>>();
-        cases.Should().NotContain(c => c.GradeId == grade.Id,
+        var paged = await response.Content.ReadFromJsonAsync<PagedResultDto<EscalatedCaseDto>>();
+        paged!.Items.Should().NotContain(c => c.GradeId == grade.Id,
             "a finalized grade with no escalation row is not a candidate");
     }
 
@@ -50,8 +50,8 @@ public class EscalationCandidateFilterTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK,
             await response.Content.ReadAsStringAsync());
 
-        var cases = await response.Content.ReadFromJsonAsync<List<EscalatedCaseDto>>();
-        cases.Should().NotContain(c => c.GradeId == grade.Id,
+        var paged = await response.Content.ReadFromJsonAsync<PagedResultDto<EscalatedCaseDto>>();
+        paged!.Items.Should().NotContain(c => c.GradeId == grade.Id,
             "an accepted appeal within the 7-day re-grade window does not trigger escalation");
     }
 }
