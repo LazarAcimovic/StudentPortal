@@ -33,9 +33,9 @@ Not in scope: the candidate filter (28.2); pagination (28.3).
 Docs to update: Tech-Backend §2
 Verify: `dotnet test backend/StudentPortal.Tests --filter Escalation` and `dotnet test backend/StudentPortal.IntegrationTests --filter Escalations`
 
-- [ ] The list read (`GetAllWithEscalationDetailsAsync`) uses `AsSplitQuery()` and `AsNoTracking()` so the many `Include`s no longer build one Cartesian result set.
-- [ ] `AsSplitQuery()` is applied to the other multi-include escalation/grade-detail reads; `AsNoTracking()` is added only on the pure-read paths, leaving the assign/reassign mutate-then-update flow working.
-- [ ] All existing escalation unit and integration tests stay green (behaviour preserved).
+- [x] The list read (`GetAllWithEscalationDetailsAsync`) uses `AsSplitQuery()` and `AsNoTracking()` so the many `Include`s no longer build one Cartesian result set.
+- [x] `AsSplitQuery()` is applied to the other multi-include escalation/grade-detail reads; `AsNoTracking()` is added only on the pure-read paths, leaving the assign/reassign mutate-then-update flow working.
+- [x] All existing escalation unit and integration tests stay green (behaviour preserved).
 - Commit: `perf(backend): split-query and no-tracking on escalation read paths`
 
 ---

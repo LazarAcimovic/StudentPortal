@@ -113,6 +113,8 @@ public class GradeRepository : IGradeRepository
     public async Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync()
     {
         return await _context.Grades
+            .AsSplitQuery()
+            .AsNoTracking()
             .Include(g => g.Enrollment)
                 .ThenInclude(e => e.Student)
             .Include(g => g.Enrollment)
@@ -131,6 +133,7 @@ public class GradeRepository : IGradeRepository
     public async Task<Grade?> GetByIdWithEscalationDetailsAsync(Guid id)
     {
         return await _context.Grades
+            .AsSplitQuery()
             .Include(g => g.Enrollment)
                 .ThenInclude(e => e.Student)
             .Include(g => g.Enrollment)
@@ -149,6 +152,8 @@ public class GradeRepository : IGradeRepository
     public async Task<IEnumerable<Grade>> GetAssignedCasesAsync(Guid professorId)
     {
         return await _context.Grades
+            .AsSplitQuery()
+            .AsNoTracking()
             .Where(g => g.AssignedProfessorId == professorId && g.FinalizedAt == null)
             .Include(g => g.Enrollment)
                 .ThenInclude(e => e.Student)
