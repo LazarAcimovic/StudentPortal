@@ -33,10 +33,10 @@ Not in scope: wiring it into any page; server-side fetching.
 Docs to update: UI §11
 Verify: `npm run test -- Pagination`
 
-- [ ] A presentational `<Pagination>` takes `page`, `pageSize`, `totalItems`, `pageSizeOptions`, `onPageChange`, `onPageSizeChange` and renders Bootstrap's pagination markup plus a "Total: N" label and a page-size `<select>`.
-- [ ] It renders whenever `totalItems >= 1`, even when everything fits on one page; the parent decides not to render it at `0`.
-- [ ] Prev/next disable correctly at the first/last page; the active page is marked.
-- [ ] Co-located unit tests (RTL) cover page change, size change, and the single-page case.
+- [x] A presentational `<Pagination>` takes `page`, `pageSize`, `totalItems`, `pageSizeOptions`, `onPageChange`, `onPageSizeChange` and renders Bootstrap's pagination markup plus a "Total: N" label and a page-size `<select>`.
+- [x] It renders whenever `totalItems >= 1`, even when everything fits on one page; the parent decides not to render it at `0`.
+- [x] Prev/next disable correctly at the first/last page; the active page is marked.
+- [x] Co-located unit tests (RTL) cover page change, size change, and the single-page case.
 - Commit: `feat(ui): reusable Pagination primitive with total count and page-size selector`
 
 ---
