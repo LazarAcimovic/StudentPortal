@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProfessorDashboard } from '../../grades/hooks/useProfessorDashboard';
+import { useProfessorStudents } from '../../grades/hooks/useProfessorStudents';
 import type { ProfessorSubject, ProfessorStudentRow } from '../models/professor/professorDashboard';
 import {
   PROFESSOR_SELECTED_SUBJECT_ID_INITIAL,
@@ -16,19 +17,50 @@ const ProfessorDashboardPage: React.FC = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(PROFESSOR_SELECTED_SUBJECT_ID_INITIAL);
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string | null>(null);
 
+  const {
+    items: pagedStudents,
+    totalCount,
+    page,
+    pageSize,
+    pageSizeOptions,
+    isLoading: studentsLoading,
+    loadPage,
+  } = useProfessorStudents();
+
   const selectedSubject: ProfessorSubject | null =
     data?.subjects.find(s => s.subjectId === selectedSubjectId) ?? null;
 
   const selectedStudentRow: ProfessorStudentRow | null =
-    selectedSubject?.students.find(s => s.enrollmentId === selectedEnrollmentId) ?? null;
+    pagedStudents.find(s => s.enrollmentId === selectedEnrollmentId) ?? null;
+
+  useEffect(() => {
+    if (!selectedSubjectId) return;
+    const controller = new AbortController();
+    void loadPage(selectedSubjectId, 1, pageSize, controller.signal);
+    setSelectedEnrollmentId(null);
+    return () => controller.abort();
+    // loadPage is stable (useCallback with []); pageSize here is the current page size when the subject changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSubjectId, loadPage]);
 
   const handleSubjectClick = (subject: ProfessorSubject) => {
     setSelectedSubjectId(subject.subjectId);
-    setSelectedEnrollmentId(null);
   };
 
   const handleStudentClick = (student: ProfessorStudentRow) => {
     setSelectedEnrollmentId(student.enrollmentId);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (!selectedSubjectId) return;
+    const controller = new AbortController();
+    void loadPage(selectedSubjectId, newPage, pageSize, controller.signal);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    if (!selectedSubjectId) return;
+    const controller = new AbortController();
+    void loadPage(selectedSubjectId, 1, newPageSize, controller.signal);
   };
 
   if (isLoading) {
@@ -58,9 +90,17 @@ const ProfessorDashboardPage: React.FC = () => {
           onSubjectClick={handleSubjectClick}
         />
         <StudentsList
-          selectedSubject={selectedSubject}
+          subjectName={selectedSubject?.subjectName ?? null}
+          students={pagedStudents}
+          totalCount={totalCount}
+          page={page}
+          pageSize={pageSize}
+          pageSizeOptions={pageSizeOptions}
+          isLoading={studentsLoading}
           selectedStudentRow={selectedStudentRow}
           onStudentClick={handleStudentClick}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
         <GradePanel selectedStudentRow={selectedStudentRow} onGradeChanged={refresh} />
       </div>

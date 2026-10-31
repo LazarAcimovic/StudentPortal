@@ -2,10 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
 import { authenticatedRender } from '../../helpers/authenticatedRender';
 import { server } from '../../server';
-import { professorDashboardHandler } from '../../helpers/mswHandlers';
+import { professorDashboardHandler, professorStudentsHandler } from '../../helpers/mswHandlers';
 import {
   emptyProfessorDashboard,
   makeAppealRow,
+  makePagedStudents,
   makeStudentRow,
   makeSubject,
 } from '../../helpers/fixtures/professorDashboard';
@@ -62,17 +63,17 @@ describe('ProfessorDashboardPage UI binding (§5.4)', () => {
     server.use(
       professorDashboardHandler({
         subjects: [
-          makeSubject({
-            subjectId: 's1',
-            subjectName: 'Databases',
-            students: [
-              makeStudentRow({ enrollmentId: 'e1', firstName: 'Ana', lastName: 'A' }),
-              makeStudentRow({ enrollmentId: 'e2', firstName: 'Bruno', lastName: 'B' }),
-            ],
-          }),
+          makeSubject({ subjectId: 's1', subjectName: 'Databases', studentCount: 2 }),
         ],
         appeals: [],
-      })
+      }),
+      professorStudentsHandler('s1', makePagedStudents(
+        [
+          makeStudentRow({ enrollmentId: 'e1', firstName: 'Ana', lastName: 'A' }),
+          makeStudentRow({ enrollmentId: 'e2', firstName: 'Bruno', lastName: 'B' }),
+        ],
+        { totalCount: 2 }
+      ))
     );
     const { user } = authenticatedRender({
       as: 'professor',

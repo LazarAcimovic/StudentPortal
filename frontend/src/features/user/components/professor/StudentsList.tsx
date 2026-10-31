@@ -1,10 +1,19 @@
 import React from 'react';
-import type { ProfessorSubject, ProfessorStudentRow } from '../../models/professor/professorDashboard';
+import Pagination from '../../../../components/ui/Pagination';
+import type { ProfessorStudentRow } from '../../models/professor/professorDashboard';
 
 interface Props {
-  selectedSubject: ProfessorSubject | null;
+  subjectName: string | null;
+  students: ProfessorStudentRow[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  pageSizeOptions: readonly number[];
+  isLoading: boolean;
   selectedStudentRow: ProfessorStudentRow | null;
   onStudentClick: (student: ProfessorStudentRow) => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 }
 
 function StudentItem({
@@ -35,30 +44,60 @@ function StudentItem({
   );
 }
 
-const StudentsList: React.FC<Props> = ({ selectedSubject, selectedStudentRow, onStudentClick }) => (
-  <div className="col-lg-4">
+const StudentsList: React.FC<Props> = ({
+  subjectName,
+  students,
+  totalCount,
+  page,
+  pageSize,
+  pageSizeOptions,
+  isLoading,
+  selectedStudentRow,
+  onStudentClick,
+  onPageChange,
+  onPageSizeChange,
+}) => (
+  <div className="col-12 col-sm-6 col-lg-4">
     <div className="card h-100">
       <div className="card-header bg-primary text-white">
         <h5 className="mb-0">
-          {selectedSubject ? `Students in ${selectedSubject.subjectName}` : 'Students'}
+          {subjectName ? `Students in ${subjectName}` : 'Students'}
         </h5>
       </div>
       <div className="card-body p-0">
-        {!selectedSubject ? (
+        {!subjectName ? (
           <p className="p-3 text-muted mb-0">Select a subject to see its students.</p>
-        ) : !selectedSubject.students.length ? (
+        ) : isLoading ? (
+          <div className="p-3 text-center">
+            <span className="spinner-border spinner-border-sm" role="status" aria-label="Loading students" />
+          </div>
+        ) : students.length === 0 ? (
           <p className="p-3 text-muted mb-0">No students enrolled in this subject.</p>
         ) : (
-          <ul className="list-group list-group-flush">
-            {selectedSubject.students.map(student => (
-              <StudentItem
-                key={student.enrollmentId}
-                student={student}
-                selectedStudentRow={selectedStudentRow}
-                onStudentClick={onStudentClick}
-              />
-            ))}
-          </ul>
+          <>
+            <ul className="list-group list-group-flush">
+              {students.map(student => (
+                <StudentItem
+                  key={student.enrollmentId}
+                  student={student}
+                  selectedStudentRow={selectedStudentRow}
+                  onStudentClick={onStudentClick}
+                />
+              ))}
+            </ul>
+            {totalCount >= 1 && (
+              <div className="p-2 border-top">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  totalItems={totalCount}
+                  pageSizeOptions={[...pageSizeOptions]}
+                  onPageChange={onPageChange}
+                  onPageSizeChange={onPageSizeChange}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

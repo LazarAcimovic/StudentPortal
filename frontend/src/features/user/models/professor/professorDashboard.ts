@@ -17,7 +17,14 @@ export interface ProfessorSubject {
   subjectId: string;
   subjectName: string;
   ects: number;
-  students: ProfessorStudentRow[];
+  studentCount: number;
+}
+
+export interface PagedStudentsResult {
+  items: ProfessorStudentRow[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface ProfessorAppealRow {

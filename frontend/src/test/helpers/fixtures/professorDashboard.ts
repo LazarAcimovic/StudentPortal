@@ -1,4 +1,5 @@
 import type {
+  PagedStudentsResult,
   ProfessorAppealRow,
   ProfessorDashboardData,
   ProfessorStudentRow,
@@ -33,7 +34,19 @@ export function makeSubject(
     subjectId: overrides.subjectId ?? 'sub-100',
     subjectName: overrides.subjectName ?? 'Databases',
     ects: overrides.ects ?? 7,
-    students: overrides.students ?? [],
+    studentCount: overrides.studentCount ?? 0,
+  };
+}
+
+export function makePagedStudents(
+  students: ProfessorStudentRow[],
+  overrides?: Partial<Omit<PagedStudentsResult, 'items'>>
+): PagedStudentsResult {
+  return {
+    items: students,
+    totalCount: overrides?.totalCount ?? students.length,
+    page: overrides?.page ?? 1,
+    pageSize: overrides?.pageSize ?? 5,
   };
 }
 
@@ -61,9 +74,14 @@ export const singleSubjectWithStudent: ProfessorDashboardData = {
     makeSubject({
       subjectId: 'sub-DB',
       subjectName: 'Databases',
-      students: [makeStudentRow({ enrollmentId: 'e-100', firstName: 'Stud', lastName: 'One' })],
+      studentCount: 1,
     }),
   ],
   appeals: [],
   assignedCases: [],
 };
+
+export const singleSubjectStudentsPage = makePagedStudents(
+  [makeStudentRow({ enrollmentId: 'e-100', firstName: 'Stud', lastName: 'One' })],
+  { totalCount: 1 }
+);

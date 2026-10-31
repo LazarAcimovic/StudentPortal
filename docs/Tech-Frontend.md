@@ -273,13 +273,13 @@ const totalItems = items.length;
 
 Changing `pageSize` resets `page` to 1. No extra network request is made for a page change.
 
-**Server-side pagination** (per D-031 — admin lists and professor students). The hook extends Pattern B: the loader accepts `page` and `pageSize` and the caller re-triggers it when either changes. Return shape adds `totalItems`:
+**Server-side pagination** (per D-031 — admin lists and professor students). The hook extends Pattern B: the loader accepts `page` and `pageSize` and the caller re-triggers it when either changes. Return shape adds `totalCount`:
 
 ```ts
-return { data, totalItems, isLoading, error, loadPage };
+return { items, totalCount, page, pageSize, pageSizeOptions, isLoading, error, loadPage };
 ```
 
-The service function maps the backend envelope `{ items: T[], total: number }` before returning.
+The service function maps the backend envelope `{ items: T[], totalCount: number, page: number, pageSize: number }` before returning. The caller owns the `AbortController` and re-triggers the loader via `useEffect` on the selected entity id (e.g. `selectedSubjectId`); changing `pageSize` resets `page` to 1 before the next fetch. See `features/grades/hooks/useProfessorStudents.ts` for a reference implementation.
 
 ---
 

@@ -67,6 +67,12 @@ export function professorDashboardHandler(payload: unknown): HttpHandler {
   );
 }
 
+export function professorStudentsHandler(subjectId: string, payload: unknown): HttpHandler {
+  return http.get(`/api${API_ROUTES.PROFESSOR_SUBJECT_STUDENTS}/${subjectId}/students`, () =>
+    HttpResponse.json(payload as JsonInput)
+  );
+}
+
 export function escalationCasesHandler(payload: unknown): HttpHandler {
   return http.get(`/api${API_ROUTES.ESCALATION}`, ({ request }) => {
     const url = new URL(request.url);

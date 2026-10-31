@@ -91,10 +91,10 @@ Not in scope: the backend contract (26.4); the client-side sections (26.3).
 Docs to update: Tech-Frontend §3
 Verify: `npm run test -- integration/grades/ProfessorDashboard`
 
-- [ ] Clicking a subject fetches page 1 of its students from the new endpoint; `<Pagination>` (5 / 20 / 50) drives further pages.
-- [ ] The control appears only when the selected subject has ≥ 1 student.
-- [ ] `GradePanel` still opens for a student selected from any page (its enrollment id comes from the paged row).
-- [ ] A loading state shows while a page is fetching; an abort cancels an in-flight page when the subject changes.
+- [x] Clicking a subject fetches page 1 of its students from the new endpoint; `<Pagination>` (5 / 20 / 50) drives further pages.
+- [x] The control appears only when the selected subject has ≥ 1 student.
+- [x] `GradePanel` still opens for a student selected from any page (its enrollment id comes from the paged row).
+- [x] A loading state shows while a page is fetching; an abort cancels an in-flight page when the subject changes.
 - Commit: `feat(professor): server-paged students list on the dashboard`
 
 ---
