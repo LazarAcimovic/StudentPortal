@@ -68,9 +68,13 @@ export function professorDashboardHandler(payload: unknown): HttpHandler {
 }
 
 export function escalationCasesHandler(payload: unknown): HttpHandler {
-  return http.get(`/api${API_ROUTES.ESCALATION}`, () =>
-    HttpResponse.json(payload as JsonInput)
-  );
+  return http.get(`/api${API_ROUTES.ESCALATION}`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? 1);
+    const pageSize = Number(url.searchParams.get('pageSize') ?? 15);
+    const p = payload as { items: unknown[]; page?: number; pageSize?: number; totalCount: number };
+    return HttpResponse.json({ items: p.items, page: p.page ?? page, pageSize: p.pageSize ?? pageSize, totalCount: p.totalCount } as JsonInput);
+  });
 }
 
 export function eligibleProfessorsHandler(payload: unknown): HttpHandler {

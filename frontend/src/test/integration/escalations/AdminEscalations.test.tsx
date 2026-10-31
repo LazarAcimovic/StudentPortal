@@ -15,6 +15,10 @@ const adminBaseHandlers = [
   http.get(`/api${API_ROUTES.ENROLLMENT}`, () => HttpResponse.json([])),
 ];
 
+function pagedCases(items: ReturnType<typeof makeEscalatedCase>[], totalCount?: number) {
+  return { items, page: 1, pageSize: 15, totalCount: totalCount ?? items.length };
+}
+
 async function openEscalationsTab(user: ReturnType<typeof authenticatedRender>['user']) {
   const tab = await screen.findByRole('button', { name: /escalations/i });
   await user.click(tab);
@@ -22,14 +26,14 @@ async function openEscalationsTab(user: ReturnType<typeof authenticatedRender>['
 
 describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
   it('shows the Escalations tab button in the admin dashboard', async () => {
-    server.use(...adminBaseHandlers, escalationCasesHandler([]));
+    server.use(...adminBaseHandlers, escalationCasesHandler(pagedCases([])));
     authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
 
     expect(await screen.findByRole('button', { name: /escalations/i })).toBeInTheDocument();
   });
 
   it('clicking Escalations tab shows the empty-state message when no cases', async () => {
-    server.use(...adminBaseHandlers, escalationCasesHandler([]));
+    server.use(...adminBaseHandlers, escalationCasesHandler(pagedCases([])));
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
 
     await openEscalationsTab(user);
@@ -40,7 +44,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
   it('a NeedsAssignment case renders the danger badge and Assign professor button', async () => {
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([makeEscalatedCase({ escalationStatus: 'NeedsAssignment' })])
+      escalationCasesHandler(pagedCases([makeEscalatedCase({ escalationStatus: 'NeedsAssignment' })]))
     );
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
 
@@ -55,7 +59,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
   it('a NeedsReassignment case renders the warning badge and Reassign professor button', async () => {
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([makeEscalatedCase({ escalationStatus: 'NeedsReassignment' })])
+      escalationCasesHandler(pagedCases([makeEscalatedCase({ escalationStatus: 'NeedsReassignment' })]))
     );
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
 
@@ -69,7 +73,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
   it('an Assigned case renders the info badge and no action button', async () => {
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([makeEscalatedCase({ escalationStatus: 'Assigned' })])
+      escalationCasesHandler(pagedCases([makeEscalatedCase({ escalationStatus: 'Assigned' })]))
     );
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
 
@@ -83,9 +87,9 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
   it('a Resolved case renders the success badge and no action button', async () => {
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([
+      escalationCasesHandler(pagedCases([
         makeEscalatedCase({ escalationStatus: 'Resolved', resolvedAt: '2026-10-27T12:00:00Z' }),
-      ])
+      ]))
     );
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
 
@@ -100,7 +104,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
     const c = makeEscalatedCase({ escalationStatus: 'NeedsAssignment' });
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([c]),
+      escalationCasesHandler(pagedCases([c])),
       eligibleProfessorsHandler([eligibleProfB])
     );
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
@@ -122,7 +126,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
   it('when the eligible professor list is empty, Confirm is disabled', async () => {
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([makeEscalatedCase({ escalationStatus: 'NeedsAssignment' })]),
+      escalationCasesHandler(pagedCases([makeEscalatedCase({ escalationStatus: 'NeedsAssignment' })])),
       eligibleProfessorsHandler([])
     );
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
@@ -145,7 +149,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
 
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([c]),
+      escalationCasesHandler(pagedCases([c])),
       eligibleProfessorsHandler([eligibleProfB]),
       http.post(`/api${API_ROUTES.ESCALATION_ASSIGN}`, () => {
         assignCalled = true;
@@ -176,7 +180,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
   it('assignment history table is hidden when there is no assignment history', async () => {
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([makeEscalatedCase({ escalationStatus: 'NeedsAssignment', assignmentHistory: [] })]),
+      escalationCasesHandler(pagedCases([makeEscalatedCase({ escalationStatus: 'NeedsAssignment', assignmentHistory: [] })])),
       eligibleProfessorsHandler([eligibleProfB])
     );
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
@@ -193,7 +197,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
   it('assignment history table is shown when there is history', async () => {
     server.use(
       ...adminBaseHandlers,
-      escalationCasesHandler([
+      escalationCasesHandler(pagedCases([
         makeEscalatedCase({
           escalationStatus: 'NeedsReassignment',
           assignmentHistory: [
@@ -205,7 +209,7 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
             },
           ],
         }),
-      ]),
+      ])),
       eligibleProfessorsHandler([eligibleProfB])
     );
     const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
@@ -218,5 +222,77 @@ describe('Admin Escalations tab (UI §8.6 / PRD §4.8)', () => {
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText(/assignment history/i)).toBeInTheDocument();
     expect(within(dialog).getAllByText(/Bob Smith/i).length).toBeGreaterThan(0);
+  });
+
+  // — Pagination tests (UI §8.6, per D-032) —
+
+  it('pagination control is not rendered when there are 0 cases', async () => {
+    server.use(...adminBaseHandlers, escalationCasesHandler(pagedCases([])));
+    const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
+
+    await openEscalationsTab(user);
+    await screen.findByText(/no escalated cases/i);
+
+    expect(screen.queryByText(/^Total:/)).toBeNull();
+  });
+
+  it('pagination control is not rendered when all cases fit on one page', async () => {
+    server.use(
+      ...adminBaseHandlers,
+      escalationCasesHandler(pagedCases([makeEscalatedCase({ escalationStatus: 'Assigned' })]))
+    );
+    const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
+
+    await openEscalationsTab(user);
+    await screen.findAllByText(/^assigned$/i);
+
+    expect(screen.queryByText(/^Total:/)).toBeNull();
+  });
+
+  it('pagination control is rendered when cases span multiple pages', async () => {
+    server.use(
+      ...adminBaseHandlers,
+      escalationCasesHandler(pagedCases([makeEscalatedCase({ escalationStatus: 'Assigned' })], 30))
+    );
+    const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
+
+    await openEscalationsTab(user);
+    await screen.findAllByText(/^assigned$/i);
+
+    expect(await screen.findByText('Total: 30')).toBeInTheDocument();
+  });
+
+  it('changing page fires a new request with the updated page number', async () => {
+    const page2Cases = [makeEscalatedCase({ escalationStatus: 'NeedsAssignment', gradeId: 'page2-grade' })];
+    const requests: string[] = [];
+
+    server.use(
+      ...adminBaseHandlers,
+      http.get(`/api${API_ROUTES.ESCALATION}`, ({ request }) => {
+        const url = new URL(request.url);
+        const page = url.searchParams.get('page') ?? '1';
+        requests.push(page);
+        if (page === '2') {
+          return HttpResponse.json({ items: page2Cases, page: 2, pageSize: 15, totalCount: 30 });
+        }
+        return HttpResponse.json({
+          items: [makeEscalatedCase({ escalationStatus: 'Assigned' })],
+          page: 1,
+          pageSize: 15,
+          totalCount: 30,
+        });
+      })
+    );
+    const { user } = authenticatedRender({ as: 'admin', initialEntries: [APP_ROUTES.ADMIN_DASHBOARD] });
+
+    await openEscalationsTab(user);
+    await screen.findAllByText(/^assigned$/i);
+
+    // Wait for pagination to appear then click page 2
+    const page2Btn = await screen.findByRole('button', { name: '2' });
+    await user.click(page2Btn);
+
+    await waitFor(() => expect(requests).toContain('2'));
+    expect((await screen.findAllByText(/needs assignment/i)).length).toBeGreaterThan(0);
   });
 });

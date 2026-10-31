@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../../../../components/ui/Modal';
+import Pagination from '../../../../components/ui/Pagination';
 import { useEscalations } from '../../../escalations/hooks/useEscalations';
 import { useEligibleProfessors } from '../../../escalations/hooks/useEligibleProfessors';
 import { assign, reassign } from '../../../escalations/api/escalationService';
+
+const PAGE_SIZE_OPTIONS = [15, 20, 50];
 import type {
   EscalatedCase,
   EscalationStatus,
@@ -348,7 +351,9 @@ function EscalationCard({
 }
 
 const EscalationsTab: React.FC = () => {
-  const { cases, isLoading, error } = useEscalations();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const { cases, totalCount, isLoading, error } = useEscalations(page, pageSize);
   const [selectedCase, setSelectedCase] = useState<EscalatedCase | null>(null);
   const [caseList, setCaseList] = useState<EscalatedCase[]>([]);
 
@@ -361,6 +366,13 @@ const EscalationsTab: React.FC = () => {
     setCaseList(prev => prev.map(c => c.gradeId === updated.gradeId ? updated : c));
     setSelectedCase(null);
   };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPage(1);
+    setPageSize(newSize);
+  };
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   if (isLoading) {
     return (
@@ -419,6 +431,19 @@ const EscalationsTab: React.FC = () => {
               />
             ))}
           </div>
+
+          {totalPages > 1 && (
+            <div className="mt-3">
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                totalItems={totalCount}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                onPageChange={setPage}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </div>
+          )}
         </>
       )}
 

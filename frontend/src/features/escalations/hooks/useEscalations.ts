@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { getCases } from '../api/escalationService';
 import type { EscalatedCase } from '../models/escalation';
 
-export function useEscalations() {
+export function useEscalations(page: number, pageSize: number) {
   const [cases, setCases] = useState<EscalatedCase[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -15,9 +16,10 @@ export function useEscalations() {
         setIsLoading(true);
         setError(null);
 
-        const data = await getCases(controller.signal);
+        const data = await getCases(page, pageSize, controller.signal);
 
-        setCases(data);
+        setCases(data.items);
+        setTotalCount(data.totalCount);
       } catch (loadError) {
         if (controller.signal.aborted) return;
 
@@ -30,7 +32,7 @@ export function useEscalations() {
     void loadCases();
 
     return () => controller.abort();
-  }, []);
+  }, [page, pageSize]);
 
-  return { cases, isLoading, error };
+  return { cases, totalCount, isLoading, error };
 }

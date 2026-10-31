@@ -79,7 +79,7 @@ Verify: `npm run test -- integration/escalations/AdminEscalations`
 
 Depends on: 26.1 for the `<Pagination>` component.
 
-- [ ] `EscalationsTab` fetches a page at a time and renders `<Pagination>` (15 / 20 / 50) with the server's total.
-- [ ] The control is hidden at 0 cases and shown at ≥ 1.
-- [ ] An assign/reassign still updates the row in place without dropping the current page.
+- [x] `EscalationsTab` fetches a page at a time and renders `<Pagination>` (15 / 20 / 50) with the server's total.
+- [x] The control is hidden at 0 cases and shown at ≥ 1.
+- [x] An assign/reassign still updates the row in place without dropping the current page.
 - Commit: `feat(admin): server-paged escalations tab`

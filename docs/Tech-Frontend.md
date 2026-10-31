@@ -87,10 +87,10 @@ frontend/src/
       models/                   enrollment.ts, subject.ts
       index.ts
     escalations/
-      api/escalationService.ts   getCases, getEligibleProfessors, assign, reassign
-      hooks/useEscalations.ts    Pattern A — GET /api/Escalation
+      api/escalationService.ts   getCases(page, pageSize), getEligibleProfessors, assign, reassign
+      hooks/useEscalations.ts    Pattern B — GET /api/Escalation?page=&pageSize= (server-side paged, per D-032)
       hooks/useEligibleProfessors.ts  Pattern B — GET /api/Escalation/eligible-professors
-      models/escalation.ts       EscalatedCase, AssignmentHistoryEntry, EscalationStatus, EligibleProfessor
+      models/escalation.ts       EscalatedCase, AssignmentHistoryEntry, EscalationStatus, EligibleProfessor, PagedResult
       index.ts
   lib/
     navigation.ts               navigation singleton

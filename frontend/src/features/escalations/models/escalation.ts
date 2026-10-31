@@ -38,6 +38,13 @@ export interface EscalatedCase {
   assignmentHistory: AssignmentHistoryEntry[];
 }
 
+export interface PagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
 export interface EligibleProfessor {
   id: string;
   firstName: string;

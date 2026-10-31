@@ -1,10 +1,17 @@
 import axiosClient from '../../../shared/api/axiosClient';
 import { API_ROUTES } from '../../../config/constants';
-import type { EscalatedCase, EligibleProfessor } from '../models/escalation';
+import type { EscalatedCase, EligibleProfessor, PagedResult } from '../models/escalation';
 
-export async function getCases(signal?: AbortSignal): Promise<EscalatedCase[]> {
+export async function getCases(
+  page: number,
+  pageSize: number,
+  signal?: AbortSignal
+): Promise<PagedResult<EscalatedCase>> {
   try {
-    const res = await axiosClient.get<EscalatedCase[]>(API_ROUTES.ESCALATION, { signal });
+    const res = await axiosClient.get<PagedResult<EscalatedCase>>(API_ROUTES.ESCALATION, {
+      params: { page, pageSize },
+      signal,
+    });
     return res.data;
   } catch (err) {
     throw err instanceof Error ? err : new Error('Failed to load escalation cases.');
