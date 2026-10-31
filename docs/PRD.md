@@ -233,6 +233,8 @@ A **single** overdue appeal does not escalate. It opens a fresh 7-day window for
 
 **What the student sees.** While a case is escalated and the grade is not final, the status column reads **Under admin review** with no action buttons. The student takes no part in escalation; the maximum of two appeals per grade (§4.1, §4.5) is unchanged by it.
 
+**Admin Escalations view — paging.** The escalations tab lists cases with server-side pagination: 15 rows per page by default, switchable to 20 or 50 (per D-032). Only candidate grades are loaded — those with a matching Scenario A or B trigger, or those that already have an escalation record (UI §8.6).
+
 ---
 
 ## 5. Screen inventory
@@ -261,15 +263,15 @@ Four tabs: **Users**, **Subjects**, **Enrollments**, **Escalations**.
 
 ### 5.4 Professor dashboard (`/professor-dashboard`)
 Three selection columns:
-1. **My Subjects** — selectable list of **every subject assigned to the professor**, including a subject with no enrolled students yet (per D-028).
-2. **Students in <subject>** — selectable list of students enrolled in the selected subject.
+1. **My Subjects** — selectable list of **every subject assigned to the professor**, including a subject with no enrolled students yet (per D-028). Paged client-side: 5 per page, options 5 / 20 / 50 (per D-031).
+2. **Students in <subject>** — students enrolled in the selected subject, fetched on demand via `GET /professor/subjects/{subjectId}/students?page=N&pageSize=N`. Paged server-side: 5 per page, options 5 / 20 / 50 (per D-031). The professor dashboard main call does **not** return students inline; the students list is empty until the professor selects a subject.
 3. **Grade for <student>** — the grading UI (see §3.3 and §5.6 below).
 
 The three columns are a **three-stage responsive layout** (per D-008): one column below 576 px, two columns from 576 px to 991 px, three columns at 992 px and above.
 
-Below those columns, an **Appeals** section listing every Pending or Overdue appeal across all the professor's subjects, plus every appeal they denied within the last 24 hours. Each row has a **View appeal** button opening the appeal modal (see §4.2).
+Below those columns, an **Appeals** section listing every Pending or Overdue appeal across all the professor's subjects, plus every appeal they denied within the last 24 hours. Each row has a **View appeal** button opening the appeal modal (see §4.2). Paged client-side: 5 per page, options 5 / 20 / 50 (per D-031).
 
-Below Appeals, an **Assigned Cases** section listing every escalated case currently assigned to this professor (§4.8) — one row per grade where they are the assigned professor and the grade is not final. Each row shows subject, student, final grade, a reason label, and a **Resolve** button that opens the case: Scenario A offers the collapsed four-field summary plus an editable exam input and **Confirm**; Scenario B offers both overdue appeal texts plus **Accept** / **Deny** on the latest appeal. The section is absent when the professor holds no assigned cases.
+Below Appeals, an **Assigned Cases** section listing every escalated case currently assigned to this professor (§4.8) — one row per grade where they are the assigned professor and the grade is not final. Each row shows subject, student, final grade, a reason label, and a **Resolve** button that opens the case: Scenario A offers the collapsed four-field summary plus an editable exam input and **Confirm**; Scenario B offers both overdue appeal texts plus **Accept** / **Deny** on the latest appeal. The section is absent when the professor holds no assigned cases. Paged client-side when present: 5 per page, options 5 / 20 / 50 (per D-031).
 
 The Appeals section is **vertically scrollable** when the list gets long — the section wraps its table in a container with a fixed `max-height` (desktop target: ~360 px, roughly 6 rows) and `overflow-y: auto`, so a professor with many open appeals sees a scrollbar inside the section rather than the appeals pushing the rest of the page off-screen. The section header stays sticky at the top of the scroll area so the column labels remain visible while scrolling. On mobile (where the table collapses to stacked cards, see below) the same fixed-height + overflow-y rule applies — the whole card stack scrolls inside its container.
 
@@ -282,7 +284,7 @@ Responsiveness: at <576 px (`sm` breakpoint) the three columns stack vertically 
   - **Passed Exams** — count of truly-final grades with `FinalGrade >= 6`.
   - **Non-passed Exams** — count of truly-final grades with `FinalGrade = 5`, **plus** every enrollment with no truly-final grade yet (per D-006).
   - **Earned ECTS** — sum of `Subject.ECTS` across truly-final passed grades (§4.7).
-- **My Subjects**: table — Subject name, Professor name, Final grade (or `—` if not graded yet), Status (`Passed` / `Failed` / `Not graded` / `Awaiting confirmation` / `Appeal pending` / `Awaiting re-confirmation` / `Under admin review`, plus a secondary outcome badge when the grade is truly final after an appeal — `Appeal accepted` or `Appeal denied` — or an `Appeal accepted` badge alongside `Awaiting re-confirmation`), Action column (either **Write appeal** button, **Confirm grade** button, both, or nothing — see §4.1 and §4.8).
+- **My Subjects**: table — Subject name, Professor name, Final grade (or `—` if not graded yet), Status (`Passed` / `Failed` / `Not graded` / `Awaiting confirmation` / `Appeal pending` / `Awaiting re-confirmation` / `Under admin review`, plus a secondary outcome badge when the grade is truly final after an appeal — `Appeal accepted` or `Appeal denied` — or an `Appeal accepted` badge alongside `Awaiting re-confirmation`), Action column (either **Write appeal** button, **Confirm grade** button, both, or nothing — see §4.1 and §4.8). Paged client-side: 5 per page, options 5 / 20 / 50 (per D-031).
 - Responsiveness: at <576 px (`sm`) the subjects table becomes stacked cards.
 - The old **Students** link and page are removed. The dashboard is the only student view.
 

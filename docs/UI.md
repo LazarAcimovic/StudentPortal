@@ -20,7 +20,7 @@
 | 8 | Admin dashboard |
 | 9 | My Profile page |
 | 10 | Change password page |
-| 11 | Reusable primitives |
+| 11 | Reusable primitives (includes §11.7 `<Pagination>`) |
 | 12 | Responsiveness |
 | 13 | Copy conventions |
 | 14 | Accessibility baseline |
@@ -245,6 +245,8 @@ Columns (desktop): Subject, Professor, Final grade, Status, Action.
 
 Below `sm`: table collapses to one card per subject.
 
+**Pagination** (client-side, per D-031): default 5 rows per page, selector options 5 / 20 / 50. Renders the `<Pagination>` control (§11.7) whenever `totalItems >= 1`; hidden when the student has no subjects.
+
 ### 6.5 Write Appeal modal
 
 Reusable `<Modal>`:
@@ -274,8 +276,8 @@ Reusable `<Modal>`:
 
 Do not use a bare `col-lg-4`: it jumps straight from one column to three and skips the two-column stage.
 
-- **Column 1 — My Subjects**: `list-group` of selectable subjects — every subject the professor teaches, including student-less ones (per D-028). The selected subject has `active` class.
-- **Column 2 — Students in {subject}**: `list-group` of students enrolled in the selected subject. The selected student has `active` class.
+- **Column 1 — My Subjects**: `list-group` of selectable subjects — every subject the professor teaches, including student-less ones (per D-028). The selected subject has `active` class. **Pagination** (client-side, per D-031): default 5 items per page, options 5 / 20 / 50; `<Pagination>` (§11.7) renders whenever `totalItems >= 1`.
+- **Column 2 — Students in {subject}**: `list-group` of students enrolled in the selected subject. The selected student has `active` class. **Pagination** (server-side via `GET /professor/subjects/{subjectId}/students?page=N&pageSize=N`, per D-031): default 5 items per page, options 5 / 20 / 50; `<Pagination>` (§11.7) renders whenever the subject has at least one enrolled student. The list is empty — and the control hidden — until the professor selects a subject.
 - **Column 3 — Grade for {student}**: the grading panel (§7.2).
 
 ### 7.2 Grading panel
@@ -318,6 +320,8 @@ Below the three columns, a full-width card titled "Appeals". Table columns:
 
 Below `sm`: table collapses to cards.
 
+**Pagination** (client-side, per D-031): default 5 rows per page, options 5 / 20 / 50. `<Pagination>` (§11.7) renders whenever there is at least one appeal row.
+
 ### 7.5 View Appeal modal
 
 Reusable `<Modal>`:
@@ -355,6 +359,8 @@ Table columns:
 
 Below `sm`: the table collapses to stacked cards, `[Resolve]` full width.
 
+**Pagination** (client-side, per D-031): default 5 rows per page, options 5 / 20 / 50. `<Pagination>` (§11.7) renders whenever there is at least one assigned case row; the section is hidden entirely when the array is empty.
+
 An escalated case the professor does **not** hold shows nothing here, and their grading panel shows the read-only banner from §7.3 instead — write buttons are hidden because the backend would return `403` (PRD §4.8, D-017).
 
 ---
@@ -372,6 +378,8 @@ Table columns (desktop): ID (short, first 8 chars of GUID), First Name, Last Nam
 Above the table: `[Create New User]` button (success).
 
 Below `md`: cards per user.
+
+**Pagination** (server-side, per D-031): default 15 rows per page, options 15 / 20 / 50. `<Pagination>` (§11.7) renders whenever the list has at least one user row.
 
 ### 8.3 Create / Edit user modals
 
@@ -391,6 +399,8 @@ Below `md`: cards per user.
 
 Table columns (desktop): Subject Name, Subject Code, ECTS, Professor, Action.
 
+**Pagination** (server-side, per D-031): default 15 rows per page, options 15 / 20 / 50. `<Pagination>` (§11.7) renders whenever the list has at least one subject row.
+
 Create / Edit subject fields, in this order:
 - Subject Name — required, 1–100 chars.
 - **Subject Code** — required, 1–20 chars (per D-015), label `"Subject Code"`, placed directly below Subject Name. Help text: "Subjects sharing a code are the same course taught by different professors." Without it the subject has no eligible substitute professor, so an escalated case on it cannot be assigned (PRD §4.8).
@@ -408,6 +418,8 @@ Create form fields, inline-validated like §8.4 (Create disabled until both are 
 - Subject — select, excluding subjects the chosen student is already enrolled in and any inactive subject.
 
 Enrollments are **create-only: there is no edit and no delete** (per D-027). A duplicate (same student and subject), an inactive student or subject, or a non-student is rejected by the server with a specific `400` message shown inline.
+
+**Pagination** (server-side, per D-031): default 15 rows per page, options 15 / 20 / 50. `<Pagination>` (§11.7) renders whenever the list has at least one enrollment row.
 
 ### 8.6 Escalations tab
 
@@ -433,6 +445,8 @@ Row rendering by `escalationStatus`:
 - **Assignment history**, from `assignmentHistory[]`: a chronological table of professor name, assigned by, assigned at, and outcome — "Superseded" + date, "Active", or "Resolved". Hidden on a first assignment, when the list is empty.
 - **Eligible professors**: fetched once on modal open from `GET /api/Escalation/eligible-professors?subjectCode={code}&gradeId={id}`, rendered as a radio-style `list-group` (the backend scopes it to one subject code and excludes the original professor and all past assignees, so the list is naturally short). If empty: the text "No eligible professors available" and a disabled Confirm.
 - **Confirm** → `POST /api/Escalation/assign` on a first assignment, `POST /api/Escalation/reassign` on a later one. On success update the row in place and close.
+
+**Pagination (per D-032):** The tab uses server-side pagination via the shared `<Pagination>` component. Default page size is **15** rows; the user may switch to **20** or **50** using the page-size selector beside the pager. The pager is hidden when there is only one page.
 
 Below `md`: stacked cards like the other admin tabs, action button full width.
 
@@ -620,6 +634,34 @@ const showAdminFields = scope === 'admin' && user.userRole !== USER_ROLES.ADMIN;
 
 **Does not host the Change password button** — that lives on the `/profile` page itself (§9), not inside this form.
 
+### 11.7 `<Pagination>`
+
+Presentational component used by every paged list in the app. Signature:
+
+```ts
+type PaginationProps = {
+  page: number;              // 1-based current page
+  pageSize: number;
+  totalItems: number;
+  pageSizeOptions: number[]; // [5, 20, 50] or [15, 20, 50] — caller passes the right one
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+};
+```
+
+Renders:
+- A `"Total: N"` label (copy from §13).
+- A `"Rows per page:"` label + `<select>` pre-filled with `pageSizeOptions` (copy from §13).
+- Bootstrap's `<ul class="pagination">` with Prev / page numbers / Next. Prev is disabled on page 1; Next is disabled on the last page. The active page is marked with `.active`.
+
+**Visibility rule (per D-031):** renders whenever `totalItems >= 1`; the parent is responsible for not rendering it at all when `totalItems === 0`. Even a single-page list (all items fit on one page) still renders the control so the "Total: N" count is always visible.
+
+**Page-size defaults by dashboard context:**
+- Student and professor sections: default `pageSize = 5`, `pageSizeOptions = [5, 20, 50]`.
+- Admin sections: default `pageSize = 15`, `pageSizeOptions = [15, 20, 50]`.
+
+These defaults are set at the call site, not inside `<Pagination>` itself — the component is page-size-agnostic.
+
 ---
 
 ## 12. Responsiveness
@@ -674,6 +716,8 @@ Test the following widths in Chrome devtools:
 - Toasts are one sentence, no punctuation at the end: `toast.success('Appeal submitted')`, `toast.error('Could not save draft')`.
 - Dates on screen: short local format, via `formatDate` in `features/user/utils/dateUtils.ts`.
 - Relative times ("2 days ago") come from a `relativeTime` export in the same `dateUtils.ts` — no `date-fns`, no `dayjs` (Tech.md §1). **The helper does not exist yet**, so the relative times required by §7.4 and §8.6 currently render as absolute dates; building it is task 25.4.
+- **Pagination total label:** `"Total: {N}"` — rendered as plain text above the Bootstrap pagination control (per D-031).
+- **Pagination page-size selector:** label text `"Rows per page:"` followed by the `<select>` element (per D-031).
 
 ---
 

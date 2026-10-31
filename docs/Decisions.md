@@ -236,3 +236,17 @@ The four statuses:
 **Answer:** They are redirected to **their own** dashboard. The three role-specific dashboard routes wrap `<RoleGate allowed={…} fallback={<RoleHomeRedirect/>}>`; on a role mismatch the gate renders the fallback, which `<Navigate replace>`s to the caller's own dashboard (`providers/RoleHomeRedirect.tsx`). `/profile` and `/profile/change-password` remain open to any authenticated user. `AuthGuard` (authentication) is unchanged and still wraps all of them.
 **Lives in:** Tech-Frontend §4
 **Why:** Without a role gate, a logged-in student could mount `/admin-dashboard` (only authentication was checked), which fired admin-only requests the backend answered with `403`. Redirecting at the route boundary means the forbidden page — and its requests — never run, which is the clean complement to D-029.
+
+### D-031 — Which lists page client-side versus server-side?
+
+**Decided:** 2026-10-31 · **Status:** Accepted
+**Answer:** Per-user lists page in the browser (the full payload already arrives in one call): student My Subjects, professor My Subjects, professor Appeals, professor Assigned Cases. Lists whose size grows with total system data page on the server: admin Users, admin Subjects, admin Enrollments, and professor Students (fetched per-subject on demand via `GET /professor/subjects/{subjectId}/students?page=N&pageSize=N`). The professor dashboard main call is reshaped to drop the students list entirely; students are loaded only when the professor selects a subject. Page-size defaults and options: student and professor lists default to 5 items per page with options 5 / 20 / 50; admin lists default to 15 with options 15 / 20 / 50. The pagination control renders whenever `totalItems >= 1`; it is hidden only when the list is empty.
+**Lives in:** PRD §5.4, PRD §5.5, UI §6.4, UI §7.1, UI §7.4, UI §7.6, UI §8.2, UI §8.4, UI §8.5, UI §11.7, UI §13, DB §6.4, Tech-Backend §2, Tech-Frontend §3
+**Why:** Per-user payload size is bounded — a professor teaches tens of subjects, not thousands, so paging a per-user list on the server adds round-trips with no scalability gain. System-wide table sizes are not bounded — an admin list can grow to thousands of rows. "Table size" is the wrong criterion; "payload size after the user's scope is applied" is the right one. The professor-students list is server-side because it is scoped per subject, not per professor, and a subject enrollment can grow without bound.
+
+### D-032 — How are escalated cases queried and paged?
+
+**Decided:** 2026-10-31 · **Status:** Accepted
+**Answer:** The repository loads only **candidate grades** — grades where `FinalizedAt IS NULL` with a qualifying appeal trigger (Scenario A or B), or grades that already have an `Escalations` row (including resolved). It never loads all grades and filters in memory. The `GET /api/Escalation` endpoint is server-side paginated: `page` (1-based, default 1) and `pageSize` (default 15, allowed 15 / 20 / 50). Multi-`Include` escalation reads use `AsSplitQuery()` + `AsNoTracking()` on pure-read paths; mutate paths omit `AsNoTracking()`.
+**Lives in:** DB §6.3, Tech-Backend §2, UI §8.6
+**Why:** Loading every grade with its full escalation graph does not survive production data volumes. Filtering in SQL, split queries, and no-tracking read models are the standard EF Core remedies for this class of N+1 / Cartesian blowup.

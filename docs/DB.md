@@ -330,7 +330,7 @@ The service then computes `canWriteAppeal`, `canConfirmGrade`, `status`, `appeal
 
 ### 6.3 Escalated cases (admin Escalations tab)
 
-The case list is derived, not stored. For every grade with `FinalizedAt IS NULL`, the service checks:
+The case list is derived, not stored. The repository loads only **candidate grades** — grades where `FinalizedAt IS NULL` and at least one escalation trigger condition is met, **or** grades that already have an `Escalations` row (including resolved ones, kept for history). Loading every grade and filtering in memory is not permitted (per D-032). For each candidate grade the service checks:
 
 - **Scenario A** — any appeal with `Status = 'Accepted'` and `ReviewedAt + INTERVAL '7 days' < NOW()`.
 - **Scenario B** — two or more appeals with `Status = 'Pending'` and `SubmittedAt + INTERVAL '7 days' < NOW()`.
@@ -395,3 +395,26 @@ Why each clause earns its place:
 | Single overdue appeal, student silent | does not count | latest is `Pending` → clause (2) fails |
 | Never appealed, 8 days of silence | counts | clause (1)'s third branch |
 | Escalated, not yet resolved | does not count | clause (3) |
+
+### 6.4 Professor students (paged, per D-031)
+
+Used by `GET /professor/subjects/{subjectId}/students?page=N&pageSize=N`. Two queries: one for the page of rows, one for the total count.
+
+```sql
+-- page of students enrolled in the selected subject
+SELECT u."Id", u."FirstName", u."LastName"
+FROM "Enrollments" e
+JOIN "Users" u ON u."Id" = e."StudentId"
+WHERE e."SubjectId" = @subjectId
+  AND e."IsDeleted" = false
+ORDER BY u."LastName", u."FirstName"
+LIMIT @pageSize OFFSET (@page - 1) * @pageSize;
+
+-- total count for the Pagination control
+SELECT COUNT(*)
+FROM "Enrollments" e
+WHERE e."SubjectId" = @subjectId
+  AND e."IsDeleted" = false;
+```
+
+The endpoint is gated `ProfessorOnly`. The service verifies that `Subject.ProfessorId == callerProfId` before returning rows (ownership check, per Tech-Backend §3).

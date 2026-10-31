@@ -63,7 +63,7 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 
 1. `AddDbContext<StudentPortalApiContext>(options => options.UseNpgsql(connectionString))`.
 2. Repositories: `IUserRepository`, `ISubjectRepository`, `IEnrollmentRepository`, `IGradeRepository`, `IGradeDraftRepository`, `IAppealRepository`, `IRefreshTokenRepository`, `IEscalationRepository`, `IEscalationAssignmentRepository`.
-3. Services: `IUserService`, `ISubjectService`, `IEnrollmentService`, `IGradeService`, `IGradeDraftService`, `IAppealService`, `IAuthService`, `ITokenService`, `IEscalationService`, `IStudentDashboardService`, `IProfessorDashboardService`.
+3. Services: `IUserService`, `ISubjectService`, `IEnrollmentService`, `IGradeService`, `IGradeDraftService`, `IAppealService`, `IAuthService`, `ITokenService`, `IEscalationService`, `IStudentDashboardService`, `IProfessorDashboardService`, `IProfessorStudentsService`.
 4. `TimeProvider.System` as the singleton default (see §6).
 5. `AddAutoMapper(typeof(MappingProfile).Assembly)`.
 6. `AddControllers()` + `AddFluentValidationAutoValidation()` + `AddValidatorsFromAssemblyContaining<LoginRequestDtoValidator>()`.
@@ -71,6 +71,10 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 8. `AddAuthentication(JwtBearerDefaults).AddJwtBearer(...)` — validation parameters pinned per PRD §6, with `OnMessageReceived` configured to read the JWT from the `sp_access` cookie.
 9. `AddAuthorization(...)` with policies `AdminOnly`, `ProfessorOnly`, `StudentOnly`.
 10. `AddCors(...)` with `WithOrigins(configuredOrigins).AllowAnyHeader().WithMethods(...).AllowCredentials()`.
+
+**Escalations endpoint — server-side pagination (per D-032):** `GET /api/Escalation` accepts `page` (1-based, default 1) and `pageSize` (default 15, allowed values 15 / 20 / 50). The repository filters to candidate grades only (DB §6.3) before paging; the response envelope carries `items`, `page`, `pageSize`, and `totalCount`.
+
+**EF Core read conventions for escalation paths:** Multi-`Include` escalation queries use `AsSplitQuery()` to avoid a Cartesian result set. `AsNoTracking()` is applied on pure-read paths (list reads, detail reads). Mutate-then-update paths (assign, reassign) must **not** carry `AsNoTracking()`, because EF's change tracker must follow the entity.
 
 ---
 
@@ -83,6 +87,7 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 - `AppealController` → `[Authorize]`; submit → `Student`; accept / deny / undo-deny → `Professor`.
 - `EscalationController` → `[Authorize(Roles = "Admin")]` on the whole class.
 - `AccountController`: `Login` and `Refresh` are `[AllowAnonymous]`; `Me`, `Logout`, `PUT /profile`, `POST /change-password` are `[Authorize]` (role-agnostic).
+- `ProfessorController` → `[Authorize(Roles = "Professor")]` on the whole class; `GET /professor/subjects/{subjectId}/students?page=N&pageSize=N` returns a paged list of enrolled students for the given subject (per D-031, DB §6.4). `IProfessorStudentsService.GetPagedAsync(subjectId, callerProfId, page, pageSize)` performs the ownership check (`Subject.ProfessorId == callerProfId`) before querying.
 
 **Layer 2 — service ownership check** reads `currentUserId` from the `ClaimTypes.NameIdentifier` claim and is the authoritative layer: it must hold even if the UI is bypassed.
 
