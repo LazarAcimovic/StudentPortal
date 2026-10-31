@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { StudentDashboardSubject } from '../../models/studentDashboard';
 import {
   APPEAL_DENIED_STATUS,
@@ -7,6 +7,10 @@ import {
   STATUS_BADGE_MAP,
 } from '../../constants/student/constants';
 import type { SubjectActionLayout } from '../../constants/student/constants';
+import Pagination from '../../../../components/ui/Pagination';
+
+const DEFAULT_PAGE_SIZE = 5;
+const PAGE_SIZE_OPTIONS = [5, 20, 50];
 
 function StatusBadge({
   status,
@@ -146,67 +150,86 @@ interface Props {
   confirmingEnrollmentId: string | null;
 }
 
-const SubjectsCard: React.FC<Props> = ({
-  subjects,
-  onWriteAppeal,
-  onConfirmGrade,
-  confirmingEnrollmentId,
-}) => (
-  <div className="card mb-4">
-    <div className="card-header bg-primary text-white">
-      <h5 className="mb-0">My Subjects</h5>
-    </div>
-    <div className="card-body p-0">
-      {subjects.length === 0 ? (
-        <div className="p-3">
-          <div className="alert alert-info mb-0">
-            You are not enrolled in any subjects yet.
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="table-responsive d-none d-sm-block">
-            <table className="table table-hover align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>Subject</th>
-                  <th>Professor</th>
-                  <th>Final grade</th>
-                  <th>Status</th>
-                  <th className="text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subjects.map(s => (
-                  <SubjectItem
-                    key={s.enrollmentId}
-                    subject={s}
-                    layout={SUBJECT_ACTION_LAYOUT.TABLE}
-                    onWriteAppeal={onWriteAppeal}
-                    onConfirmGrade={onConfirmGrade}
-                    confirmingEnrollmentId={confirmingEnrollmentId}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+function SubjectsCard({ subjects, onWriteAppeal, onConfirmGrade, confirmingEnrollmentId }: Props) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-          <div className="d-sm-none p-2">
-            {subjects.map(s => (
-              <SubjectItem
-                key={s.enrollmentId}
-                subject={s}
-                layout={SUBJECT_ACTION_LAYOUT.CARD}
-                onWriteAppeal={onWriteAppeal}
-                onConfirmGrade={onConfirmGrade}
-                confirmingEnrollmentId={confirmingEnrollmentId}
-              />
-            ))}
+  const start = (page - 1) * pageSize;
+  const visibleSubjects = subjects.slice(start, start + pageSize);
+
+  function handlePageSizeChange(newSize: number) {
+    setPageSize(newSize);
+    setPage(1);
+  }
+
+  return (
+    <div className="card mb-4">
+      <div className="card-header bg-primary text-white">
+        <h5 className="mb-0">My Subjects</h5>
+      </div>
+      <div className="card-body p-0">
+        {subjects.length === 0 ? (
+          <div className="p-3">
+            <div className="alert alert-info mb-0">
+              You are not enrolled in any subjects yet.
+            </div>
           </div>
-        </>
-      )}
+        ) : (
+          <>
+            <div className="table-responsive d-none d-sm-block">
+              <table className="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Professor</th>
+                    <th>Final grade</th>
+                    <th>Status</th>
+                    <th className="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleSubjects.map(s => (
+                    <SubjectItem
+                      key={s.enrollmentId}
+                      subject={s}
+                      layout={SUBJECT_ACTION_LAYOUT.TABLE}
+                      onWriteAppeal={onWriteAppeal}
+                      onConfirmGrade={onConfirmGrade}
+                      confirmingEnrollmentId={confirmingEnrollmentId}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="d-sm-none p-2">
+              {visibleSubjects.map(s => (
+                <SubjectItem
+                  key={s.enrollmentId}
+                  subject={s}
+                  layout={SUBJECT_ACTION_LAYOUT.CARD}
+                  onWriteAppeal={onWriteAppeal}
+                  onConfirmGrade={onConfirmGrade}
+                  confirmingEnrollmentId={confirmingEnrollmentId}
+                />
+              ))}
+            </div>
+
+            <div className="p-3 pt-2">
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                totalItems={subjects.length}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                onPageChange={setPage}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 export default SubjectsCard;

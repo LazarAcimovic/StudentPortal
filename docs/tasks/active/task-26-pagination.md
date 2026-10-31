@@ -48,9 +48,9 @@ Not in scope: the stats cards (single values, no list); any backend change.
 Docs to update: none
 Verify: `npm run test -- integration/responsive/studentSubjects`
 
-- [ ] `SubjectsCard` slices the already-loaded subjects to the current page (5 per page default) and renders `<Pagination>` below the table.
-- [ ] The control is absent when the student has 0 subjects and present with ≥ 1.
-- [ ] Changing the page size (5 / 20 / 50) re-pages without a refetch and resets to page 1.
+- [x] `SubjectsCard` slices the already-loaded subjects to the current page (5 per page default) and renders `<Pagination>` below the table.
+- [x] The control is absent when the student has 0 subjects and present with ≥ 1.
+- [x] Changing the page size (5 / 20 / 50) re-pages without a refetch and resets to page 1.
 - Commit: `feat(student): client-side pagination on the My Subjects table`
 
 ---
