@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers
@@ -19,21 +20,13 @@ namespace StudentPortal.Controllers
 
         // GET: api/enrollment
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EnrollmentDto>>> GetAllEnrollments()
+        public async Task<ActionResult<PagedResultDto<EnrollmentDto>>> GetAllEnrollments(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 15)
         {
-            try
-            {
-                var enrollments = await _enrollmentService.GetAllEnrollmentsAsync();
-                if (enrollments == null || !enrollments.Any())
-                {
-                    return NotFound("No enrollments available.");
-                }
-                return Ok(enrollments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var (p, ps) = PagingHelper.Normalize(page, pageSize);
+            var result = await _enrollmentService.GetPagedAsync(p, ps);
+            return Ok(result);
         }
 
         // GET: api/enrollment/{id}

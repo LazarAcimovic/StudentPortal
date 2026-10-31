@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers
@@ -19,21 +20,13 @@ namespace StudentPortal.Controllers
 
         // GET: api/subject
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SubjectDto>>> GetAllSubjects()
+        public async Task<ActionResult<PagedResultDto<SubjectDto>>> GetAllSubjects(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 15)
         {
-            try
-            {
-                var subjects = await _subjectService.GetAllSubjectsAsync();
-                if (subjects == null || !subjects.Any())
-                {
-                    return NotFound("No subjects available.");
-                }
-                return Ok(subjects);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var (p, ps) = PagingHelper.Normalize(page, pageSize);
+            var result = await _subjectService.GetPagedAsync(p, ps);
+            return Ok(result);
         }
 
         // GET: api/subject/{id}

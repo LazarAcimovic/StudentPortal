@@ -19,4 +19,5 @@ public interface IEnrollmentRepository
     Task<IEnumerable<Enrollment>> GetEnrollmentsForProfessorDashboardAsync(Guid professorId);
     Task<(IReadOnlyList<Enrollment> Items, int TotalCount)> GetPagedStudentsForSubjectAsync(
         Guid subjectId, int page, int pageSize);
+    Task<(IReadOnlyList<Enrollment> Items, int TotalCount)> GetPagedAsync(int page, int pageSize);
 }

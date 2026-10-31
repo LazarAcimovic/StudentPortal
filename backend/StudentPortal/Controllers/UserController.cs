@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers
@@ -22,21 +23,13 @@ namespace StudentPortal.Controllers
         // GET: api/user
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
+        public async Task<ActionResult<PagedResultDto<UserDto>>> GetAllUsers(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 15)
         {
-            try
-            {
-                var users = await _userService.GetAllUsersAsync();
-                if (users == null || !users.Any())
-                {
-                    return NotFound("No users available.");
-                }
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var (p, ps) = PagingHelper.Normalize(page, pageSize);
+            var result = await _userService.GetPagedAsync(p, ps);
+            return Ok(result);
         }
 
         // GET: api/user/{id}

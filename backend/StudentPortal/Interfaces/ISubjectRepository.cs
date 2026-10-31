@@ -12,4 +12,5 @@ public interface ISubjectRepository
 
     Task<IEnumerable<Subject>> GetSubjectsByProfessorIdAsync(Guid professorId);
     Task<IEnumerable<User>> GetStudentsBySubjectIdAsync(Guid subjectId);
+    Task<(IReadOnlyList<Subject> Items, int TotalCount)> GetPagedAsync(int page, int pageSize);
 }

@@ -142,4 +142,22 @@ public class EnrollmentRepository : IEnrollmentRepository
 
         return (items, totalCount);
     }
+
+    public async Task<(IReadOnlyList<Enrollment> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
+    {
+        var baseQuery = _context.Enrollments
+            .AsNoTracking()
+            .Include(e => e.Student)
+            .Include(e => e.Subject);
+
+        var totalCount = await _context.Enrollments.CountAsync();
+
+        var items = await baseQuery
+            .OrderBy(e => e.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 }

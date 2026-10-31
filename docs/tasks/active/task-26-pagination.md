@@ -106,10 +106,10 @@ Not in scope: the escalations tab (task 28); any change to create/edit/delete.
 Docs to update: Tech-Backend §1, Tech-Backend §2, UI §8
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter "AdminUserCrud"`
 
-- [ ] `GET /users`, `GET /subjects`, `GET /enrollments` accept `page` and `pageSize` and return `{ items, totalCount }` (15 default, 20 / 50 allowed; out-of-range values clamped).
-- [ ] Ordering is stable (so page boundaries don't shift between requests).
-- [ ] A shared paging shape/helper is used by all three, not copy-pasted per controller (Tech-Backend §2).
-- [ ] Integration tests assert the count and the page slice for each of the three.
+- [x] `GET /users`, `GET /subjects`, `GET /enrollments` accept `page` and `pageSize` and return `{ items, totalCount }` (15 default, 20 / 50 allowed; out-of-range values clamped).
+- [x] Ordering is stable (so page boundaries don't shift between requests).
+- [x] A shared paging shape/helper is used by all three, not copy-pasted per controller (Tech-Backend §2).
+- [x] Integration tests assert the count and the page slice for each of the three.
 - Commit: `feat(admin): server-side pagination for users, subjects, and enrollments`
 
 ---

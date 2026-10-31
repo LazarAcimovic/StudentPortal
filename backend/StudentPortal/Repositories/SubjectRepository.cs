@@ -70,4 +70,17 @@ public class SubjectRepository : ISubjectRepository
             .Select(e => e.Student)
             .ToListAsync();
     }
+
+    public async Task<(IReadOnlyList<Subject> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
+    {
+        var baseQuery = _context.Subjects.AsNoTracking();
+        var totalCount = await baseQuery.CountAsync();
+        var items = await baseQuery
+            .Include(s => s.Professor)
+            .OrderBy(s => s.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
 }

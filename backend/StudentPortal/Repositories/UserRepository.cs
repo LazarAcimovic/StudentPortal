@@ -75,5 +75,17 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .ToListAsync();
     }
+
+    public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
+    {
+        var baseQuery = _context.Users.AsNoTracking();
+        var totalCount = await baseQuery.CountAsync();
+        var items = await baseQuery
+            .OrderBy(u => u.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
 }
 

@@ -93,4 +93,16 @@ public class SubjectService : ISubjectService
         var students = await _subjectRepository.GetStudentsBySubjectIdAsync(subjectId);
         return _mapper.Map<IEnumerable<UserDto>>(students);
     }
+
+    public async Task<PagedResultDto<SubjectDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var (subjects, totalCount) = await _subjectRepository.GetPagedAsync(page, pageSize);
+        return new PagedResultDto<SubjectDto>
+        {
+            Items = _mapper.Map<IReadOnlyList<SubjectDto>>(subjects),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+        };
+    }
 }

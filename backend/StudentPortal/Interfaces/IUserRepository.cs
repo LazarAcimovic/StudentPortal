@@ -14,5 +14,6 @@ namespace StudentPortal.Interfaces
 
         Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(Guid studentId);
         Task<IEnumerable<User>> GetProfessorsBySubjectCodeAsync(string subjectCode, IEnumerable<Guid> excludeIds);
+        Task<(IReadOnlyList<User> Items, int TotalCount)> GetPagedAsync(int page, int pageSize);
     }
 }

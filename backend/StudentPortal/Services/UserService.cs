@@ -131,6 +131,18 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         await _refreshTokenRepository.RevokeAllForUserAsync(callerId);
     }
 
+    public async Task<PagedResultDto<UserDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var (users, totalCount) = await _userRepository.GetPagedAsync(page, pageSize);
+        return new PagedResultDto<UserDto>
+        {
+            Items = _mapper.Map<IReadOnlyList<UserDto>>(users),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+        };
+    }
+
     public async Task<IEnumerable<StudentSubjectGradesDto>> GetStudentSubjectsAndGradesAsync(Guid studentId)
     {
         // Koristimo novu metodu iz UserRepository-a
