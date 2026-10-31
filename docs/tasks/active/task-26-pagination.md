@@ -62,9 +62,9 @@ Not in scope: the students list (26.4/26.5, server-side); the grading panel.
 Docs to update: none
 Verify: `npm run test -- integration/grades/ProfessorDashboard`
 
-- [ ] `SubjectsList`, `AppealsSection` and `AssignedCasesSection` each page their own list client-side (5 per page default) with a `<Pagination>` control.
-- [ ] Each control appears only when that section has ≥ 1 item, independently of the others (per D-0NN).
-- [ ] Selecting a subject still works when the subject sits on a later page.
+- [x] `SubjectsList`, `AppealsSection` and `AssignedCasesSection` each page their own list client-side (5 per page default) with a `<Pagination>` control.
+- [x] Each control appears only when that section has ≥ 1 item, independently of the others (per D-0NN).
+- [x] Selecting a subject still works when the subject sits on a later page.
 - Commit: `feat(professor): client-side pagination on subjects, appeals, and assigned cases`
 
 ---

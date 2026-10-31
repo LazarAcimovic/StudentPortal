@@ -4,6 +4,10 @@ import { APPEAL_STATUS_BADGE } from '../../constants/professor/constants';
 import ViewAppealModal from './ViewAppealModal';
 import { undoDenyAppeal } from '../../../appeals/api/appealService';
 import { formatCountdown } from '../../utils/gradeUtils';
+import Pagination from '../../../../components/ui/Pagination';
+
+const DEFAULT_PAGE_SIZE = 5;
+const PAGE_SIZE_OPTIONS = [5, 20, 50];
 
 function useCountdown(deadline: string | null): string {
   const [label, setLabel] = useState('');
@@ -126,8 +130,18 @@ function AppealItem({
   );
 }
 
-const AppealsSection: React.FC<AppealsSectionProps> = ({ appeals, onRefresh }) => {
+function AppealsSection({ appeals, onRefresh }: AppealsSectionProps) {
   const [selectedAppeal, setSelectedAppeal] = useState<ProfessorAppealRow | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const start = (page - 1) * pageSize;
+  const visibleAppeals = appeals.slice(start, start + pageSize);
+
+  function handlePageSizeChange(newSize: number) {
+    setPageSize(newSize);
+    setPage(1);
+  }
 
   return (
     <>
@@ -139,10 +153,10 @@ const AppealsSection: React.FC<AppealsSectionProps> = ({ appeals, onRefresh }) =
           {!appeals.length ? (
             <p className="p-3 text-muted mb-0">No pending or overdue appeals.</p>
           ) : (
-            <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
+            <>
               <div className="table-responsive d-none d-sm-block">
                 <table className="table table-hover align-middle mb-0">
-                  <thead style={{ position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>
+                  <thead>
                     <tr>
                       <th>Student</th>
                       <th>Subject</th>
@@ -152,7 +166,7 @@ const AppealsSection: React.FC<AppealsSectionProps> = ({ appeals, onRefresh }) =
                     </tr>
                   </thead>
                   <tbody>
-                    {appeals.map(appeal => (
+                    {visibleAppeals.map(appeal => (
                       <AppealItem
                         key={appeal.appealId}
                         appeal={appeal}
@@ -166,7 +180,7 @@ const AppealsSection: React.FC<AppealsSectionProps> = ({ appeals, onRefresh }) =
               </div>
 
               <div className="d-sm-none p-2">
-                {appeals.map(appeal => (
+                {visibleAppeals.map(appeal => (
                   <AppealItem
                     key={appeal.appealId}
                     appeal={appeal}
@@ -176,7 +190,18 @@ const AppealsSection: React.FC<AppealsSectionProps> = ({ appeals, onRefresh }) =
                   />
                 ))}
               </div>
-            </div>
+
+              <div className="p-3 pt-2">
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  totalItems={appeals.length}
+                  pageSizeOptions={PAGE_SIZE_OPTIONS}
+                  onPageChange={setPage}
+                  onPageSizeChange={handlePageSizeChange}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -193,6 +218,6 @@ const AppealsSection: React.FC<AppealsSectionProps> = ({ appeals, onRefresh }) =
       />
     </>
   );
-};
+}
 
 export default AppealsSection;

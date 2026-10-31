@@ -14,7 +14,7 @@ Progress counts **subtasks**, and a subtask counts as done only when every one o
 |---|---|---|---|---|---|---|
 | 22 | Tests — backend integration, frontend unit + integration, e2e | 32/38 | all four suites landed; 6 boxes defer to tasks 23.6 / 25 | 23 (23.15 owns escalation coverage) | — | [task-22-tests.md](task-22-tests.md) |
 | 25 | Align the shipped UI with the rules settled in the consistency pass | 0/4 | not started | — | 22 (22c.7) | [task-25-ui-alignment.md](task-25-ui-alignment.md) |
-| 26 | Pagination across the dashboards | 3/8 | 26.1–26.2 done; 26.3–26.7 remain | — | 28 (28.4 reuses 26.1) | [task-26-pagination.md](task-26-pagination.md) |
+| 26 | Pagination across the dashboards | 4/8 | 26.1–26.3 done; 26.4–26.7 remain | — | 28 (28.4 reuses 26.1) | [task-26-pagination.md](task-26-pagination.md) |
 | 27 | Serbian translation (i18n) | 0/9 | not started | — | — | [task-27-i18n-serbian.md](task-27-i18n-serbian.md) |
 | 28 | Escalation read performance and server-paged escalations tab | 4/5 | in progress | 26 (26.1 component) | — | [task-28-escalation-read-perf.md](task-28-escalation-read-perf.md) |
 
