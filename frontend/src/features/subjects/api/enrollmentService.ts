@@ -4,6 +4,7 @@ import type {
   Enrollment,
   CreateEnrollment,
 } from "../models/enrollment";
+import type { PagedResult } from "../../../shared/models/pagedResult";
 import { API_ROUTES } from "../../../config/constants";
 
 export type CreateEnrollmentFieldErrors = Partial<Record<string, string>>;
@@ -12,9 +13,14 @@ export type CreateEnrollmentResult =
   | { ok: true; enrollment: Enrollment }
   | { ok: false; fieldErrors?: CreateEnrollmentFieldErrors; message?: string };
 
-export const getAllEnrollments = async (): Promise<Enrollment[] | null> => {
+export const getAllEnrollments = async (
+  page: number,
+  pageSize: number
+): Promise<PagedResult<Enrollment> | null> => {
   try {
-    const response = await apiClient.get<Enrollment[]>(API_ROUTES.ENROLLMENT);
+    const response = await apiClient.get<PagedResult<Enrollment>>(API_ROUTES.ENROLLMENT, {
+      params: { page, pageSize },
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching enrollments:", error);

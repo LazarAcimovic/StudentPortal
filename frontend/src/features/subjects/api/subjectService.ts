@@ -5,6 +5,7 @@ import type {
   CreateSubject,
   UpdateSubject,
 } from "../models/subject";
+import type { PagedResult } from "../../../shared/models/pagedResult";
 import { API_ROUTES } from "../../../config/constants";
 
 // Field-keyed messages, PascalCase to match the create form field names and the
@@ -19,9 +20,14 @@ export type UpdateSubjectResult =
   | { ok: true; subject: Subject }
   | { ok: false; fieldErrors?: CreateSubjectFieldErrors; message?: string };
 
-export const getAllSubjects = async (): Promise<Subject[] | null> => {
+export const getAllSubjects = async (
+  page: number,
+  pageSize: number
+): Promise<PagedResult<Subject> | null> => {
   try {
-    const response = await apiClient.get<Subject[]>(API_ROUTES.SUBJECT);
+    const response = await apiClient.get<PagedResult<Subject>>(API_ROUTES.SUBJECT, {
+      params: { page, pageSize },
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching subjects:", error);

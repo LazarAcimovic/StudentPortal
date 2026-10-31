@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { CreateUser, User, UpdateUser } from "../../../shared/models/User";
+import type { PagedResult } from "../../../shared/models/pagedResult";
 import apiClient from "../../../shared/api/axiosClient";
 import { API_ROUTES } from "../../../config/constants";
 
@@ -11,9 +12,14 @@ export type AddUserResult =
   | { ok: true; user: User }
   | { ok: false; fieldErrors?: AddUserFieldErrors; message?: string };
 
-export const getAllUsers = async (): Promise<User[] | null> => {
+export const getAllUsers = async (
+  page: number,
+  pageSize: number
+): Promise<PagedResult<User> | null> => {
   try {
-    const response = await apiClient.get<User[]>(API_ROUTES.USER);
+    const response = await apiClient.get<PagedResult<User>>(API_ROUTES.USER, {
+      params: { page, pageSize },
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching users:", error);

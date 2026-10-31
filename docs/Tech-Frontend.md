@@ -305,6 +305,8 @@ Response interceptor:
 - Role-restricted routes additionally wrap `<RoleGate allowed={USER_ROLES.Admin} fallback={<RoleHomeRedirect/>}>`. The fallback (`providers/RoleHomeRedirect.tsx`) redirects a mismatched role to its **own** dashboard, so a role never mounts another role's page and never fires the requests the backend answers with `403` (per D-030). The three dashboard routes are gated; `/profile` and `/profile/change-password` stay open to any authenticated user.
 - Imperative navigation from non-components uses `lib/navigation.ts`, registered by `App.tsx`'s first `useEffect`.
 
+**Paged API calls:** Admin service functions (`getAllUsers`, `getAllSubjects`, `getAllEnrollments`) accept `(page: number, pageSize: number)` and return `Promise<PagedResult<T> | null>`. Paging params are sent as Axios query params (`{ params: { page, pageSize } }`). The shared `PagedResult<T>` shape (`items`, `page`, `pageSize`, `totalCount`) lives in `shared/models/pagedResult.ts`. Allowed page sizes are 15, 20, 50 (enforced server-side). Form dropdowns that need all records (professors for subject forms, students and subjects for enrollment form) fetch with `pageSize=50` — the maximum allowed.
+
 ---
 
 ## 5. State management and forms

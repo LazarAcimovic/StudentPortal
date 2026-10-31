@@ -121,8 +121,8 @@ Not in scope: the escalations tab (task 28).
 Docs to update: Tech-Frontend §4
 Verify: `npm run test -- integration/user`
 
-- [ ] `AdminDashboardPage` tracks page + pageSize per tab and refetches on change; each table renders `<Pagination>` (15 / 20 / 50).
-- [ ] The control is hidden when a tab has 0 rows, shown at ≥ 1.
-- [ ] Creating or deleting a row updates the current page's count/total sensibly (refetch the current page).
-- [ ] The derived lists that feed the create forms (professors from users, students from users) still work with paging in place.
+- [x] `AdminDashboardPage` tracks page + pageSize per tab and refetches on change; each table renders `<Pagination>` (15 / 20 / 50).
+- [x] The control is hidden when a tab has 0 rows, shown at ≥ 1.
+- [x] Creating or deleting a row updates the current page's count/total sensibly (refetch the current page).
+- [x] The derived lists that feed the create forms (professors from users, students from users) still work with paging in place.
 - Commit: `feat(admin): wire users, subjects, and enrollments tables to server pagination`

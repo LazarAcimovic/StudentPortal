@@ -89,6 +89,63 @@ export function eligibleProfessorsHandler(payload: unknown): HttpHandler {
   );
 }
 
+export function pagedUsersHandler(payload: {
+  items: unknown[];
+  totalCount: number;
+  page?: number;
+  pageSize?: number;
+}): HttpHandler {
+  return http.get(`/api${API_ROUTES.USER}`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? 1);
+    const pageSize = Number(url.searchParams.get('pageSize') ?? 15);
+    return HttpResponse.json({
+      items: payload.items,
+      page: payload.page ?? page,
+      pageSize: payload.pageSize ?? pageSize,
+      totalCount: payload.totalCount,
+    } as JsonInput);
+  });
+}
+
+export function pagedSubjectsHandler(payload: {
+  items: unknown[];
+  totalCount: number;
+  page?: number;
+  pageSize?: number;
+}): HttpHandler {
+  return http.get(`/api${API_ROUTES.SUBJECT}`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? 1);
+    const pageSize = Number(url.searchParams.get('pageSize') ?? 15);
+    return HttpResponse.json({
+      items: payload.items,
+      page: payload.page ?? page,
+      pageSize: payload.pageSize ?? pageSize,
+      totalCount: payload.totalCount,
+    } as JsonInput);
+  });
+}
+
+export function pagedEnrollmentsHandler(payload: {
+  items: unknown[];
+  totalCount: number;
+  page?: number;
+  pageSize?: number;
+}): HttpHandler {
+  return http.get(`/api${API_ROUTES.ENROLLMENT}`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? 1);
+    const pageSize = Number(url.searchParams.get('pageSize') ?? 15);
+    return HttpResponse.json({
+      items: payload.items,
+      page: payload.page ?? page,
+      pageSize: payload.pageSize ?? pageSize,
+      totalCount: payload.totalCount,
+    } as JsonInput);
+  });
+}
+
 export function defaultHandlers(user: StoreUser | null = seededStudent): HttpHandler[] {
   return [
     meHandler(user),
