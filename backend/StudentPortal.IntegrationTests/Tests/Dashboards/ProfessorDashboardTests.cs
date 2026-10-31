@@ -86,7 +86,7 @@ public class ProfessorDashboardTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task Dashboard_HasActiveAppealFlag_IsTrueForEnrollmentWithPendingAppeal()
+    public async Task SubjectStudents_HasActiveAppealFlag_IsTrueForEnrollmentWithPendingAppeal()
     {
         var now = FakeTime.GetUtcNow().UtcDateTime;
 
@@ -94,12 +94,10 @@ public class ProfessorDashboardTests : IntegrationTestBase
         await SeedAppealAtAsync(grade.Id, now.AddHours(-1), AppealStatus.Pending);
 
         var client = await CreateAuthenticatedClientAsync(ProfLinAlg);
-        var response = await client.GetAsync("/api/Professor/me/dashboard");
-        var dto = await response.Content.ReadFromJsonAsync<ProfessorDashboardDto>();
+        var response = await client.GetAsync($"/api/Professor/subjects/{SeedIds.Subjects.LinearAlgebra}/students?page=1&pageSize=50");
+        var dto = await response.Content.ReadFromJsonAsync<PagedResultDto<ProfessorStudentRowDto>>();
 
-        var row = dto!.Subjects
-            .SelectMany(s => s.Students)
-            .Single(s => s.EnrollmentId == Liam_LinearAlgebra);
+        var row = dto!.Items.Single(s => s.EnrollmentId == Liam_LinearAlgebra);
         row.HasActiveAppeal.Should().BeTrue();
         row.GradeState.Should().Be("Confirmed");
     }

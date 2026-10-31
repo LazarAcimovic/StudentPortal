@@ -29,7 +29,7 @@ public class ProfessorSubjectDto
     public Guid SubjectId { get; set; }
     public string SubjectName { get; set; } = null!;
     public int Ects { get; set; }
-    public List<ProfessorStudentRowDto> Students { get; set; } = new();
+    public int StudentCount { get; set; }
 }
 
 public class ProfessorStudentRowDto

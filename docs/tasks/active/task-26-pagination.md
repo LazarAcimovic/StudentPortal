@@ -76,10 +76,10 @@ Not in scope: the appeals/assigned-cases payload, which stays inline.
 Docs to update: PRD §5.4, DB §6, Tech-Backend §1, Tech-Backend §2
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Dashboards`
 
-- [ ] New `GET /professor/subjects/{subjectId}/students?page=&pageSize=` returns `{ items, totalCount }`, students ordered by last name then first name, scoped to the signed-in professor's subject (403 otherwise).
-- [ ] `GET /professor/me/dashboard` no longer returns students inline; it still returns subjects (with their student counts), appeals and assigned cases.
-- [ ] An integration test proves page 1 and page 2 of a subject with > pageSize students, and that a professor cannot read another professor's subject's students.
-- [ ] The empty-subject case (no enrolled students) returns `totalCount = 0`, consistent with D-028.
+- [x] New `GET /professor/subjects/{subjectId}/students?page=&pageSize=` returns `{ items, totalCount }`, students ordered by last name then first name, scoped to the signed-in professor's subject (403 otherwise).
+- [x] `GET /professor/me/dashboard` no longer returns students inline; it still returns subjects (with their student counts), appeals and assigned cases.
+- [x] An integration test proves page 1 and page 2 of a subject with > pageSize students, and that a professor cannot read another professor's subject's students.
+- [x] The empty-subject case (no enrolled students) returns `totalCount = 0`, consistent with D-028.
 - Commit: `feat(professor): paged students endpoint and slimmer dashboard payload`
 
 ---

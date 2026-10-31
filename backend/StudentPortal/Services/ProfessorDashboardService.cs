@@ -59,11 +59,7 @@ public class ProfessorDashboardService : IProfessorDashboardService
                 SubjectId = subject.Id,
                 SubjectName = subject.SubjectName,
                 Ects = subject.ECTS,
-                Students = (enrollmentsBySubject.TryGetValue(subject.Id, out var rows)
-                        ? rows
-                        : new List<Enrollment>())
-                    .Select(e => BuildStudentRow(e, now))
-                    .ToList(),
+                StudentCount = enrollmentsBySubject.TryGetValue(subject.Id, out var rows) ? rows.Count : 0,
             })
             .OrderBy(s => s.SubjectName)
             .ToList();
@@ -77,45 +73,6 @@ public class ProfessorDashboardService : IProfessorDashboardService
             Appeals = appealRows,
             AssignedCases = assignedCases,
         };
-    }
-
-    private static ProfessorStudentRowDto BuildStudentRow(Enrollment enrollment, DateTime now)
-    {
-        var student = enrollment.Student;
-        var grade = enrollment.Grade;
-        var draft = enrollment.GradeDraft;
-
-        return new ProfessorStudentRowDto
-        {
-            EnrollmentId = enrollment.Id,
-            StudentId = student.Id,
-            FirstName = student.FirstName,
-            LastName = student.LastName,
-            IndexNumber = student.IndexNumber,
-            GradeState = ComputeGradeState(grade, draft, now),
-            FinalGrade = grade?.FinalGrade,
-            HasActiveAppeal = grade != null && grade.Appeals.Any(a =>
-                a.Status == AppealStatus.Pending ||
-                a.Status == AppealStatus.Accepted),
-        };
-    }
-
-    private static string ComputeGradeState(Grade? grade, GradeDraft? draft, DateTime now)
-    {
-        if (grade == null)
-            return draft != null ? "Draft" : "NotGraded";
-
-        if (grade.FinalizedAt != null)
-            return "Finalized";
-
-        if (grade.Appeals.Any(a => a.Status == AppealStatus.Accepted))
-            return "ReconfirmNeeded";
-
-        // Auto-finalize: initial window expired with no appeals
-        if (!grade.Appeals.Any() && grade.ConfirmedAt.AddDays(7) < now)
-            return "Finalized";
-
-        return "Confirmed";
     }
 
     private static AssignedCaseDto BuildAssignedCaseRow(Grade grade, DateTime now)

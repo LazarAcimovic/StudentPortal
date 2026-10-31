@@ -107,6 +107,7 @@ builder.Services.AddScoped<IAppealService, AppealService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IStudentDashboardService, StudentDashboardService>();
 builder.Services.AddScoped<IProfessorDashboardService, ProfessorDashboardService>();
+builder.Services.AddScoped<IProfessorStudentsService, ProfessorStudentsService>();
 builder.Services.AddScoped<IEscalationService, EscalationService>();
 
 builder.Services.AddAutoMapper(cfg =>

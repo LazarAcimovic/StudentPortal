@@ -118,4 +118,28 @@ public class EnrollmentRepository : IEnrollmentRepository
                 .ThenBy(e => e.Student.FirstName)
             .ToListAsync();
     }
+
+    public async Task<(IReadOnlyList<Enrollment> Items, int TotalCount)> GetPagedStudentsForSubjectAsync(
+        Guid subjectId, int page, int pageSize)
+    {
+        var baseQuery = _context.Enrollments
+            .AsNoTracking()
+            .Where(e => e.SubjectId == subjectId && !e.IsDeleted);
+
+        var totalCount = await baseQuery.CountAsync();
+
+        var items = await baseQuery
+            .AsSplitQuery()
+            .Include(e => e.Student)
+            .Include(e => e.Grade)
+                .ThenInclude(g => g!.Appeals)
+            .Include(e => e.GradeDraft)
+            .OrderBy(e => e.Student.LastName)
+            .ThenBy(e => e.Student.FirstName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 }
