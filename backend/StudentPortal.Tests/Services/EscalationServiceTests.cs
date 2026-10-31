@@ -79,7 +79,7 @@ public class EscalationServiceTests
         // ReviewedAt + 7d == now  →  boundary condition is < now (exclusive)  →  no trigger
         var appeal = MakeAcceptedAppeal(T0.AddDays(-7));
         var grade = MakeGrade(appeals: new List<Appeal> { appeal });
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var cases = (await sut.GetAllCasesAsync(T0)).ToList();
@@ -93,7 +93,7 @@ public class EscalationServiceTests
         // ReviewedAt + 6d < now (6 days old accept, only 6d since review)
         var appeal = MakeAcceptedAppeal(T0.AddDays(-6));
         var grade = MakeGrade(appeals: new List<Appeal> { appeal });
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var cases = (await sut.GetAllCasesAsync(T0)).ToList();
@@ -106,7 +106,7 @@ public class EscalationServiceTests
     {
         var appeal = MakeAcceptedAppeal(T0.AddDays(-7));
         var grade = MakeGrade(appeals: new List<Appeal> { appeal });
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var now = T0.AddSeconds(1);
@@ -125,7 +125,7 @@ public class EscalationServiceTests
         // PRD §4.8: a single overdue appeal does not escalate
         var appeal = MakePendingAppeal(T0.AddDays(-8));
         var grade = MakeGrade(appeals: new List<Appeal> { appeal });
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var cases = (await sut.GetAllCasesAsync(T0)).ToList();
@@ -140,7 +140,7 @@ public class EscalationServiceTests
         var a1 = MakePendingAppeal(T0.AddDays(-8));
         var a2 = MakePendingAppeal(T0.AddDays(-7));
         var grade = MakeGrade(appeals: new List<Appeal> { a1, a2 });
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var cases = (await sut.GetAllCasesAsync(T0)).ToList();
@@ -154,7 +154,7 @@ public class EscalationServiceTests
         var a1 = MakePendingAppeal(T0.AddDays(-8));
         var a2 = MakePendingAppeal(T0.AddDays(-7));
         var grade = MakeGrade(appeals: new List<Appeal> { a1, a2 });
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var now = T0.AddSeconds(1);
@@ -173,7 +173,7 @@ public class EscalationServiceTests
         var a1 = MakePendingAppeal(T0.AddDays(-8));
         var a2 = MakePendingAppeal(T0.AddDays(-8));
         var grade = MakeGrade(appeals: new List<Appeal> { a1, a2 });
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var cases = (await sut.GetAllCasesAsync(T0.AddSeconds(1))).ToList();
@@ -199,7 +199,7 @@ public class EscalationServiceTests
             Assignments = new List<EscalationAssignment> { assignment }
         };
         var grade = MakeGrade(escalation: escalation);
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var cases = (await sut.GetAllCasesAsync(T0)).ToList();
@@ -225,7 +225,7 @@ public class EscalationServiceTests
             Assignments = new List<EscalationAssignment> { assignment }
         };
         var grade = MakeGrade(escalation: escalation);
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var cases = (await sut.GetAllCasesAsync(T0)).ToList();
@@ -251,7 +251,7 @@ public class EscalationServiceTests
             Assignments = new List<EscalationAssignment> { assignment }
         };
         var grade = MakeGrade(escalation: escalation);
-        _gradeRepo.GetAllWithEscalationDetailsAsync().Returns(new List<Grade> { grade });
+        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
 
         var sut = CreateSut();
         var cases = (await sut.GetAllCasesAsync(T0)).ToList();

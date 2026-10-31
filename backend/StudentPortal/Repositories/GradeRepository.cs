@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
+using StudentPortal.Models.Enums;
 using System.Diagnostics;
 
 namespace StudentPortal.Repositories;
@@ -110,11 +111,27 @@ public class GradeRepository : IGradeRepository
         return false;
     }
 
-    public async Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync()
+    public async Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync(DateTime now)
     {
+        // Candidate grades only (DB §6.3): grades that already have an Escalations row
+        // (including resolved, kept for history), OR grades where FinalizedAt IS NULL
+        // and at least one escalation trigger condition is met (Scenario A or B).
+        // Note: a partial index on Grades WHERE FinalizedAt IS NULL is deferred until
+        // EXPLAIN ANALYZE on production-sized data confirms it is needed.
         return await _context.Grades
             .AsSplitQuery()
             .AsNoTracking()
+            .Where(g =>
+                g.Escalation != null
+                || (g.FinalizedAt == null
+                    && g.Appeals.Any(a =>
+                        a.Status == AppealStatus.Accepted
+                        && a.ReviewedAt.HasValue
+                        && a.ReviewedAt.Value.AddDays(7) < now))
+                || (g.FinalizedAt == null
+                    && g.Appeals.Count(a =>
+                        a.Status == AppealStatus.Pending
+                        && a.SubmittedAt.AddDays(7) < now) >= 2))
             .Include(g => g.Enrollment)
                 .ThenInclude(e => e.Student)
             .Include(g => g.Enrollment)

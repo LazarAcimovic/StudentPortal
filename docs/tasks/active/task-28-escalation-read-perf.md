@@ -47,10 +47,10 @@ Not in scope: the UI; the response shape (28.3).
 Docs to update: DB §6.3
 Verify: `dotnet test backend/StudentPortal.Tests --filter Escalation` and `dotnet test backend/StudentPortal.IntegrationTests --filter Escalations`
 
-- [ ] The repository loads only candidate grades: `FinalizedAt IS NULL` with a qualifying appeal (Scenario A or B), **or** a grade that has an `Escalations` row (including resolved, for history).
-- [ ] The derived statuses (`NeedsAssignment` / `Assigned` / `NeedsReassignment` / `Resolved`) are identical to today for the same data.
-- [ ] A new test proves a finalized grade with no open case, and a plain in-window grade, are **not** loaded.
-- [ ] No partial index is added here; a `verify-then-add` note records that a partial index on open grades (`WHERE FinalizedAt IS NULL`) is only to be added if `EXPLAIN ANALYZE` on production-sized data shows it is needed.
+- [x] The repository loads only candidate grades: `FinalizedAt IS NULL` with a qualifying appeal (Scenario A or B), **or** a grade that has an `Escalations` row (including resolved, for history).
+- [x] The derived statuses (`NeedsAssignment` / `Assigned` / `NeedsReassignment` / `Resolved`) are identical to today for the same data.
+- [x] A new test proves a finalized grade with no open case, and a plain in-window grade, are **not** loaded.
+- [x] No partial index is added here; a `verify-then-add` note records that a partial index on open grades (`WHERE FinalizedAt IS NULL`) is only to be added if `EXPLAIN ANALYZE` on production-sized data shows it is needed.
 - Commit: `perf(backend): filter escalation candidates in SQL`
 
 ---

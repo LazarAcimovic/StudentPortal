@@ -337,6 +337,8 @@ The case list is derived, not stored. The repository loads only **candidate grad
 
 A matching grade with no `Escalations` row is `NeedsAssignment`. With a row and `ResolvedAt IS NULL`, the active assignment (`SupersededAt IS NULL`) decides: `AssignedAt + INTERVAL '7 days' >= NOW()` → `Assigned`, otherwise `NeedsReassignment`. With `ResolvedAt` set → `Resolved`.
 
+A partial index on `Grades` (`WHERE "FinalizedAt" IS NULL`) may reduce the candidate scan as data grows. Do not add it speculatively; add it only after `EXPLAIN ANALYZE` on production-sized data confirms it is needed.
+
 Eligible professors for a case:
 
 ```sql

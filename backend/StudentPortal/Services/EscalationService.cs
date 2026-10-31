@@ -27,7 +27,7 @@ public class EscalationService : IEscalationService
 
     public async Task<IEnumerable<EscalatedCaseDto>> GetAllCasesAsync(DateTime now)
     {
-        var grades = await _gradeRepository.GetAllWithEscalationDetailsAsync();
+        var grades = await _gradeRepository.GetAllWithEscalationDetailsAsync(now);
         var result = new List<EscalatedCaseDto>();
 
         foreach (var grade in grades)

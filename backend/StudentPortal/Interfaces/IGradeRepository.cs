@@ -13,7 +13,7 @@ public interface IGradeRepository
     Task<bool> DeleteGradeAsync(Guid id);
     Task<Grade> ConfirmGradeAsync(Guid id);
     Task<IEnumerable<Grade>> GetGradesByStudentAndSubjectAsync(Guid studentId, Guid subjectId);
-    Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync();
+    Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync(DateTime now);
     Task<Grade?> GetByIdWithEscalationDetailsAsync(Guid id);
     Task<IEnumerable<Grade>> GetAssignedCasesAsync(Guid professorId);
 }
