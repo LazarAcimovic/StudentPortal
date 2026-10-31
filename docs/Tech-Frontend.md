@@ -261,6 +261,26 @@ Rules for Pattern B:
 
 **Both patterns call the feature's own `api/*Service.ts` functions.** Services catch and re-throw as `Error`, accept an optional `AbortSignal`, and map response rows through `utils/map*.ts` where field renames are needed. Services never set React state — they return data.
 
+**Client-side pagination** (per D-031 — student/professor per-user lists). The hook fetches all items once (Pattern A), then exposes `page`, `pageSize`, `setPage`, `setPageSize` as local `useState`. The visible slice is computed with `useMemo`:
+
+```ts
+const visibleItems = useMemo(
+  () => items.slice((page - 1) * pageSize, page * pageSize),
+  [items, page, pageSize],
+);
+const totalItems = items.length;
+```
+
+Changing `pageSize` resets `page` to 1. No extra network request is made for a page change.
+
+**Server-side pagination** (per D-031 — admin lists and professor students). The hook extends Pattern B: the loader accepts `page` and `pageSize` and the caller re-triggers it when either changes. Return shape adds `totalItems`:
+
+```ts
+return { data, totalItems, isLoading, error, loadPage };
+```
+
+The service function maps the backend envelope `{ items: T[], total: number }` before returning.
+
 ---
 
 ## 4. Axios singleton and routing
