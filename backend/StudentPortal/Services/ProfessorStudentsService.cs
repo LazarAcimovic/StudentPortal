@@ -34,7 +34,13 @@ public class ProfessorStudentsService : IProfessorStudentsService
         var now = _timeProvider.GetUtcNow().UtcDateTime;
         var items = enrollments.Select(e => BuildStudentRow(e, now)).ToList();
 
-        return new PagedResultDto<ProfessorStudentRowDto> { Items = items, TotalCount = totalCount };
+        return new PagedResultDto<ProfessorStudentRowDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+        };
     }
 
     private static ProfessorStudentRowDto BuildStudentRow(Enrollment enrollment, DateTime now)

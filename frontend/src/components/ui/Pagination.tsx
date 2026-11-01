@@ -15,7 +15,9 @@ export default function Pagination({
   onPageChange,
   onPageSizeChange,
 }: PaginationProps) {
-  const totalPages = Math.ceil(totalItems / pageSize);
+  // Guard against a non-positive pageSize: ceil(total / 0) is Infinity, which makes
+  // Array.from below throw "Invalid array length" and take the page down.
+  const totalPages = pageSize > 0 ? Math.max(Math.ceil(totalItems / pageSize), 1) : 1;
 
   return (
     <div className="d-flex align-items-center gap-3 flex-wrap">

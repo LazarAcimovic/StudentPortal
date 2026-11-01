@@ -50,12 +50,18 @@ public class ProfessorStudentsTests : IntegrationTestBase
         var p1 = await r1.Content.ReadFromJsonAsync<PagedResultDto<ProfessorStudentRowDto>>();
         p1!.TotalCount.Should().Be(6);
         p1.Items.Should().HaveCount(5);
+        // The response must echo the requested page/pageSize — the client divides by
+        // PageSize for its pagination, and a 0 here crashes the Pagination component.
+        p1.Page.Should().Be(1);
+        p1.PageSize.Should().Be(5);
 
         var r2 = await client.GetAsync($"/api/Professor/subjects/{LinearAlgebra}/students?page=2&pageSize=5");
         r2.StatusCode.Should().Be(HttpStatusCode.OK);
         var p2 = await r2.Content.ReadFromJsonAsync<PagedResultDto<ProfessorStudentRowDto>>();
         p2!.TotalCount.Should().Be(6);
         p2.Items.Should().HaveCount(1);
+        p2.Page.Should().Be(2);
+        p2.PageSize.Should().Be(5);
 
         p1.Items.Select(i => i.EnrollmentId).Should()
             .NotIntersectWith(p2.Items.Select(i => i.EnrollmentId));
