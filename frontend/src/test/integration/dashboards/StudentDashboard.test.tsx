@@ -30,9 +30,11 @@ describe('StudentDashboardPage aggregates (§5.5)', () => {
     server.use(studentDashboardHandler(dashboardWith837Average));
     authenticatedRender({ as: 'student', initialEntries: [APP_ROUTES.STUDENT_DASHBOARD] });
 
-    expect(await screen.findByText('3')).toBeInTheDocument();
-    expect(await screen.findByText('1')).toBeInTheDocument();
-    expect(await screen.findByText('21')).toBeInTheDocument();
+    // Query the stat tiles by heading role — a pagination page-link button also
+    // renders "1", so a bare findByText('1') is ambiguous.
+    expect(await screen.findByRole('heading', { name: '3' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '1' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '21' })).toBeInTheDocument();
   });
 
   it('when the student has zero enrollments then tiles show zeros and subjects empty-state renders', async () => {

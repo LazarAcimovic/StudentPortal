@@ -3,16 +3,25 @@ import { http, HttpResponse } from 'msw';
 import { screen, waitFor, within } from '@testing-library/react';
 import { authenticatedRender } from '../../helpers/authenticatedRender';
 import { server } from '../../server';
-import { escalationCasesHandler, eligibleProfessorsHandler } from '../../helpers/mswHandlers';
+import {
+  escalationCasesHandler,
+  eligibleProfessorsHandler,
+  pagedUsersHandler,
+  pagedSubjectsHandler,
+  pagedEnrollmentsHandler,
+} from '../../helpers/mswHandlers';
 import { makeEscalatedCase, eligibleProfB } from '../../helpers/fixtures/escalation';
 import { APP_ROUTES, API_ROUTES } from '../../../config/constants';
 
-// The admin page also fetches users, subjects and enrollments on mount.
-// These handlers silence those requests so the test stays focused on escalations.
+// The admin page also fetches users, subjects and enrollments on mount. These
+// handlers answer those paged requests with an empty page so the test stays
+// focused on escalations. (They must return the PagedResult shape — a bare array
+// leaves AdminDashboardPage with undefined items and crashes UsersTable.)
+const emptyPage = { items: [], totalCount: 0 };
 const adminBaseHandlers = [
-  http.get(`/api${API_ROUTES.USER}`, () => HttpResponse.json([])),
-  http.get(`/api${API_ROUTES.SUBJECT}`, () => HttpResponse.json([])),
-  http.get(`/api${API_ROUTES.ENROLLMENT}`, () => HttpResponse.json([])),
+  pagedUsersHandler(emptyPage),
+  pagedSubjectsHandler(emptyPage),
+  pagedEnrollmentsHandler(emptyPage),
 ];
 
 function pagedCases(items: ReturnType<typeof makeEscalatedCase>[], totalCount?: number) {
