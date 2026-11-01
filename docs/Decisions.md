@@ -251,12 +251,12 @@ The four statuses:
 **Lives in:** DB §6.3, Tech-Backend §2, UI §8.6
 **Why:** Loading every grade with its full escalation graph does not survive production data volumes. Filtering in SQL, split queries, and no-tracking read models are the standard EF Core remedies for this class of N+1 / Cartesian blowup.
 
-### D-034 — How are admin dropdown searches served and which combobox library is used?
+### D-034 — How are admin dropdown options fetched, and which combobox is used?
 
 **Decided:** 2026-11-01 · **Status:** Accepted
-**Answer:** Admin create/edit dropdowns (professor, student, subject) use **hand-rolled, Bootstrap-styled searchable comboboxes** backed by **server-side search endpoints** (`GET /api/users/search`, `GET /api/subjects/search`). No third-party combobox library is added. Default page size is **15**, clamped to a maximum of 50 server-side; `ILIKE` substring search; deterministic `Id` tie-breaker sort; `IsDeleted = false` and role filters applied in SQL; `AsNoTracking` on read paths. A `pg_trgm`/GIN index is only added if `EXPLAIN ANALYZE` justifies it — none is added upfront.
-**Lives in:** UI §8.4, UI §8.5, UI §11.8, Tech-Backend §2, Tech-Frontend §2, DB §6
-**Why:** The previous approach fetched the first 50 records in the browser and filtered in memory, silently missing any record beyond position 50. Server-side search scales to thousands of rows. Hand-rolling avoids adding a combobox dependency (accessibility and styling cost) when the required behaviour is simple. 15 per page matches the existing paging tier and keeps responses small; infinite scroll in the dropdown loads more only when the user scrolls, not upfront.
+**Answer:** Admin create/edit dropdowns (professor, student, subject) use **hand-rolled, Bootstrap-styled searchable comboboxes** — no third-party combobox library — backed by **dedicated server-side search endpoints** (`GET /api/users/search`, `GET /api/subjects/search`) that filter, sort and page in SQL. Default page size is **15**, clamped to a maximum of **50** server-side via `PagingHelper`; search is an `ILIKE` substring match; sort is deterministic with `Id` as tie-breaker; `AsNoTracking` on read paths. Role and `IsDeleted = false` filters are enforced on the server, never in the browser. Students are searchable by `IndexNumber` and name, professors by name, subjects by `SubjectName` and `SubjectCode`. The combobox loads the first page on open and appends pages on scroll (infinite scroll via `IntersectionObserver`); debounce is inline with `useRef` + `setTimeout` (no `useDebounce` hook). A `pg_trgm`/GIN index is added only if `EXPLAIN ANALYZE` on production-sized data justifies it — none is added upfront.
+**Lives in:** UI §8.4, UI §8.5, UI §11.8, Tech-Backend §2, Tech-Frontend §2, DB §6.5
+**Why:** The previous approach pre-filled a native `<select>` with page 1 at size 50 of the full user/subject list and filtered in memory, silently missing any record past position 50 and not scaling to thousands of rows. Server-side search scales; hand-rolling avoids a combobox dependency (accessibility and styling cost) when the behaviour required is simple; 15 per page matches the existing paging tier and infinite scroll loads more only when the user scrolls.
 
 ### D-033 — How should render errors and runaway render loops be contained?
 
@@ -264,13 +264,6 @@ The four statuses:
 **Answer:** (1) A single route-level `errorElement` in `providers/router.tsx` catches all component render errors and shows a friendly fallback that preserves the session — it does not clear auth state or redirect to login. (2) A `useEffect` must never list an array or object prop as a dependency when the parent produces it inline or via `?? []`; the fix is to depend on a primitive (id, count) or a `useMemo`-stabilised value.
 **Lives in:** Tech-Frontend §2, Tech-Frontend §4
 **Why:** After tasks 26 and 28 landed, a stale `.find` on a removed inline array threw a render error; the error cascaded through React Router's unhandled boundary into the Axios interceptor's 401 path, which cleared the session and forced a logout. Separately, `SubjectsList`'s page-jump effect depended on a `subjects` array reference that `ProfessorDashboardPage` recreated on every render via `?? []`, producing a `Maximum update depth exceeded` loop that flooded the API and also triggered the refresh/logout chain. Both failures share the same containment fix: an error boundary stops render errors from reaching the interceptor, and a stable dependency stops the loop from ever firing.
-
-### D-034 — How should admin dropdown fields fetch their options?
-
-**Decided:** 2026-11-01 · **Status:** Accepted
-**Answer:** Admin create/edit form dropdowns use hand-rolled, Bootstrap-styled searchable comboboxes (no new library dependency). Options are fetched from dedicated server-side search endpoints — `GET /api/users/search` and `GET /api/subjects/search` — that filter and page in SQL. Default page size is 15, max is 50 (validated server-side via `PagingHelper`). Search uses `ILIKE` substring matching; `pg_trgm` / GIN indexes are added only if `EXPLAIN ANALYZE` on production-sized data justifies them. The combobox fetches the first page on open and appends pages on scroll (infinite scroll, `IntersectionObserver`). Role and soft-delete filters are enforced on the server, never in the browser. Students are searchable by `IndexNumber` and name; professors by name; subjects by `SubjectName` and `SubjectCode`. Debounce inside the component uses `useRef` + `setTimeout` (no `useDebounce` hook).
-**Lives in:** UI §8.4, UI §8.5, UI §11.8, Tech-Backend §2, Tech-Frontend §2, DB §6.5
-**Why:** Pre-filling a native `<select>` with page 1 at size 50 of the full user/subject list misses any record past the first 50 and does not scale to thousands of rows. A hand-rolled combobox avoids adding a third-party component library while giving debounced, infinite-scroll search against an endpoint that does the filtering in SQL.
 
 ### D-035 — Which user responses may carry `IsDeleted`?
 
