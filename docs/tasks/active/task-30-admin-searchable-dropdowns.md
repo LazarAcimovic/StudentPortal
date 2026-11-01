@@ -94,7 +94,7 @@ Not in scope: Playwright e2e (task 22d).
 Docs to update: none
 Verify: `npm run test -- integration/user` and `dotnet test backend/StudentPortal.IntegrationTests --filter "User|Subject"`
 
-- [ ] A frontend test asserts the admin page load triggers no full-collection fetch for the form dropdowns.
-- [ ] Changing the query while a previous request is in flight yields the correct (newest) results, no duplicates.
-- [ ] Backend tests confirm role + soft-delete filtering and deterministic pagination for both search endpoints (cross-check with 30.1 / 30.2 coverage, no duplication).
+- [x] A frontend test asserts the admin page load triggers no full-collection fetch for the form dropdowns.
+- [x] Changing the query while a previous request is in flight yields the correct (newest) results, no duplicates.
+- [x] Backend tests confirm role + soft-delete filtering and deterministic pagination for both search endpoints (cross-check with 30.1 / 30.2 coverage, no duplication — satisfied by `AdminUserSearchTests` / `AdminSubjectSearchTests`; no new backend test added).
 - Commit: `test(admin): verify searchable dropdowns never fetch entire collections`
