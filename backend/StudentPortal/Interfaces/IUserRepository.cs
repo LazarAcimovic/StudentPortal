@@ -1,4 +1,5 @@
 ﻿using StudentPortal.Models.Entities;
+using StudentPortal.Models.Enums;
 
 namespace StudentPortal.Interfaces
 {
@@ -15,5 +16,6 @@ namespace StudentPortal.Interfaces
         Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(Guid studentId);
         Task<IEnumerable<User>> GetProfessorsBySubjectCodeAsync(string subjectCode, IEnumerable<Guid> excludeIds);
         Task<(IReadOnlyList<User> Items, int TotalCount)> GetPagedAsync(int page, int pageSize);
+        Task<(IReadOnlyList<User> Items, int TotalCount)> SearchAsync(RoleEnum role, string? query, int page, int pageSize);
     }
 }

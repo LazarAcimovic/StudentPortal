@@ -34,10 +34,10 @@ Not in scope: the subject search (30.2); the frontend (30.3, 30.4).
 Docs to update: Tech-Backend §2, DB §6
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter User`
 
-- [ ] `GET /users/search?role=&query=&page=&pageSize=` filters by `UserRole` and `IsDeleted = false`, returns `{ items, totalCount }` with a lightweight DTO (id + display fields only).
-- [ ] `role=Professor` searches `FirstName`/`LastName`; `role=Student` searches `IndexNumber` + `FirstName`/`LastName`; search is case-insensitive (`ILIKE`), applied only when `query` is non-empty.
-- [ ] Filtering, sorting and paging are translated to SQL (`Skip`/`Take`, `AsNoTracking`), never done in memory; sort is deterministic with `Id` as tie-breaker; `pageSize` defaults to 15 and is clamped to a max of 50.
-- [ ] Integration tests: role filter, soft-delete exclusion, name/index search, empty query returns a page of all, pagination boundaries, deterministic order.
+- [x] `GET /users/search?role=&query=&page=&pageSize=` filters by `UserRole` and `IsDeleted = false`, returns `{ items, totalCount }` with a lightweight DTO (id + display fields only).
+- [x] `role=Professor` searches `FirstName`/`LastName`; `role=Student` searches `IndexNumber` + `FirstName`/`LastName`; search is case-insensitive (`ILIKE`), applied only when `query` is non-empty.
+- [x] Filtering, sorting and paging are translated to SQL (`Skip`/`Take`, `AsNoTracking`), never done in memory; sort is deterministic with `Id` as tie-breaker; `pageSize` defaults to 15 and is clamped to a max of 50.
+- [x] Integration tests: role filter, soft-delete exclusion, name/index search, empty query returns a page of all, pagination boundaries, deterministic order.
 - Commit: `feat(admin): server-side user search endpoint with role and soft-delete filters`
 
 ---

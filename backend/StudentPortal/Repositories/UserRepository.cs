@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
+using StudentPortal.Models.Enums;
 
 namespace StudentPortal.Repositories;
 
@@ -81,6 +82,33 @@ public class UserRepository : IUserRepository
         var baseQuery = _context.Users.AsNoTracking();
         var totalCount = await baseQuery.CountAsync();
         var items = await baseQuery
+            .OrderBy(u => u.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
+
+    public async Task<(IReadOnlyList<User> Items, int TotalCount)> SearchAsync(
+        RoleEnum role, string? query, int page, int pageSize)
+    {
+        var q = _context.Users
+            .AsNoTracking()
+            .Where(u => u.UserRole == role && !u.IsDeleted);
+
+        if (!string.IsNullOrEmpty(query))
+        {
+            if (role == RoleEnum.Professor)
+                q = q.Where(u => EF.Functions.ILike(u.FirstName, $"%{query}%")
+                              || EF.Functions.ILike(u.LastName, $"%{query}%"));
+            else
+                q = q.Where(u => EF.Functions.ILike(u.IndexNumber, $"%{query}%")
+                              || EF.Functions.ILike(u.FirstName, $"%{query}%")
+                              || EF.Functions.ILike(u.LastName, $"%{query}%"));
+        }
+
+        var totalCount = await q.CountAsync();
+        var items = await q
             .OrderBy(u => u.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

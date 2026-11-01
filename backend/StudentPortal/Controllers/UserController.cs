@@ -5,6 +5,7 @@ using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
+using StudentPortal.Models.Enums;
 
 namespace StudentPortal.Controllers
 {
@@ -18,6 +19,20 @@ namespace StudentPortal.Controllers
         public UserController(IUserService userService)
         {
             _userService = userService;
+        }
+
+        // GET: api/user/search?role=&query=&page=&pageSize=
+        [Authorize(Roles = "Admin")]
+        [HttpGet("search")]
+        public async Task<ActionResult<PagedResultDto<UserSearchResultDto>>> SearchUsers(
+            [FromQuery] RoleEnum role,
+            [FromQuery] string? query,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 15)
+        {
+            var (p, ps) = PagingHelper.NormalizeSearch(page, pageSize);
+            var result = await _userService.SearchAsync(role, query, p, ps);
+            return Ok(result);
         }
 
         // GET: api/user
