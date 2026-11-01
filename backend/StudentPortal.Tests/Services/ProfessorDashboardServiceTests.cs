@@ -37,6 +37,10 @@ public class ProfessorDashboardServiceTests
         };
     }
 
+    // The dashboard exposes per-subject tiles (name, ECTS, StudentCount) and the
+    // appeal / assigned-case rows. Per-student rows and their GradeState moved to
+    // ProfessorStudentsService — see ProfessorStudentsServiceTests.
+
     [Fact]
     public async Task GetDashboardAsync_IncludesSubjectWithNoEnrollments()
     {
@@ -54,7 +58,7 @@ public class ProfessorDashboardServiceTests
 
         Assert.Single(dto.Subjects);
         Assert.Equal("Programiranje 3", dto.Subjects[0].SubjectName);
-        Assert.Empty(dto.Subjects[0].Students);
+        Assert.Equal(0, dto.Subjects[0].StudentCount);
     }
 
     [Fact]
@@ -80,115 +84,8 @@ public class ProfessorDashboardServiceTests
         Assert.Equal(2, dto.Subjects.Count);
         Assert.Equal("AI", dto.Subjects[0].SubjectName);         // alphabetical
         Assert.Equal("Databases", dto.Subjects[1].SubjectName);
-        Assert.Single(dto.Subjects[0].Students);
-        Assert.Equal(2, dto.Subjects[1].Students.Count);
-    }
-
-    [Fact]
-    public async Task GetDashboardAsync_NotGraded_WhenNoGradeAndNoDraft()
-    {
-        var profId = Guid.NewGuid();
-        var subject = MakeSubject();
-        _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment>
-        {
-            MakeEnrollment(subject, MakeStudent()),
-        });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
-
-        var sut = CreateSut();
-
-        var dto = await sut.GetDashboardAsync(profId);
-
-        Assert.Equal("NotGraded", dto.Subjects[0].Students[0].GradeState);
-    }
-
-    [Fact]
-    public async Task GetDashboardAsync_Draft_WhenDraftExistsButNoGrade()
-    {
-        var profId = Guid.NewGuid();
-        var subject = MakeSubject();
-        var enrollment = MakeEnrollment(subject, MakeStudent(),
-            draft: new GradeDraft { Id = Guid.NewGuid(), Midterm1Points = 10 });
-        _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
-
-        var sut = CreateSut();
-
-        var dto = await sut.GetDashboardAsync(profId);
-
-        Assert.Equal("Draft", dto.Subjects[0].Students[0].GradeState);
-    }
-
-    [Fact]
-    public async Task GetDashboardAsync_ReconfirmNeeded_WhenAnAcceptedAppealIsOpen()
-    {
-        // PRD Â§4.3: after Accept, the professor must re-confirm the exam.
-        var profId = Guid.NewGuid();
-        var subject = MakeSubject();
-        var grade = new Grade
-        {
-            Id = Guid.NewGuid(), FinalGrade = 7, ConfirmedAt = DateTime.UtcNow.AddDays(-5),
-            Appeals = new List<Appeal>
-            {
-                new() { Status = AppealStatus.Accepted, SubmittedAt = DateTime.UtcNow.AddDays(-3) },
-            },
-        };
-        var enrollment = MakeEnrollment(subject, MakeStudent(), grade);
-        _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
-
-        var sut = CreateSut();
-
-        var dto = await sut.GetDashboardAsync(profId);
-
-        Assert.Equal("ReconfirmNeeded", dto.Subjects[0].Students[0].GradeState);
-    }
-
-    [Fact]
-    public async Task GetDashboardAsync_Finalized_WhenFinalizedAtSet()
-    {
-        var profId = Guid.NewGuid();
-        var subject = MakeSubject();
-        var grade = new Grade
-        {
-            Id = Guid.NewGuid(), FinalGrade = 8,
-            ConfirmedAt = DateTime.UtcNow.AddDays(-10),
-            FinalizedAt = DateTime.UtcNow.AddDays(-2),
-            Appeals = new List<Appeal>(),
-        };
-        var enrollment = MakeEnrollment(subject, MakeStudent(), grade);
-        _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
-
-        var sut = CreateSut();
-
-        var dto = await sut.GetDashboardAsync(profId);
-
-        Assert.Equal("Finalized", dto.Subjects[0].Students[0].GradeState);
-    }
-
-    [Fact]
-    public async Task GetDashboardAsync_Finalized_WhenInitialWindowLapsedWithoutAppeal()
-    {
-        // PRD Â§4.7 case 2: auto-finalize after 7 days of silence on the initial window.
-        var profId = Guid.NewGuid();
-        var subject = MakeSubject();
-        var grade = new Grade
-        {
-            Id = Guid.NewGuid(), FinalGrade = 7,
-            ConfirmedAt = DateTime.UtcNow.AddDays(-10),      // > 7 days ago
-            FinalizedAt = null,
-            Appeals = new List<Appeal>(),
-        };
-        var enrollment = MakeEnrollment(subject, MakeStudent(), grade);
-        _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
-
-        var sut = CreateSut();
-
-        var dto = await sut.GetDashboardAsync(profId);
-
-        Assert.Equal("Finalized", dto.Subjects[0].Students[0].GradeState);
+        Assert.Equal(1, dto.Subjects[0].StudentCount);
+        Assert.Equal(2, dto.Subjects[1].StudentCount);
     }
 
     [Fact]
@@ -330,30 +227,4 @@ public class ProfessorDashboardServiceTests
         Assert.False(dto.Appeals[0].CanUndoDeny);
         Assert.Null(dto.Appeals[0].UndoDenyDeadline);
     }
-
-    [Fact]
-    public async Task GetDashboardAsync_StudentRow_FlagsActiveAppealWhenGradeHasPendingOrAcceptedAppeal()
-    {
-        var profId = Guid.NewGuid();
-        var subject = MakeSubject();
-        var grade = new Grade
-        {
-            Id = Guid.NewGuid(), FinalGrade = 7,
-            ConfirmedAt = DateTime.UtcNow.AddDays(-2),
-            Appeals = new List<Appeal>
-            {
-                new() { Status = AppealStatus.Pending, SubmittedAt = DateTime.UtcNow.AddDays(-1) },
-            },
-        };
-        var enrollment = MakeEnrollment(subject, MakeStudent(), grade);
-        _enrollRepo.GetEnrollmentsForProfessorDashboardAsync(profId).Returns(new List<Enrollment> { enrollment });
-        _appealRepo.GetAppealsByProfessorIdForDashboardAsync(profId, Arg.Any<DateTime>()).Returns(new List<Appeal>());
-
-        var sut = CreateSut();
-
-        var dto = await sut.GetDashboardAsync(profId);
-
-        Assert.True(dto.Subjects[0].Students[0].HasActiveAppeal);
-    }
 }
-
