@@ -250,3 +250,10 @@ The four statuses:
 **Answer:** The repository loads only **candidate grades** — grades where `FinalizedAt IS NULL` with a qualifying appeal trigger (Scenario A or B), or grades that already have an `Escalations` row (including resolved). It never loads all grades and filters in memory. The `GET /api/Escalation` endpoint is server-side paginated: `page` (1-based, default 1) and `pageSize` (default 15, allowed 15 / 20 / 50). Multi-`Include` escalation reads use `AsSplitQuery()` + `AsNoTracking()` on pure-read paths; mutate paths omit `AsNoTracking()`.
 **Lives in:** DB §6.3, Tech-Backend §2, UI §8.6
 **Why:** Loading every grade with its full escalation graph does not survive production data volumes. Filtering in SQL, split queries, and no-tracking read models are the standard EF Core remedies for this class of N+1 / Cartesian blowup.
+
+### D-033 — How should render errors and runaway render loops be contained?
+
+**Decided:** 2026-11-01 · **Status:** Accepted
+**Answer:** (1) A single route-level `errorElement` in `providers/router.tsx` catches all component render errors and shows a friendly fallback that preserves the session — it does not clear auth state or redirect to login. (2) A `useEffect` must never list an array or object prop as a dependency when the parent produces it inline or via `?? []`; the fix is to depend on a primitive (id, count) or a `useMemo`-stabilised value.
+**Lives in:** Tech-Frontend §2, Tech-Frontend §4
+**Why:** After tasks 26 and 28 landed, a stale `.find` on a removed inline array threw a render error; the error cascaded through React Router's unhandled boundary into the Axios interceptor's 401 path, which cleared the session and forced a logout. Separately, `SubjectsList`'s page-jump effect depended on a `subjects` array reference that `ProfessorDashboardPage` recreated on every render via `?? []`, producing a `Maximum update depth exceeded` loop that flooded the API and also triggered the refresh/logout chain. Both failures share the same containment fix: an error boundary stops render errors from reaching the interceptor, and a stable dependency stops the loop from ever firing.
