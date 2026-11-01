@@ -141,6 +141,7 @@ So the Appeals section renders from `payload.appeals`, the Assigned Cases sectio
 - **Data-fetching custom hooks are the first-class pattern for every network read**: one hook per fetch, in the owning feature's `hooks/` folder, named `use<Noun>` (plural for a collection), calling a service function from that feature's `api/` folder. See §3 for the two canonical templates.
 - `AbortSignal` plumbed hook → service → axios on every fetch.
 - **Effect dependencies must be primitives or memoised values.** A `useEffect` must never list an array or object prop as a dependency when a parent produces that value inline or via `?? []` — a new reference is created on every render, making the effect run on every render (runaway loop). Depend on a primitive (an id, a count/length) or a `useMemo`-stabilised value instead (per D-033).
+- **`<SearchableCombobox>`** — single hand-rolled combobox primitive (UI §11.8). Debounce is implemented inline with `useRef` + `setTimeout`; no `useDebounce` hook (per D-034 and "Not in use" below).
 
 **Not in use (do not introduce):**
 
@@ -306,7 +307,7 @@ Response interceptor:
 - Role-restricted routes additionally wrap `<RoleGate allowed={USER_ROLES.Admin} fallback={<RoleHomeRedirect/>}>`. The fallback (`providers/RoleHomeRedirect.tsx`) redirects a mismatched role to its **own** dashboard, so a role never mounts another role's page and never fires the requests the backend answers with `403` (per D-030). The three dashboard routes are gated; `/profile` and `/profile/change-password` stay open to any authenticated user.
 - Imperative navigation from non-components uses `lib/navigation.ts`, registered by `App.tsx`'s first `useEffect`.
 
-**Error boundary:** The app has a single top-level route-level error boundary registered as `errorElement` on the root route in `providers/router.tsx`. It renders a friendly fallback (a "Something went wrong" message with a reload / go-home option) that preserves the session — a render error must not clear auth state or redirect to login. Component-level render errors therefore never reach the raw React Router crash page and never trigger the `401` → refresh → logout chain (per D-033).
+**Error boundary:** The app has a single top-level route-level error boundary — `<ErrorBoundary>` (`components/ui/ErrorBoundary.tsx`) — registered as `errorElement` on the root route in `providers/router.tsx`. It renders a friendly fallback (a "Something went wrong" message with a reload / go-home option) that preserves the session — a render error must not clear auth state or redirect to login. Component-level render errors therefore never reach the raw React Router crash page and never trigger the `401` → refresh → logout chain (per D-033).
 
 **Paged API calls:** Admin service functions (`getAllUsers`, `getAllSubjects`, `getAllEnrollments`) accept `(page: number, pageSize: number)` and return `Promise<PagedResult<T> | null>`. Paging params are sent as Axios query params (`{ params: { page, pageSize } }`). The shared `PagedResult<T>` shape (`items`, `page`, `pageSize`, `totalCount`) lives in `shared/models/pagedResult.ts`. Allowed page sizes are 15, 20, 50 (enforced server-side). Form dropdowns that need all records (professors for subject forms, students and subjects for enrollment form) fetch with `pageSize=50` — the maximum allowed.
 

@@ -420,3 +420,41 @@ WHERE e."SubjectId" = @subjectId
 ```
 
 The endpoint is gated `ProfessorOnly`. The service verifies that `Subject.ProfessorId == callerProfId` before returning rows (ownership check, per Tech-Backend §3).
+
+### 6.5 User search and subject search (admin comboboxes, per D-034)
+
+`ILIKE` substring matching executed in SQL. **Do not filter in memory.** No index is added speculatively; add `pg_trgm` / GIN only if `EXPLAIN ANALYZE` on production-sized data justifies it. Omit the `ILIKE` predicate when `@query` is empty (return all rows matching the role / delete filter, paged).
+
+```sql
+-- GET /api/users/search?role=Professor
+SELECT "Id", "FirstName", "LastName"
+FROM "Users"
+WHERE "UserRole" = 'Professor'
+  AND "IsDeleted" = false
+  AND (  "FirstName" ILIKE '%' || @query || '%'
+       OR "LastName"  ILIKE '%' || @query || '%')
+ORDER BY "Id"
+LIMIT @pageSize OFFSET (@page - 1) * @pageSize;
+
+-- GET /api/users/search?role=Student
+SELECT "Id", "FirstName", "LastName", "IndexNumber"
+FROM "Users"
+WHERE "UserRole" = 'Student'
+  AND "IsDeleted" = false
+  AND (  "IndexNumber" ILIKE '%' || @query || '%'
+       OR "FirstName"  ILIKE '%' || @query || '%'
+       OR "LastName"   ILIKE '%' || @query || '%')
+ORDER BY "Id"
+LIMIT @pageSize OFFSET (@page - 1) * @pageSize;
+
+-- GET /api/subjects/search
+SELECT "Id", "SubjectName", "SubjectCode"
+FROM "Subjects"
+WHERE "IsDeleted" = false
+  AND (  "SubjectName" ILIKE '%' || @query || '%'
+       OR "SubjectCode" ILIKE '%' || @query || '%')
+ORDER BY "Id"
+LIMIT @pageSize OFFSET (@page - 1) * @pageSize;
+```
+
+A matching `COUNT(*)` query (same `WHERE`, no `LIMIT`/`OFFSET`) runs alongside each to populate `totalCount` in the response envelope.

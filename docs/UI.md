@@ -20,7 +20,7 @@
 | 8 | Admin dashboard |
 | 9 | My Profile page |
 | 10 | Change password page |
-| 11 | Reusable primitives (includes §11.7 `<Pagination>`) |
+| 11 | Reusable primitives (includes §11.7 `<Pagination>`, §11.8 `<SearchableCombobox>`) |
 | 12 | Responsiveness |
 | 13 | Copy conventions |
 | 14 | Accessibility baseline |
@@ -405,7 +405,7 @@ Create / Edit subject fields, in this order:
 - Subject Name — required, 1–100 chars.
 - **Subject Code** — required, 1–20 chars (per D-015), label `"Subject Code"`, placed directly below Subject Name. Help text: "Subjects sharing a code are the same course taught by different professors." Without it the subject has no eligible substitute professor, so an escalated case on it cannot be assigned (PRD §4.8).
 - ECTS — required, integer 1–30, default 6.
-- Professor — select populated from `/api/User?role=Professor`. **Soft-deleted (inactive) professors are excluded** from the list; an inactive user cannot be assigned a subject (per D-025). On the **edit** form the subject's current professor stays selectable even if inactive, but the subject cannot be reassigned to a different inactive one (per D-026).
+- Professor — **searchable combobox** (§11.8) backed by `GET /api/users/search?role=Professor` (per D-034). Debounced input searches professor names; the list loads the first page on open and appends pages as the user scrolls (15 per page). **Soft-deleted (inactive) professors are excluded** from the list (per D-025); an inactive user cannot be assigned a subject. On the **edit** form the subject's current professor stays selectable even if inactive, but the subject cannot be reassigned to a different inactive one (per D-026).
 
 **Validation is inline, never a popup** (same pattern as §5 / §8.3), on both the create and edit forms: each field shows a Bootstrap `invalid-feedback` once touched, the Create / Save Changes button stays disabled until the form is valid, and a server error (e.g. an inactive professor on edit) renders as a top-of-form `alert alert-danger` — no `alert()`.
 
@@ -414,8 +414,8 @@ Create / Edit subject fields, in this order:
 Table columns (desktop): Student, Subject, Enrolled At.
 
 Create form fields, inline-validated like §8.4 (Create disabled until both are chosen; a server error renders as a top-of-form `alert alert-danger`):
-- Student — select of **active students only** (soft-deleted users are excluded).
-- Subject — select, excluding subjects the chosen student is already enrolled in and any inactive subject.
+- Student — **searchable combobox** (§11.8) backed by `GET /api/users/search?role=Student` (per D-034). Searches by `IndexNumber` and name. **Active students only** (soft-deleted users are excluded by the endpoint).
+- Subject — **searchable combobox** (§11.8) backed by `GET /api/subjects/search` (per D-034). Searches by `SubjectName` and `SubjectCode`. Inactive subjects are excluded by the endpoint; subjects the chosen student is already enrolled in are not pre-filtered in the combobox — a duplicate is rejected by the server on submit with a specific `400` message shown inline.
 
 Enrollments are **create-only: there is no edit and no delete** (per D-027). A duplicate (same student and subject), an inactive student or subject, or a non-student is rejected by the server with a specific `400` message shown inline.
 
@@ -661,6 +661,42 @@ Renders:
 - Admin sections: default `pageSize = 15`, `pageSizeOptions = [15, 20, 50]`.
 
 These defaults are set at the call site, not inside `<Pagination>` itself — the component is page-size-agnostic.
+
+### 11.8 `<SearchableCombobox>`
+
+Generic, hand-rolled combobox backed by a server-side search endpoint. **No third-party combobox library** is introduced (per D-034).
+
+Signature:
+
+```ts
+type SearchableComboboxProps<T> = {
+  value: T | null;
+  onChange: (item: T | null) => void;
+  fetchPage: (query: string, page: number, signal: AbortSignal) => Promise<{ items: T[]; totalCount: number }>;
+  getLabel: (item: T) => string;
+  getId: (item: T) => string;
+  placeholder?: string;
+  isInvalid?: boolean;
+};
+```
+
+Behaviour:
+- Renders a Bootstrap `.form-control` text input. Typing debounces 300 ms via `useRef` + `setTimeout` — **not** a `useDebounce` hook (per §2 "Not in use").
+- Fetches page 1 with an empty query on open (shows the first 15 results immediately). Typing resets to page 1; each keystroke after the debounce fires a new fetch.
+- Appends the next page when the user scrolls to the bottom of the open dropdown list (`IntersectionObserver` on a sentinel `<div>` at the list's end). Stops appending when `items.length >= totalCount`.
+- Page size is fixed at **15** (per D-034). No local collection is built beyond the loaded pages; selecting an item does not require all pages to be loaded.
+- The dropdown is a `position: absolute` `.list-group` rendered below the input. Clicking an item selects it, updates the visible label, and closes the dropdown. Clicking outside closes without clearing an existing selection. `Esc` closes.
+- `isInvalid` propagates `.is-invalid` onto the input for Bootstrap inline validation (same pattern as §5 / §8.3).
+- Internally uses `useState` and `useRef` only — no custom hook.
+
+### 11.9 `<ErrorBoundary>`
+
+React class error boundary. Registered as `errorElement` on the root route (`providers/router.tsx`) so render errors from any child component show a friendly fallback instead of a raw crash page.
+
+Behaviour:
+- When a child component throws during render (`hasError` state) **or** when rendered with no children (React Router `errorElement` mode): renders a centred page with an `<h1>Something went wrong</h1>`, a "Reload" `<button>`, and a "Go home" `<Link to="/">`.
+- Does **not** clear auth state or call `clearCurrentUser` — a render error does not log the user out (per D-033).
+- Lives at `components/ui/ErrorBoundary.tsx`. No props beyond `children?: ReactNode`.
 
 ---
 
