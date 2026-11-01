@@ -55,6 +55,16 @@ const ProfessorDashboardPage: React.FC = () => {
     setSelectedEnrollmentId(student.enrollmentId);
   };
 
+  // After a grade is saved/confirmed, refresh BOTH data sources: the dashboard
+  // (appeals / assigned cases) and the students list, whose gradeState drives the
+  // GradePanel. Without the second one the panel keeps the stale pre-confirm state.
+  const handleGradeChanged = () => {
+    refresh();
+    if (selectedSubjectId) {
+      void loadPage(selectedSubjectId, page, pageSize);
+    }
+  };
+
   const handlePageChange = (newPage: number) => {
     if (!selectedSubjectId) return;
     const controller = new AbortController();
@@ -67,7 +77,10 @@ const ProfessorDashboardPage: React.FC = () => {
     void loadPage(selectedSubjectId, 1, newPageSize, controller.signal);
   };
 
-  if (isLoading) {
+  // Full-page spinner only on the FIRST load (no data yet). On later refreshes the
+  // dashboard stays mounted and updates in place — otherwise every refresh unmounts
+  // everything (a jarring "reload" flash) and resets the GradePanel form.
+  if (isLoading && !data) {
     return (
       <div className="container my-4 text-center">
         <span className="spinner-border" role="status" aria-label="Loading" />
@@ -106,7 +119,7 @@ const ProfessorDashboardPage: React.FC = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-        <GradePanel selectedStudentRow={selectedStudentRow} onGradeChanged={refresh} />
+        <GradePanel selectedStudentRow={selectedStudentRow} onGradeChanged={handleGradeChanged} />
       </div>
 
       <AppealsSection appeals={data?.appeals ?? EMPTY_APPEALS} onRefresh={refresh} />
