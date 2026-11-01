@@ -47,9 +47,9 @@ Not in scope: the error boundary (29.1); server-side paging (already shipped in 
 Docs to update: none
 Verify: `npm run test -- integration/grades/ProfessorDashboard`
 
-- [ ] `SubjectsList`'s page-jump effect no longer depends on the `subjects` array reference — it depends on `selectedSubjectId` and `subjects.length`, or computes the target page during render.
-- [ ] A test that re-renders `SubjectsList` with a fresh-but-equal `subjects` array does not loop or exceed the update depth.
-- [ ] Selecting a subject still scrolls to the page that holds it.
+- [x] `SubjectsList`'s page-jump effect no longer depends on the `subjects` array reference — it depends on `selectedSubjectId` and `subjects.length`, or computes the target page during render.
+- [x] A test that re-renders `SubjectsList` with a fresh-but-equal `subjects` array does not loop or exceed the update depth.
+- [x] Selecting a subject still scrolls to the page that holds it.
 - Commit: `fix(professor): stop SubjectsList page-jump effect depending on the array reference`
 
 ---

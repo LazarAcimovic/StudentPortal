@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
-import { screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { authenticatedRender } from '../../helpers/authenticatedRender';
 import { server } from '../../server';
 import { professorDashboardHandler, professorStudentsHandler } from '../../helpers/mswHandlers';
@@ -13,6 +13,7 @@ import {
   singleSubjectStudentsPage,
 } from '../../helpers/fixtures/professorDashboard';
 import { APP_ROUTES } from '../../../config/constants';
+import SubjectsList from '../../../features/user/components/professor/SubjectsList';
 
 describe('ProfessorDashboardPage (§5.4)', () => {
   it('when zero subjects then it shows the no-subjects empty state in column 1', async () => {
@@ -308,5 +309,54 @@ describe('ProfessorDashboardPage (§5.4)', () => {
 
     resolveStudents();
     expect(await screen.findByText(/Stud One/)).toBeInTheDocument();
+  });
+});
+
+describe('SubjectsList page-jump behaviour (Tech-Frontend §2)', () => {
+  it('renders the page that contains the selected subject on first render', () => {
+    const subjects = Array.from({ length: 11 }, (_, i) =>
+      makeSubject({ subjectId: `sub-${i}`, subjectName: `Subject ${i}` })
+    );
+    // sub-5 is at index 5 → with default pageSize 5, it is on page 2
+    render(
+      <SubjectsList
+        subjects={subjects}
+        selectedSubjectId="sub-5"
+        onSubjectClick={() => {}}
+      />
+    );
+    const items = screen.getAllByRole('listitem');
+    expect(items.some(item => item.textContent?.includes('Subject 5'))).toBe(true);
+    expect(items.every(item => !item.textContent?.includes('Subject 0'))).toBe(true);
+  });
+
+  it('re-rendering with a fresh-but-equal array reference does not loop or exceed the update depth', () => {
+    const subject = makeSubject({ subjectId: 'sub-1', subjectName: 'Math' });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { rerender } = render(
+      <SubjectsList
+        subjects={[subject]}
+        selectedSubjectId="sub-1"
+        onSubjectClick={() => {}}
+      />
+    );
+
+    for (let i = 0; i < 10; i++) {
+      rerender(
+        <SubjectsList
+          subjects={[{ ...subject }]}
+          selectedSubjectId="sub-1"
+          onSubjectClick={() => {}}
+        />
+      );
+    }
+
+    const maxDepthErrors = errorSpy.mock.calls.filter(([msg]) =>
+      typeof msg === 'string' && msg.includes('Maximum update depth exceeded')
+    );
+    expect(maxDepthErrors).toHaveLength(0);
+
+    errorSpy.mockRestore();
   });
 });

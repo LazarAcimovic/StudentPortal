@@ -45,7 +45,7 @@ function SubjectsList({ subjects, selectedSubjectId, onSubjectClick }: Props) {
     if (idx === -1) return;
     const targetPage = Math.floor(idx / pageSize) + 1;
     setPage(targetPage);
-  }, [selectedSubjectId, subjects, pageSize]);
+  }, [selectedSubjectId, subjects.length, pageSize]);
 
   const start = (page - 1) * pageSize;
   const visibleSubjects = subjects.slice(start, start + pageSize);
