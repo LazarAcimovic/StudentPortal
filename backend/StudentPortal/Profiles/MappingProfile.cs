@@ -34,6 +34,7 @@ public class MappingProfile : Profile
         CreateMap<Subject, SubjectDto>()
             .ForMember(dest => dest.ProfessorFirstName, opt => opt.MapFrom(src => src.Professor.FirstName))
             .ForMember(dest => dest.ProfessorLastName, opt => opt.MapFrom(src => src.Professor.LastName));
+        CreateMap<Subject, SubjectSearchResultDto>();
 
         CreateMap<SubjectCreateDto, Subject>();
         CreateMap<SubjectUpdateDto, Subject>();

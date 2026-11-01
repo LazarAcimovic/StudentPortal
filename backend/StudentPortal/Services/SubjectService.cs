@@ -105,4 +105,16 @@ public class SubjectService : ISubjectService
             PageSize = pageSize,
         };
     }
+
+    public async Task<PagedResultDto<SubjectSearchResultDto>> SearchAsync(string? query, int page, int pageSize)
+    {
+        var (subjects, totalCount) = await _subjectRepository.SearchAsync(query, page, pageSize);
+        return new PagedResultDto<SubjectSearchResultDto>
+        {
+            Items = _mapper.Map<IReadOnlyList<SubjectSearchResultDto>>(subjects),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+        };
+    }
 }

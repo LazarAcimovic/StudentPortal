@@ -14,4 +14,5 @@ public interface ISubjectService
     Task<IEnumerable<SubjectDto>> GetSubjectsByProfessorIdAsync(Guid professorId);
     Task<IEnumerable<UserDto>> GetStudentsBySubjectIdAsync(Guid subjectId);
     Task<PagedResultDto<SubjectDto>> GetPagedAsync(int page, int pageSize);
+    Task<PagedResultDto<SubjectSearchResultDto>> SearchAsync(string? query, int page, int pageSize);
 }

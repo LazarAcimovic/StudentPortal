@@ -18,6 +18,19 @@ namespace StudentPortal.Controllers
             _subjectService = subjectService;
         }
 
+        // GET: api/subject/search?query=&page=&pageSize=
+        [Authorize(Roles = "Admin")]
+        [HttpGet("search")]
+        public async Task<ActionResult<PagedResultDto<SubjectSearchResultDto>>> SearchSubjects(
+            [FromQuery] string? query,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 15)
+        {
+            var (p, ps) = PagingHelper.NormalizeSearch(page, pageSize);
+            var result = await _subjectService.SearchAsync(query, p, ps);
+            return Ok(result);
+        }
+
         // GET: api/subject
         [HttpGet]
         public async Task<ActionResult<PagedResultDto<SubjectDto>>> GetAllSubjects(

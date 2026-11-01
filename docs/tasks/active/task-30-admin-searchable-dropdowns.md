@@ -49,9 +49,9 @@ Not in scope: the user search (30.1); the frontend.
 Docs to update: Tech-Backend §2, DB §6
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Subject`
 
-- [ ] `GET /subjects/search?query=&page=&pageSize=` searches `SubjectName` (and `SubjectCode` where it fits the UX), excludes `IsDeleted`, returns `{ items, totalCount }` with a lightweight DTO.
-- [ ] Same SQL-side filtering/sort/paging rules as 30.1 (`ILIKE`, `AsNoTracking`, `Id` tie-breaker, 15 default / 50 max, validated).
-- [ ] Integration tests: name search, (code search if implemented), soft-delete exclusion, pagination, deterministic order, empty results.
+- [x] `GET /subjects/search?query=&page=&pageSize=` searches `SubjectName` (and `SubjectCode` where it fits the UX), excludes `IsDeleted`, returns `{ items, totalCount }` with a lightweight DTO.
+- [x] Same SQL-side filtering/sort/paging rules as 30.1 (`ILIKE`, `AsNoTracking`, `Id` tie-breaker, 15 default / 50 max, validated).
+- [x] Integration tests: name search, (code search if implemented), soft-delete exclusion, pagination, deterministic order, empty results.
 - Commit: `feat(admin): server-side subject search endpoint`
 
 ---

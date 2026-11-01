@@ -83,4 +83,24 @@ public class SubjectRepository : ISubjectRepository
             .ToListAsync();
         return (items, totalCount);
     }
+
+    public async Task<(IReadOnlyList<Subject> Items, int TotalCount)> SearchAsync(
+        string? query, int page, int pageSize)
+    {
+        var q = _context.Subjects
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted);
+
+        if (!string.IsNullOrEmpty(query))
+            q = q.Where(s => EF.Functions.ILike(s.SubjectName, $"%{query}%")
+                          || EF.Functions.ILike(s.SubjectCode, $"%{query}%"));
+
+        var totalCount = await q.CountAsync();
+        var items = await q
+            .OrderBy(s => s.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
 }
