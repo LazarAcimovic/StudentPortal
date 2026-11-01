@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useProfessorDashboard } from '../../grades/hooks/useProfessorDashboard';
 import { useProfessorStudents } from '../../grades/hooks/useProfessorStudents';
-import type { ProfessorSubject, ProfessorStudentRow } from '../models/professor/professorDashboard';
+import type { ProfessorSubject, ProfessorStudentRow, ProfessorAppealRow, AssignedCase } from '../models/professor/professorDashboard';
 import {
   PROFESSOR_SELECTED_SUBJECT_ID_INITIAL,
 } from '../constants/professor/constants';
@@ -10,6 +10,10 @@ import StudentsList from '../components/professor/StudentsList';
 import GradePanel from '../components/professor/GradePanel';
 import AppealsSection from '../components/professor/AppealsSection';
 import AssignedCasesSection from '../components/professor/AssignedCasesSection';
+
+const EMPTY_SUBJECTS: ProfessorSubject[] = [];
+const EMPTY_APPEALS: ProfessorAppealRow[] = [];
+const EMPTY_CASES: AssignedCase[] = [];
 
 const ProfessorDashboardPage: React.FC = () => {
   const { data, isLoading, error, refresh } = useProfessorDashboard();
@@ -28,7 +32,7 @@ const ProfessorDashboardPage: React.FC = () => {
   } = useProfessorStudents();
 
   const selectedSubject: ProfessorSubject | null =
-    data?.subjects.find(s => s.subjectId === selectedSubjectId) ?? null;
+    data?.subjects?.find(s => s.subjectId === selectedSubjectId) ?? null;
 
   const selectedStudentRow: ProfessorStudentRow | null =
     pagedStudents.find(s => s.enrollmentId === selectedEnrollmentId) ?? null;
@@ -85,7 +89,7 @@ const ProfessorDashboardPage: React.FC = () => {
 
       <div className="row g-3">
         <SubjectsList
-          subjects={data?.subjects ?? []}
+          subjects={data?.subjects ?? EMPTY_SUBJECTS}
           selectedSubjectId={selectedSubjectId}
           onSubjectClick={handleSubjectClick}
         />
@@ -105,8 +109,8 @@ const ProfessorDashboardPage: React.FC = () => {
         <GradePanel selectedStudentRow={selectedStudentRow} onGradeChanged={refresh} />
       </div>
 
-      <AppealsSection appeals={data?.appeals ?? []} onRefresh={refresh} />
-      <AssignedCasesSection assignedCases={data?.assignedCases ?? []} onRefresh={refresh} />
+      <AppealsSection appeals={data?.appeals ?? EMPTY_APPEALS} onRefresh={refresh} />
+      <AssignedCasesSection assignedCases={data?.assignedCases ?? EMPTY_CASES} onRefresh={refresh} />
     </div>
   );
 };

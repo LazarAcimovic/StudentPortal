@@ -61,9 +61,9 @@ Not in scope: the backend; the error boundary.
 Docs to update: none
 Verify: `npm run test -- integration/grades/ProfessorDashboard`
 
-- [ ] `ProfessorDashboardPage` passes a stable module-level `EMPTY` constant for `?? []` fallbacks instead of a fresh `[]` each render.
-- [ ] `data?.subjects.find(...)` is made consistent with the `?? []` guards so it cannot throw if `subjects` is ever absent.
-- [ ] A quick audit confirms no other page passes an inline `?? []` into a component whose effect depends on that array; any found are fixed the same way.
+- [x] `ProfessorDashboardPage` passes a stable module-level `EMPTY` constant for `?? []` fallbacks instead of a fresh `[]` each render.
+- [x] `data?.subjects.find(...)` is made consistent with the `?? []` guards so it cannot throw if `subjects` is ever absent.
+- [x] A quick audit confirms no other page passes an inline `?? []` into a component whose effect depends on that array; any found are fixed the same way.
 - Commit: `fix(professor): stable array props and consistent optional chaining on the dashboard`
 
 ---
