@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { authenticatedRender } from '../../helpers/authenticatedRender';
 import { server } from '../../server';
 import { professorDashboardHandler, professorStudentsHandler } from '../../helpers/mswHandlers';
@@ -14,6 +15,10 @@ import {
 } from '../../helpers/fixtures/professorDashboard';
 import { APP_ROUTES } from '../../../config/constants';
 import SubjectsList from '../../../features/user/components/professor/SubjectsList';
+import ErrorBoundary from '../../../components/ui/ErrorBoundary';
+import { resetUserStore } from '../../helpers/renderWithProviders';
+import { makeProfessor } from '../../factories';
+import { useUserStore } from '../../../store/user/useUserStore';
 
 describe('ProfessorDashboardPage (§5.4)', () => {
   it('when zero subjects then it shows the no-subjects empty state in column 1', async () => {
@@ -356,6 +361,78 @@ describe('SubjectsList page-jump behaviour (Tech-Frontend §2)', () => {
       typeof msg === 'string' && msg.includes('Maximum update depth exceeded')
     );
     expect(maxDepthErrors).toHaveLength(0);
+
+    errorSpy.mockRestore();
+  });
+});
+
+describe('Task-29 regression guards', () => {
+  it('selecting a subject with students renders the paged list and does not throw', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    server.use(
+      professorDashboardHandler(singleSubjectWithStudent),
+      professorStudentsHandler('sub-DB', singleSubjectStudentsPage)
+    );
+
+    const { user } = authenticatedRender({
+      as: 'professor',
+      initialEntries: [APP_ROUTES.PROFESSOR_DASHBOARD],
+    });
+
+    await user.click(await screen.findByText(/Databases/));
+    expect(await screen.findByText(/Stud One/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Rows per page:/i).length).toBeGreaterThanOrEqual(2);
+
+    const crashErrors = errorSpy.mock.calls.filter(([msg]) =>
+      typeof msg === 'string' && msg.includes('Cannot read properties of undefined')
+    );
+    expect(crashErrors).toHaveLength(0);
+
+    errorSpy.mockRestore();
+  });
+
+  it('the dashboard page does not exceed the React update depth when subject data loads', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    server.use(
+      professorDashboardHandler(singleSubjectWithStudent),
+      professorStudentsHandler('sub-DB', singleSubjectStudentsPage)
+    );
+
+    authenticatedRender({
+      as: 'professor',
+      initialEntries: [APP_ROUTES.PROFESSOR_DASHBOARD],
+    });
+
+    await screen.findByText(/Databases/);
+
+    const loopErrors = errorSpy.mock.calls.filter(([msg]) =>
+      typeof msg === 'string' && msg.includes('Maximum update depth exceeded')
+    );
+    expect(loopErrors).toHaveLength(0);
+
+    errorSpy.mockRestore();
+  });
+
+  it('a render error shows the error-boundary fallback and keeps the user logged in', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    resetUserStore(makeProfessor());
+
+    const Thrower = (): never => { throw new Error('simulated render crash'); };
+
+    render(
+      <MemoryRouter>
+        <ErrorBoundary>
+          <Thrower />
+        </ErrorBoundary>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('heading', { name: /something went wrong/i })).toBeInTheDocument();
+    expect(screen.getByText(/session is still active/i)).toBeInTheDocument();
+    expect(useUserStore.getState().currentUser).not.toBeNull();
 
     errorSpy.mockRestore();
   });

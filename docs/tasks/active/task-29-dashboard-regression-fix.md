@@ -75,7 +75,7 @@ Not in scope: e2e (task 22d owns Playwright).
 Docs to update: none
 Verify: `npm run test -- integration/grades/ProfessorDashboard`
 
-- [ ] Selecting a subject with students renders the paged list and does not throw.
-- [ ] A professor dashboard given an unstable/empty `subjects` prop renders without exceeding the update depth.
-- [ ] A thrown render error shows the error-boundary fallback and the user stays logged in (no redirect to login).
+- [x] Selecting a subject with students renders the paged list and does not throw.
+- [x] A professor dashboard given an unstable/empty `subjects` prop renders without exceeding the update depth.
+- [x] A thrown render error shows the error-boundary fallback and the user stays logged in (no redirect to login).
 - Commit: `test(frontend): regression coverage for the professor-dashboard crash and loop`
