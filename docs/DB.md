@@ -262,6 +262,8 @@ COMMIT;
 
 **No time-sensitive row is seeded (per D-022).** `seed.sql` replays before every integration test, so a backdated `SubmittedAt` or `ReviewedAt` would inject an overdue or escalated case into every test in the suite. Overdue appeals, escalation Scenarios A and B, and the 24-hour undo window are created per test by the backdating helpers on `IntegrationTestBase` (`Tech-Backend.md` §7); for manual (in-browser) testing, the dev-only companion script `Migrations/seed-dev-escalations.sql` layers those escalated states on top of `seed.sql` and is never loaded by the integration-test fixture. The appeals the seed does create are freshly submitted or already reviewed, never mid-deadline.
 
+**Dev-only volume fixtures.** `seed.sql` keeps small, fixed counts (10 students, 15 subjects) because integration tests assert them exactly (`AdminUserSearchTests`, `AdminSubjectSearchTests`, `AdminPaginationTests`). To exercise paging and the search comboboxes by hand, the dev-only companion `Migrations/seed-dev-pagination.sql` layers 20 extra students on top of `seed.sql` — 10 of them enrolled in Calculus — so the professor students list spans several pages and the enrollment student combobox needs a second fetch. Like `seed-dev-escalations.sql` it is applied manually with `psql`, is re-runnable, and is never loaded by the integration-test fixture.
+
 Fixed GUID prefixes (as in the pre-reset seed) keep FKs predictable:
 
 | Prefix | Table |
