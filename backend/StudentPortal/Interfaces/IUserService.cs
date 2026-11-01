@@ -17,6 +17,6 @@ public interface IUserService
     Task<bool> DeleteUserAsync(Guid id);
 
     Task<IEnumerable<StudentSubjectGradesDto>> GetStudentSubjectsAndGradesAsync(Guid studentId);
-    Task<PagedResultDto<UserDto>> GetPagedAsync(int page, int pageSize);
+    Task<PagedResultDto<AdminUserDto>> GetPagedAsync(int page, int pageSize);
     Task<PagedResultDto<UserSearchResultDto>> SearchAsync(RoleEnum role, string? query, int page, int pageSize);
 }

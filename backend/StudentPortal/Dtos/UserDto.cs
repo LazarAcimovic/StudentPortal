@@ -10,7 +10,10 @@ namespace StudentPortal.Dtos
         public string Email { get; set; }
         public RoleEnum UserRole { get; set; }
         public string IndexNumber { get; set; }
-        public bool IsDeleted { get; set; }
+        // NOTE: IsDeleted is deliberately absent — self-facing responses (Me,
+        // profile, admin single-user update) must not leak a user's soft-delete
+        // state. The admin Users list uses AdminUserDto, which carries it for the
+        // status badge (per D-035).
         public DateTime CreatedAt { get; set; }
     }
 }

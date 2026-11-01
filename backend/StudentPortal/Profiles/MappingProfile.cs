@@ -9,6 +9,7 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         CreateMap<User, UserDto>();
+        CreateMap<User, AdminUserDto>();
         CreateMap<User, UserSearchResultDto>();
         CreateMap<AdminCreateUserDto, User>()
             .ForMember(dest => dest.UserPassword, opt => opt.MapFrom(src => src.Password))

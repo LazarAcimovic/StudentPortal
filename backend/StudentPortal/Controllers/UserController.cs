@@ -38,7 +38,7 @@ namespace StudentPortal.Controllers
         // GET: api/user
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public async Task<ActionResult<PagedResultDto<UserDto>>> GetAllUsers(
+        public async Task<ActionResult<PagedResultDto<AdminUserDto>>> GetAllUsers(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 15)
         {

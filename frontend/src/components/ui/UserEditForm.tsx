@@ -144,12 +144,19 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
         if (showUserRole) payload.UserRole = form.userRole;
         if (showIsDeleted) payload.IsDeleted = form.isDeleted;
 
-        const response = await axiosClient.put<User>(
-          `${API_ROUTES.USER}/${user.id}`,
-          payload
-        );
+        await axiosClient.put(`${API_ROUTES.USER}/${user.id}`, payload);
         toast.success("Changes saved.");
-        onSaved(response.data);
+        // The admin update response intentionally omits IsDeleted (per D-035),
+        // so reflect the just-saved values from the form, not the response body.
+        onSaved({
+          ...user,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          ...(showIndexNumber && { indexNumber: form.indexNumber }),
+          ...(showUserRole && { userRole: form.userRole }),
+          ...(showIsDeleted && { isDeleted: form.isDeleted }),
+        });
       }
     } catch {
       setApiError('Failed to save changes. Please try again.');

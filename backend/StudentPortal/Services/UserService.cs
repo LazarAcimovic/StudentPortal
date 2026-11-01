@@ -131,12 +131,12 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         await _refreshTokenRepository.RevokeAllForUserAsync(callerId);
     }
 
-    public async Task<PagedResultDto<UserDto>> GetPagedAsync(int page, int pageSize)
+    public async Task<PagedResultDto<AdminUserDto>> GetPagedAsync(int page, int pageSize)
     {
         var (users, totalCount) = await _userRepository.GetPagedAsync(page, pageSize);
-        return new PagedResultDto<UserDto>
+        return new PagedResultDto<AdminUserDto>
         {
-            Items = _mapper.Map<IReadOnlyList<UserDto>>(users),
+            Items = _mapper.Map<IReadOnlyList<AdminUserDto>>(users),
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize,
