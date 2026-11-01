@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { AssignedCase, AssignedCasesSectionProps } from '../../models/professor/professorDashboard';
 import AssignedCaseItem from './AssignedCaseItem';
 import ResolveModal from './ResolveModal';

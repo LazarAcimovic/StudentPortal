@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { ProfessorAppealRow, AppealsSectionProps } from '../../models/professor/professorDashboard';
 import { APPEAL_STATUS_BADGE } from '../../constants/professor/constants';
 import ViewAppealModal from './ViewAppealModal';

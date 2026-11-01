@@ -34,21 +34,23 @@ describe('subjectService.getAllSubjects', () => {
     server.use(
       http.get(apiUrl(API_ROUTES.SUBJECT), () => {
         called += 1;
-        return HttpResponse.json([subjectRow]);
+        return HttpResponse.json({ items: [subjectRow], totalCount: 1, page: 1, pageSize: 50 });
       })
     );
 
-    const result = await getAllSubjects();
+    const result = await getAllSubjects(1, 50);
 
     expect(called).toBe(1);
-    expect(result).toEqual([subjectRow]);
+    expect(result?.items).toEqual([subjectRow]);
   });
 
   it('returns an empty array when the server returns one', async () => {
     server.use(
-      http.get(apiUrl(API_ROUTES.SUBJECT), () => HttpResponse.json([]))
+      http.get(apiUrl(API_ROUTES.SUBJECT), () =>
+        HttpResponse.json({ items: [], totalCount: 0, page: 1, pageSize: 50 })
+      )
     );
-    expect(await getAllSubjects()).toEqual([]);
+    expect((await getAllSubjects(1, 50))?.items).toEqual([]);
   });
 
   it('returns null (and logs) on a server 500', async () => {
@@ -58,7 +60,7 @@ describe('subjectService.getAllSubjects', () => {
       )
     );
 
-    const result = await getAllSubjects();
+    const result = await getAllSubjects(1, 50);
 
     expect(result).toBeNull();
     expect(console.error).toHaveBeenCalled();

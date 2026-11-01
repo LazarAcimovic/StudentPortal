@@ -30,22 +30,24 @@ describe('enrollmentService.getAllEnrollments', () => {
     server.use(
       http.get(apiUrl(API_ROUTES.ENROLLMENT), () => {
         called += 1;
-        return HttpResponse.json([enrollmentRow]);
+        return HttpResponse.json({ items: [enrollmentRow], totalCount: 1, page: 1, pageSize: 50 });
       })
     );
 
-    const result = await getAllEnrollments();
+    const result = await getAllEnrollments(1, 50);
 
     expect(called).toBe(1);
-    expect(result).toHaveLength(1);
-    expect(result?.[0].subjectName).toBe('Programming 1');
+    expect(result?.items).toHaveLength(1);
+    expect(result?.items[0].subjectName).toBe('Programming 1');
   });
 
   it('returns an empty array when the server returns one', async () => {
     server.use(
-      http.get(apiUrl(API_ROUTES.ENROLLMENT), () => HttpResponse.json([]))
+      http.get(apiUrl(API_ROUTES.ENROLLMENT), () =>
+        HttpResponse.json({ items: [], totalCount: 0, page: 1, pageSize: 50 })
+      )
     );
-    expect(await getAllEnrollments()).toEqual([]);
+    expect((await getAllEnrollments(1, 50))?.items).toEqual([]);
   });
 
   it('returns null (and logs) on a server 500', async () => {
@@ -55,7 +57,7 @@ describe('enrollmentService.getAllEnrollments', () => {
       )
     );
 
-    const result = await getAllEnrollments();
+    const result = await getAllEnrollments(1, 50);
 
     expect(result).toBeNull();
     expect(console.error).toHaveBeenCalled();

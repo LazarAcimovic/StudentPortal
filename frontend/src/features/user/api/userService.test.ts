@@ -39,19 +39,23 @@ describe('userService.getAllUsers', () => {
     server.use(
       http.get(apiUrl(API_ROUTES.USER), () => {
         called += 1;
-        return HttpResponse.json([studentRow, adminRow]);
+        return HttpResponse.json({ items: [studentRow, adminRow], totalCount: 2, page: 1, pageSize: 50 });
       })
     );
 
-    const result = await getAllUsers();
+    const result = await getAllUsers(1, 50);
 
     expect(called).toBe(1);
-    expect(result).toHaveLength(2);
+    expect(result?.items).toHaveLength(2);
   });
 
   it('returns an empty array when the server returns one', async () => {
-    server.use(http.get(apiUrl(API_ROUTES.USER), () => HttpResponse.json([])));
-    expect(await getAllUsers()).toEqual([]);
+    server.use(
+      http.get(apiUrl(API_ROUTES.USER), () =>
+        HttpResponse.json({ items: [], totalCount: 0, page: 1, pageSize: 50 })
+      )
+    );
+    expect((await getAllUsers(1, 50))?.items).toEqual([]);
   });
 
   it('returns null (and logs) on a server 500', async () => {
@@ -60,7 +64,7 @@ describe('userService.getAllUsers', () => {
         HttpResponse.json({ title: 'boom' }, { status: 500 })
       )
     );
-    const result = await getAllUsers();
+    const result = await getAllUsers(1, 50);
     expect(result).toBeNull();
     expect(console.error).toHaveBeenCalled();
   });

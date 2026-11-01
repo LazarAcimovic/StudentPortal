@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { StudentDashboardSubject } from '../../models/studentDashboard';
 import {
   APPEAL_DENIED_STATUS,
