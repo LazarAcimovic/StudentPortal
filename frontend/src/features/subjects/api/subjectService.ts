@@ -8,6 +8,12 @@ import type {
 import type { PagedResult } from "../../../shared/models/pagedResult";
 import { API_ROUTES } from "../../../config/constants";
 
+export interface SubjectSearchResult {
+  id: string;
+  subjectName: string;
+  subjectCode: string;
+}
+
 // Field-keyed messages, PascalCase to match the create form field names and the
 // ASP.NET ValidationProblemDetails `errors` map (SubjectName, SubjectCode, …).
 export type CreateSubjectFieldErrors = Partial<Record<string, string>>;
@@ -19,6 +25,27 @@ export type CreateSubjectResult =
 export type UpdateSubjectResult =
   | { ok: true; subject: Subject }
   | { ok: false; fieldErrors?: CreateSubjectFieldErrors; message?: string };
+
+export const searchSubjects = async (
+  query: string,
+  page: number,
+  signal: AbortSignal
+): Promise<{ items: SubjectSearchResult[]; totalCount: number }> => {
+  try {
+    const response = await apiClient.get<PagedResult<SubjectSearchResult>>(
+      `${API_ROUTES.SUBJECT}/search`,
+      { params: { query, page, pageSize: 15 }, signal }
+    );
+    return { items: response.data.items, totalCount: response.data.totalCount };
+  } catch (err) {
+    if (axios.isCancel(err) || signal.aborted) {
+      const abortError = new Error('Aborted');
+      abortError.name = 'AbortError';
+      throw abortError;
+    }
+    throw err;
+  }
+};
 
 export const getAllSubjects = async (
   page: number,

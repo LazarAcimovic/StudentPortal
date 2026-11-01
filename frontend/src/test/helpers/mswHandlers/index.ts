@@ -146,6 +146,24 @@ export function pagedEnrollmentsHandler(payload: {
   });
 }
 
+export function userSearchHandler(payload: {
+  items: unknown[];
+  totalCount: number;
+}): HttpHandler {
+  return http.get(`/api${API_ROUTES.USER}/search`, () =>
+    HttpResponse.json({ items: payload.items, totalCount: payload.totalCount } as JsonInput)
+  );
+}
+
+export function subjectSearchHandler(payload: {
+  items: unknown[];
+  totalCount: number;
+}): HttpHandler {
+  return http.get(`/api${API_ROUTES.SUBJECT}/search`, () =>
+    HttpResponse.json({ items: payload.items, totalCount: payload.totalCount } as JsonInput)
+  );
+}
+
 export function defaultHandlers(user: StoreUser | null = seededStudent): HttpHandler[] {
   return [
     meHandler(user),

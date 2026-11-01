@@ -1,28 +1,63 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SubjectCreateForm from './SubjectCreateForm';
-import type { User } from '../../../../shared/models/User';
-import { USER_ROLES } from '../../../../shared/constants/constants';
+import * as userService from '../../api/userService';
 
-const professors: User[] = [
-  {
-    id: 1,
-    firstName: 'Ana',
-    lastName: 'Anić',
-    email: 'ana@test.com',
-    userRole: USER_ROLES.Professor,
-    isDeleted: false,
-    indexNumber: null,
-  } as unknown as User,
+beforeAll(() => {
+  vi.stubGlobal('IntersectionObserver', class {
+    observe() {}
+    disconnect() {}
+    unobserve() {}
+  });
+});
+
+const mockProfessors = [
+  { id: 'prof-1', firstName: 'Ana', lastName: 'Anić' },
+  { id: 'prof-2', firstName: 'Inactive', lastName: 'Prof' },
 ];
+
+vi.mock('../../api/userService', async (importOriginal) => {
+  const original = await importOriginal<typeof userService>();
+  return {
+    ...original,
+    searchUsers: vi.fn(),
+  };
+});
+
+beforeEach(() => {
+  vi.mocked(userService.searchUsers).mockResolvedValue({
+    items: mockProfessors,
+    totalCount: mockProfessors.length,
+  });
+});
 
 function renderForm() {
   const onSave = vi.fn();
   const onCancel = vi.fn();
-  render(<SubjectCreateForm professors={professors} onSave={onSave} onCancel={onCancel} />);
+  render(<SubjectCreateForm onSave={onSave} onCancel={onCancel} />);
   return { onSave, onCancel };
 }
+
+describe('SubjectCreateForm — correct id on submit (UI §8.4)', () => {
+  it('submits the selected professor id, not the display label', async () => {
+    const ue = userEvent.setup();
+    const { onSave } = renderForm();
+
+    await ue.type(screen.getByLabelText(/subject name/i), 'Databases');
+    await ue.type(screen.getByLabelText(/subject code/i), 'CS101');
+
+    const professorInput = screen.getByLabelText(/professor/i);
+    await ue.click(professorInput);
+    await screen.findByText('Ana Anić');
+    await ue.click(screen.getByText('Ana Anić'));
+
+    await ue.click(screen.getByRole('button', { name: /create/i }));
+
+    expect(onSave).toHaveBeenCalledOnce();
+    expect(onSave.mock.calls[0][0]).toMatchObject({ ProfessorId: 'prof-1' });
+  });
+});
 
 describe('SubjectCreateForm — SubjectCode field (UI §8.4)', () => {
   it('renders a "Subject Code" label and input', () => {
@@ -70,7 +105,13 @@ describe('SubjectCreateForm — SubjectCode field (UI §8.4)', () => {
     await ue.type(screen.getByLabelText(/subject code/i), 'CS101');
     await ue.clear(screen.getByLabelText(/ects/i));
     await ue.type(screen.getByLabelText(/ects/i), '6');
-    await ue.selectOptions(screen.getByLabelText(/professor/i), ['Ana Anić']);
+
+    // Open professor combobox and select
+    const professorInput = screen.getByLabelText(/professor/i);
+    await ue.click(professorInput);
+    const option = await screen.findByText('Ana Anić');
+    await ue.click(option);
+
     await ue.click(screen.getByRole('button', { name: /create/i }));
 
     expect(onSave).toHaveBeenCalledOnce();
@@ -97,8 +138,13 @@ describe('SubjectCreateForm — SubjectCode field (UI §8.4)', () => {
 
     await ue.type(screen.getByLabelText(/subject name/i), 'Databases');
     await ue.type(screen.getByLabelText(/subject code/i), 'CS101');
-    await ue.selectOptions(screen.getByLabelText(/professor/i), ['Ana Anić']);
-    // ECTS defaults to 6, so the form is now valid.
+    // ECTS defaults to 6; professor not yet chosen — still disabled
+    expect(createBtn).toBeDisabled();
+
+    const professorInput = screen.getByLabelText(/professor/i);
+    await ue.click(professorInput);
+    await screen.findByText('Ana Anić');
+    await ue.click(screen.getByText('Ana Anić'));
     expect(createBtn).toBeEnabled();
   });
 
@@ -110,22 +156,5 @@ describe('SubjectCreateForm — SubjectCode field (UI §8.4)', () => {
     await ue.tab();
 
     expect(await screen.findByText(/ects is required/i)).toBeInTheDocument();
-  });
-
-  it('excludes soft-deleted professors from the dropdown', () => {
-    const onSave = vi.fn();
-    render(
-      <SubjectCreateForm
-        professors={[
-          ...professors,
-          { ...professors[0], id: '2', firstName: 'Inactive', lastName: 'Prof', isDeleted: true } as unknown as User,
-        ]}
-        onSave={onSave}
-        onCancel={vi.fn()}
-      />
-    );
-
-    expect(screen.queryByRole('option', { name: /inactive prof/i })).toBeNull();
-    expect(screen.getByRole('option', { name: /ana anić/i })).toBeInTheDocument();
   });
 });

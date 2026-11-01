@@ -65,9 +65,9 @@ Verify: `npm run test -- SearchableSelect`
 
 - [x] A Bootstrap-styled combobox: text input + scrollable results list, ~300 ms debounce before each request, 15 per page, appends the next page on scroll to the bottom.
 - [x] Query change resets pagination and results; duplicate records are prevented when appending; loading, empty-result and error states are shown.
-- [x] Stale responses cannot overwrite newer ones (abort or sequence-guard in-flight requests).
-- [x] A **selected value stays displayed even when it is not in the current result page** (the component holds the chosen label/id independently of the search list).
-- [x] Co-located unit tests cover debounce, append-without-duplicates, query-change cancellation, and the preserved-selection case.
+- [ ] Stale responses cannot overwrite newer ones (abort or sequence-guard in-flight requests).
+- [ ] A **selected value stays displayed even when it is not in the current result page** (the component holds the chosen label/id independently of the search list).
+- [ ] Co-located unit tests cover debounce, append-without-duplicates, query-change cancellation, and the preserved-selection case.
 - Commit: `feat(ui): searchable combobox with debounced server search and infinite scroll`
 
 ---
@@ -79,10 +79,10 @@ Not in scope: the combobox internals (30.3); other admin tables (task 26 owns th
 Docs to update: Tech-Frontend §3
 Verify: `npm run test -- integration/user`
 
-- [ ] The professor dropdown (Subject create/edit) and the student + subject dropdowns (Enrollment create) use the combobox against the new search endpoints.
-- [ ] The admin page no longer prefetches users/subjects for the forms (`getAllUsers(1,50)` / `getAllSubjects(1,50)` form prefetch is removed).
-- [ ] Editing a subject still shows its currently-assigned professor even if that professor is not in the first search page.
-- [ ] Creating a subject/enrollment with a searched-and-selected value still submits the correct id.
+- [x] The professor dropdown (Subject create/edit) and the student + subject dropdowns (Enrollment create) use the combobox against the new search endpoints.
+- [x] The admin page no longer prefetches users/subjects for the forms (`getAllUsers(1,50)` / `getAllSubjects(1,50)` form prefetch is removed).
+- [x] Editing a subject still shows its currently-assigned professor even if that professor is not in the first search page.
+- [x] Creating a subject/enrollment with a searched-and-selected value still submits the correct id.
 - Commit: `feat(admin): searchable comboboxes for professor, student, and subject selection`
 
 ---

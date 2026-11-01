@@ -4,6 +4,13 @@ import type { PagedResult } from "../../../shared/models/pagedResult";
 import apiClient from "../../../shared/api/axiosClient";
 import { API_ROUTES } from "../../../config/constants";
 
+export interface UserSearchResult {
+  id: string;
+  firstName: string;
+  lastName: string;
+  indexNumber?: string | null;
+}
+
 // Field-keyed messages, PascalCase to match the create form field names and the
 // ASP.NET ValidationProblemDetails `errors` map (Email, Password, …).
 export type AddUserFieldErrors = Partial<Record<string, string>>;
@@ -87,6 +94,28 @@ export const updateUser = async (
   } catch (error) {
     console.error("Error updating user:", error);
     return null;
+  }
+};
+
+export const searchUsers = async (
+  role: 'Professor' | 'Student',
+  query: string,
+  page: number,
+  signal: AbortSignal
+): Promise<{ items: UserSearchResult[]; totalCount: number }> => {
+  try {
+    const response = await apiClient.get<PagedResult<UserSearchResult>>(
+      `${API_ROUTES.USER}/search`,
+      { params: { role, query, page, pageSize: 15 }, signal }
+    );
+    return { items: response.data.items, totalCount: response.data.totalCount };
+  } catch (err) {
+    if (axios.isCancel(err) || signal.aborted) {
+      const abortError = new Error('Aborted');
+      abortError.name = 'AbortError';
+      throw abortError;
+    }
+    throw err;
   }
 };
 

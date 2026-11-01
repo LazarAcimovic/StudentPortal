@@ -1,7 +1,5 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useCallback, useRef } from "react";
 import type { Subject, UpdateSubject } from "../../../../features/subjects/models/subject";
-import type { User } from "../../../../shared/models/User";
-import { USER_ROLES } from "../../../../shared/constants/constants";
 import {
   subjectEditSchema,
   type SubjectEditFieldErrors,
@@ -10,10 +8,11 @@ import type {
   UpdateSubjectResult,
   CreateSubjectFieldErrors,
 } from "../../../subjects/api/subjectService";
+import { searchUsers, type UserSearchResult } from "../../api/userService";
+import SearchableCombobox from "../../../../components/ui/SearchableCombobox";
 
 interface SubjectEditFormProps {
   subject: Subject;
-  professors: User[];
   onSave: (updatedSubject: UpdateSubject) => Promise<UpdateSubjectResult>;
   onCancel: () => void;
 }
@@ -23,7 +22,6 @@ const SUBJECT_CODE_HELP =
 
 const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
   subject,
-  professors,
   onSave,
   onCancel,
 }) => {
@@ -34,6 +32,12 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
     ECTS: subject.ects,
     ProfessorId: String(subject.professorId),
     IsDeleted: subject.isDeleted,
+  });
+  // Initialise from the subject so the current professor shows even if inactive.
+  const [selectedProfessor, setSelectedProfessor] = useState<UserSearchResult | null>({
+    id: String(subject.professorId),
+    firstName: subject.professorFirstName,
+    lastName: subject.professorLastName,
   });
   const [touched, setTouched] = useState<Partial<Record<keyof UpdateSubject, boolean>>>({});
   const [serverFieldErrors, setServerFieldErrors] = useState<CreateSubjectFieldErrors>({});
@@ -52,9 +56,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
   const showError = (field: keyof UpdateSubject): string | undefined =>
     touched[field] ? errorFor(field) : undefined;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
     setServerFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     if (type === "checkbox") {
@@ -71,6 +73,33 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
 
   const handleBlur = (field: keyof UpdateSubject) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const initialProfessorRef = useRef<UserSearchResult>({
+    id: String(subject.professorId),
+    firstName: subject.professorFirstName,
+    lastName: subject.professorLastName,
+  });
+
+  const fetchProfessorsPage = useCallback(
+    async (query: string, page: number, signal: AbortSignal) => {
+      const result = await searchUsers("Professor", query, page, signal);
+      if (page === 1) {
+        const seed = initialProfessorRef.current;
+        if (!result.items.some(item => item.id === seed.id)) {
+          return { ...result, items: [seed, ...result.items] };
+        }
+      }
+      return result;
+    },
+    []
+  );
+
+  const handleProfessorChange = (item: UserSearchResult | null) => {
+    setSelectedProfessor(item);
+    setServerFieldErrors((prev) => ({ ...prev, ProfessorId: undefined }));
+    setFormData((prev) => ({ ...prev, ProfessorId: item ? item.id : "" }));
+    setTouched((prev) => ({ ...prev, ProfessorId: true }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -167,30 +196,20 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
             <label htmlFor="professor" className="form-label">
               Professor
             </label>
-            <select
-              className={`form-select${showError("ProfessorId") ? " is-invalid" : ""}`}
+            <SearchableCombobox
               id="professor"
-              name="ProfessorId"
-              value={formData.ProfessorId}
-              onChange={handleChange}
-              onBlur={() => handleBlur("ProfessorId")}
-            >
-              <option value="">Select professor</option>
-              {professors
-                .filter(
-                  (p) =>
-                    p.userRole === USER_ROLES.Professor &&
-                    // offer active professors, plus the current one even if inactive
-                    (!p.isDeleted || String(p.id) === formData.ProfessorId)
-                )
-                .map((prof) => (
-                  <option key={prof.id} value={prof.id}>
-                    {prof.firstName} {prof.lastName}
-                  </option>
-                ))}
-            </select>
+              value={selectedProfessor}
+              onChange={handleProfessorChange}
+              fetchPage={fetchProfessorsPage}
+              getLabel={(p) => `${p.firstName} ${p.lastName}`}
+              getId={(p) => p.id}
+              placeholder="Search professor…"
+              isInvalid={!!showError("ProfessorId")}
+            />
             {showError("ProfessorId") && (
-              <div className="invalid-feedback">{showError("ProfessorId")}</div>
+              <div className="text-danger" style={{ fontSize: "0.875em", marginTop: "0.25rem" }}>
+                {showError("ProfessorId")}
+              </div>
             )}
           </div>
 

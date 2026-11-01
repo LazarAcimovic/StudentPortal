@@ -1,28 +1,20 @@
-﻿import React, { useState, useEffect } from "react";
-import type {
-  CreateEnrollment,
-  Enrollment,
-} from "../../../../features/subjects/models/enrollment";
-import type { User } from "../../../../shared/models/User";
-import type { Subject } from "../../../../features/subjects/models/subject";
+﻿import React, { useState, useCallback } from "react";
+import type { CreateEnrollment } from "../../../../features/subjects/models/enrollment";
 import {
   enrollmentCreateSchema,
   type EnrollmentCreateFieldErrors,
 } from "../../utils/enrollmentSchemas";
 import type { CreateEnrollmentResult } from "../../../subjects/api/enrollmentService";
+import { searchUsers, type UserSearchResult } from "../../api/userService";
+import { searchSubjects, type SubjectSearchResult } from "../../../subjects/api/subjectService";
+import SearchableCombobox from "../../../../components/ui/SearchableCombobox";
 
 interface EnrollmentCreateFormProps {
-  students: User[];
-  subjects: Subject[];
-  enrollments: Enrollment[];
   onSave: (newEnrollment: CreateEnrollment) => Promise<CreateEnrollmentResult>;
   onCancel: () => void;
 }
 
 const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
-  students,
-  subjects,
-  enrollments,
   onSave,
   onCancel,
 }) => {
@@ -30,31 +22,11 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
     StudentId: "",
     SubjectId: "",
   });
+  const [selectedStudent, setSelectedStudent] = useState<UserSearchResult | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<SubjectSearchResult | null>(null);
   const [touched, setTouched] = useState<Partial<Record<keyof CreateEnrollment, boolean>>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>(
-    subjects.filter((s) => !s.isDeleted)
-  );
-
-  // Inactive students cannot be enrolled, so they are not offered.
-  const availableStudents = students.filter((s) => !s.isDeleted);
-
-  useEffect(() => {
-    if (formData.StudentId) {
-      const enrolledSubjectIds = enrollments
-        .filter((e) => String(e.studentId) === formData.StudentId)
-        .map((e) => e.subjectId);
-
-      const filteredSubjects = subjects.filter(
-        (s) => !enrolledSubjectIds.includes(s.id) && !s.isDeleted
-      );
-      setAvailableSubjects(filteredSubjects);
-    } else {
-      setAvailableSubjects(subjects.filter((s) => !s.isDeleted));
-    }
-  }, [formData.StudentId, subjects, enrollments]);
 
   const parsed = enrollmentCreateSchema.safeParse(formData);
   const fieldErrors: EnrollmentCreateFieldErrors = parsed.success
@@ -64,15 +36,30 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
   const showError = (field: keyof CreateEnrollment): string | undefined =>
     touched[field] ? fieldErrors[field]?.[0] : undefined;
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    // StudentId / SubjectId are GUID strings and must not be coerced with Number().
+  const fetchStudentsPage = useCallback(
+    (query: string, page: number, signal: AbortSignal) =>
+      searchUsers("Student", query, page, signal),
+    []
+  );
+
+  const fetchSubjectsPage = useCallback(
+    (query: string, page: number, signal: AbortSignal) =>
+      searchSubjects(query, page, signal),
+    []
+  );
+
+  const handleStudentChange = (item: UserSearchResult | null) => {
     setServerError(null);
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setSelectedStudent(item);
+    setFormData((prev) => ({ ...prev, StudentId: item ? item.id : "" }));
+    setTouched((prev) => ({ ...prev, StudentId: true }));
   };
 
-  const handleBlur = (field: keyof CreateEnrollment) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
+  const handleSubjectChange = (item: SubjectSearchResult | null) => {
+    setServerError(null);
+    setSelectedSubject(item);
+    setFormData((prev) => ({ ...prev, SubjectId: item ? item.id : "" }));
+    setTouched((prev) => ({ ...prev, SubjectId: true }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +71,6 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
     setIsSubmitting(true);
     const result = await onSave(formData);
     if (result && !result.ok) {
-      // Enrollment errors are not tied to one field, so show them at the top.
       const fieldError = result.fieldErrors
         ? Object.values(result.fieldErrors).find(Boolean)
         : undefined;
@@ -108,23 +94,24 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
             <label htmlFor="student" className="form-label">
               Student
             </label>
-            <select
-              className={`form-select${showError("StudentId") ? " is-invalid" : ""}`}
+            <SearchableCombobox
               id="student"
-              name="StudentId"
-              value={formData.StudentId}
-              onChange={handleChange}
-              onBlur={() => handleBlur("StudentId")}
-            >
-              <option value="">Select student</option>
-              {availableStudents.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.firstName} {student.lastName}
-                </option>
-              ))}
-            </select>
+              value={selectedStudent}
+              onChange={handleStudentChange}
+              fetchPage={fetchStudentsPage}
+              getLabel={(s) =>
+                s.indexNumber
+                  ? `${s.firstName} ${s.lastName} (${s.indexNumber})`
+                  : `${s.firstName} ${s.lastName}`
+              }
+              getId={(s) => s.id}
+              placeholder="Search student…"
+              isInvalid={!!showError("StudentId")}
+            />
             {showError("StudentId") && (
-              <div className="invalid-feedback">{showError("StudentId")}</div>
+              <div className="text-danger" style={{ fontSize: "0.875em", marginTop: "0.25rem" }}>
+                {showError("StudentId")}
+              </div>
             )}
           </div>
 
@@ -132,23 +119,20 @@ const EnrollmentCreateForm: React.FC<EnrollmentCreateFormProps> = ({
             <label htmlFor="subject" className="form-label">
               Subject
             </label>
-            <select
-              className={`form-select${showError("SubjectId") ? " is-invalid" : ""}`}
+            <SearchableCombobox
               id="subject"
-              name="SubjectId"
-              value={formData.SubjectId}
-              onChange={handleChange}
-              onBlur={() => handleBlur("SubjectId")}
-            >
-              <option value="">Select subject</option>
-              {availableSubjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.subjectName}
-                </option>
-              ))}
-            </select>
+              value={selectedSubject}
+              onChange={handleSubjectChange}
+              fetchPage={fetchSubjectsPage}
+              getLabel={(s) => `${s.subjectName} (${s.subjectCode})`}
+              getId={(s) => s.id}
+              placeholder="Search subject…"
+              isInvalid={!!showError("SubjectId")}
+            />
             {showError("SubjectId") && (
-              <div className="invalid-feedback">{showError("SubjectId")}</div>
+              <div className="text-danger" style={{ fontSize: "0.875em", marginTop: "0.25rem" }}>
+                {showError("SubjectId")}
+              </div>
             )}
           </div>
 

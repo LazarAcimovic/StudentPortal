@@ -14,10 +14,7 @@ import type {
   CreateSubject,
   UpdateSubject,
 } from "../../subjects/models/subject";
-import type {
-  Enrollment,
-  CreateEnrollment,
-} from "../../subjects/models/enrollment";
+import type { Enrollment, CreateEnrollment } from "../../subjects/models/enrollment";
 import Modal from "../../../components/ui/Modal";
 import UsersTable from "../components/admin/UsersTable";
 import UserEditForm from "../../../components/ui/UserEditForm";
@@ -32,7 +29,6 @@ import Pagination from "../../../components/ui/Pagination";
 
 const PAGE_SIZE_OPTIONS = [15, 20, 50];
 const DEFAULT_PAGE_SIZE = 15;
-const FORM_FETCH_PAGE_SIZE = 50;
 
 const AdminDashboardPage: React.FC = () => {
   const { currentUser } = useUserStore();
@@ -55,11 +51,6 @@ const AdminDashboardPage: React.FC = () => {
   const [enrollmentsTotalCount, setEnrollmentsTotalCount] = useState(0);
   const [enrollmentsPage, setEnrollmentsPage] = useState(1);
   const [enrollmentsPageSize, setEnrollmentsPageSize] = useState(DEFAULT_PAGE_SIZE);
-
-  // Separate state for form dropdowns — fetched with max page size
-  const [allProfessors, setAllProfessors] = useState<User[]>([]);
-  const [allStudents, setAllStudents] = useState<User[]>([]);
-  const [allSubjectsForForm, setAllSubjectsForForm] = useState<Subject[]>([]);
 
   // Modal / inline form state
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -92,28 +83,11 @@ const AdminDashboardPage: React.FC = () => {
     }
   }, []);
 
-  const refreshFormUsers = useCallback(async () => {
-    const result = await getAllUsers(1, FORM_FETCH_PAGE_SIZE);
-    if (result) {
-      setAllProfessors(result.items.filter(u => u.userRole === USER_ROLES.Professor));
-      setAllStudents(result.items.filter(u => u.userRole === USER_ROLES.Student));
-    }
-  }, []);
-
-  const refreshFormSubjects = useCallback(async () => {
-    const result = await getAllSubjects(1, FORM_FETCH_PAGE_SIZE);
-    if (result) {
-      setAllSubjectsForForm(result.items);
-    }
-  }, []);
-
   useEffect(() => {
     void fetchUsersPage(1, DEFAULT_PAGE_SIZE);
     void fetchSubjectsPage(1, DEFAULT_PAGE_SIZE);
     void fetchEnrollmentsPage(1, DEFAULT_PAGE_SIZE);
-    void refreshFormUsers();
-    void refreshFormSubjects();
-  }, [fetchUsersPage, fetchSubjectsPage, fetchEnrollmentsPage, refreshFormUsers, refreshFormSubjects]);
+  }, [fetchUsersPage, fetchSubjectsPage, fetchEnrollmentsPage]);
 
   if (!currentUser || currentUser.userRole !== USER_ROLES.Admin) {
     return (
@@ -131,7 +105,6 @@ const AdminDashboardPage: React.FC = () => {
     if (result.ok) {
       setIsCreatingUser(false);
       await fetchUsersPage(usersPage, usersPageSize);
-      await refreshFormUsers();
     }
     return result;
   };
@@ -139,14 +112,12 @@ const AdminDashboardPage: React.FC = () => {
   const handleUserSaved = async (updatedUser: User) => {
     setUsersItems(prev => prev.map(u => (u.id === updatedUser.id ? updatedUser : u)));
     setEditingUser(null);
-    await refreshFormUsers();
   };
 
   const handleDeleteUser = async (userId: string) => {
     const isSuccess = await deleteUser(userId);
     if (isSuccess) {
       await fetchUsersPage(usersPage, usersPageSize);
-      await refreshFormUsers();
       alert("User deleted successfully.");
     } else {
       alert("Failed to delete user.");
@@ -158,7 +129,6 @@ const AdminDashboardPage: React.FC = () => {
     if (result.ok) {
       setIsCreatingSubject(false);
       await fetchSubjectsPage(subjectsPage, subjectsPageSize);
-      await refreshFormSubjects();
     }
     return result;
   };
@@ -168,7 +138,6 @@ const AdminDashboardPage: React.FC = () => {
     if (result.ok) {
       setEditingSubject(null);
       await fetchSubjectsPage(subjectsPage, subjectsPageSize);
-      await refreshFormSubjects();
     }
     return result;
   };
@@ -284,14 +253,12 @@ const AdminDashboardPage: React.FC = () => {
             <h3>Manage Subjects</h3>
             {isCreatingSubject ? (
               <SubjectCreateForm
-                professors={allProfessors}
                 onSave={handleCreateSubject}
                 onCancel={() => setIsCreatingSubject(false)}
               />
             ) : editingSubject ? (
               <SubjectEditForm
                 subject={editingSubject}
-                professors={allProfessors}
                 onSave={handleUpdateSubject}
                 onCancel={() => setEditingSubject(null)}
               />
@@ -331,9 +298,6 @@ const AdminDashboardPage: React.FC = () => {
             <h3>Student Enrollments</h3>
             {isCreatingEnrollment ? (
               <EnrollmentCreateForm
-                students={allStudents}
-                subjects={allSubjectsForForm}
-                enrollments={enrollmentsItems}
                 onSave={handleCreateEnrollment}
                 onCancel={() => setIsCreatingEnrollment(false)}
               />

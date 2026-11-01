@@ -1,7 +1,5 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useCallback } from "react";
 import type { CreateSubject } from "../../../../features/subjects/models/subject";
-import type { User } from "../../../../shared/models/User";
-import { USER_ROLES } from "../../../../shared/constants/constants";
 import {
   subjectCreateSchema,
   type SubjectCreateFieldErrors,
@@ -10,9 +8,10 @@ import type {
   CreateSubjectResult,
   CreateSubjectFieldErrors,
 } from "../../../subjects/api/subjectService";
+import { searchUsers, type UserSearchResult } from "../../api/userService";
+import SearchableCombobox from "../../../../components/ui/SearchableCombobox";
 
 interface SubjectCreateFormProps {
-  professors: User[];
   onSave: (newSubject: CreateSubject) => Promise<CreateSubjectResult>;
   onCancel: () => void;
 }
@@ -21,7 +20,6 @@ const SUBJECT_CODE_HELP =
   "Subjects sharing a code are the same course taught by different professors.";
 
 const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
-  professors,
   onSave,
   onCancel,
 }) => {
@@ -31,6 +29,7 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
     ECTS: 6,
     ProfessorId: "",
   });
+  const [selectedProfessor, setSelectedProfessor] = useState<UserSearchResult | null>(null);
   const [touched, setTouched] = useState<Partial<Record<keyof CreateSubject, boolean>>>({});
   const [serverFieldErrors, setServerFieldErrors] = useState<CreateSubjectFieldErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
@@ -41,29 +40,36 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
     ? {}
     : (parsed.error.flatten().fieldErrors as SubjectCreateFieldErrors);
 
-  // Zod (client) wins when present; otherwise fall back to a server-side message.
   const errorFor = (field: keyof CreateSubject): string | undefined =>
     fieldErrors[field]?.[0] ?? serverFieldErrors[field];
 
   const showError = (field: keyof CreateSubject): string | undefined =>
     touched[field] ? errorFor(field) : undefined;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // A field being edited should drop its stale server error.
     setServerFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     setFormData((prev) => ({
       ...prev,
-      // ECTS is numeric; an empty field becomes NaN so Zod reports it as required.
-      // ProfessorId is a GUID string and must not be coerced.
       [name]: name === "ECTS" ? (value === "" ? NaN : Number(value)) : value,
     }));
   };
 
   const handleBlur = (field: keyof CreateSubject) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const fetchProfessorsPage = useCallback(
+    (query: string, page: number, signal: AbortSignal) =>
+      searchUsers("Professor", query, page, signal),
+    []
+  );
+
+  const handleProfessorChange = (item: UserSearchResult | null) => {
+    setSelectedProfessor(item);
+    setServerFieldErrors((prev) => ({ ...prev, ProfessorId: undefined }));
+    setFormData((prev) => ({ ...prev, ProfessorId: item ? item.id : "" }));
+    setTouched((prev) => ({ ...prev, ProfessorId: true }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,25 +160,20 @@ const SubjectCreateForm: React.FC<SubjectCreateFormProps> = ({
             <label htmlFor="professor" className="form-label">
               Professor
             </label>
-            <select
-              className={`form-select${showError("ProfessorId") ? " is-invalid" : ""}`}
+            <SearchableCombobox
               id="professor"
-              name="ProfessorId"
-              value={formData.ProfessorId}
-              onChange={handleChange}
-              onBlur={() => handleBlur("ProfessorId")}
-            >
-              <option value="">Select professor</option>
-              {professors
-                .filter((p) => p.userRole === USER_ROLES.Professor && !p.isDeleted)
-                .map((prof) => (
-                  <option key={prof.id} value={prof.id}>
-                    {prof.firstName} {prof.lastName}
-                  </option>
-                ))}
-            </select>
+              value={selectedProfessor}
+              onChange={handleProfessorChange}
+              fetchPage={fetchProfessorsPage}
+              getLabel={(p) => `${p.firstName} ${p.lastName}`}
+              getId={(p) => p.id}
+              placeholder="Search professor…"
+              isInvalid={!!showError("ProfessorId")}
+            />
             {showError("ProfessorId") && (
-              <div className="invalid-feedback">{showError("ProfessorId")}</div>
+              <div className="text-danger" style={{ fontSize: "0.875em", marginTop: "0.25rem" }}>
+                {showError("ProfessorId")}
+              </div>
             )}
           </div>
 

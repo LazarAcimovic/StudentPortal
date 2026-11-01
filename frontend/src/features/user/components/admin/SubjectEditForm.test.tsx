@@ -1,22 +1,32 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SubjectEditForm from './SubjectEditForm';
 import type { Subject } from '../../../../features/subjects/models/subject';
-import type { User } from '../../../../shared/models/User';
-import { USER_ROLES } from '../../../../shared/constants/constants';
+import * as userService from '../../api/userService';
 
-const professors: User[] = [
-  {
-    id: 7,
-    firstName: 'Petar',
-    lastName: 'Petrović',
-    email: 'petar@test.com',
-    userRole: USER_ROLES.Professor,
-    isDeleted: false,
-    indexNumber: null,
-  } as unknown as User,
-];
+beforeAll(() => {
+  vi.stubGlobal('IntersectionObserver', class {
+    observe() {}
+    disconnect() {}
+    unobserve() {}
+  });
+});
+
+vi.mock('../../api/userService', async (importOriginal) => {
+  const original = await importOriginal<typeof userService>();
+  return {
+    ...original,
+    searchUsers: vi.fn(),
+  };
+});
+
+beforeEach(() => {
+  vi.mocked(userService.searchUsers).mockResolvedValue({
+    items: [{ id: 'prof-new', firstName: 'New', lastName: 'Professor' }],
+    totalCount: 1,
+  });
+});
 
 const subject: Subject = {
   id: '42',
@@ -35,13 +45,44 @@ function renderForm(overrides?: Partial<Subject>) {
   render(
     <SubjectEditForm
       subject={{ ...subject, ...overrides }}
-      professors={professors}
       onSave={onSave}
       onCancel={onCancel}
     />
   );
   return { onSave, onCancel };
 }
+
+describe('SubjectEditForm — professor seed item (UI §8.4)', () => {
+  it('always shows the current professor in the dropdown even when absent from search results', async () => {
+    const ue = userEvent.setup();
+    // Default mock returns prof-new only — the current professor (id: '7') is absent
+    renderForm();
+    const professorInput = screen.getByLabelText(/professor/i);
+    await ue.click(professorInput);
+    expect(await screen.findByRole('button', { name: 'Petar Petrović' })).toBeInTheDocument();
+  });
+});
+
+describe('SubjectEditForm — correct id on submit after combobox selection (UI §8.4)', () => {
+  it('submits the newly selected professor id, not the original or the query text', async () => {
+    const ue = userEvent.setup();
+    vi.mocked(userService.searchUsers).mockResolvedValue({
+      items: [{ id: 'prof-99', firstName: 'New', lastName: 'Professor' }],
+      totalCount: 1,
+    });
+    const { onSave } = renderForm();
+
+    const professorInput = screen.getByLabelText(/professor/i);
+    await ue.click(professorInput);
+    const option = await screen.findByRole('button', { name: 'New Professor' });
+    await ue.click(option);
+
+    await ue.click(screen.getByRole('button', { name: /save changes/i }));
+
+    expect(onSave).toHaveBeenCalledOnce();
+    expect(onSave.mock.calls[0][0]).toMatchObject({ ProfessorId: 'prof-99' });
+  });
+});
 
 describe('SubjectEditForm — SubjectCode field (UI §8.4)', () => {
   it('renders a "Subject Code" label and input', () => {
@@ -105,19 +146,10 @@ describe('SubjectEditForm — SubjectCode field (UI §8.4)', () => {
     expect(save).toBeDisabled();
   });
 
-  it('excludes other inactive professors but keeps the current (even if inactive)', () => {
-    render(
-      <SubjectEditForm
-        subject={{ ...subject, professorId: '7' }}
-        professors={[
-          { id: '7', firstName: 'Petar', lastName: 'Petrović', userRole: USER_ROLES.Professor, isDeleted: true, indexNumber: null } as unknown as User,
-          { id: '9', firstName: 'Inactive', lastName: 'Prof', userRole: USER_ROLES.Professor, isDeleted: true, indexNumber: null } as unknown as User,
-        ]}
-        onSave={vi.fn()}
-        onCancel={vi.fn()}
-      />
-    );
-    expect(screen.getByRole('option', { name: /petar petrović/i })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: /inactive prof/i })).toBeNull();
+  it('pre-populates the professor combobox from the subject prop', () => {
+    renderForm();
+    // The combobox input shows the current professor label before any interaction
+    const professorInput = screen.getByLabelText(/professor/i);
+    expect(professorInput).toHaveValue('Petar Petrović');
   });
 });

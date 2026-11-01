@@ -6,6 +6,7 @@ type SearchableComboboxProps<T> = {
   fetchPage: (query: string, page: number, signal: AbortSignal) => Promise<{ items: T[]; totalCount: number }>;
   getLabel: (item: T) => string;
   getId: (item: T) => string;
+  id?: string;
   placeholder?: string;
   isInvalid?: boolean;
 };
@@ -16,6 +17,7 @@ export default function SearchableCombobox<T>({
   fetchPage,
   getLabel,
   getId,
+  id,
   placeholder,
   isInvalid,
 }: SearchableComboboxProps<T>) {
@@ -127,6 +129,7 @@ export default function SearchableCombobox<T>({
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
       <input
+        id={id}
         type="text"
         className={`form-control${isInvalid ? ' is-invalid' : ''}`}
         placeholder={!isOpen ? placeholder : undefined}

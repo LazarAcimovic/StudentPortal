@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import { authenticatedRender } from '../../helpers/authenticatedRender';
 import { server } from '../../server';
@@ -9,6 +9,8 @@ import {
 } from '../../helpers/mswHandlers';
 import { APP_ROUTES } from '../../../config/constants';
 import { USER_ROLES } from '../../../shared/constants/constants';
+import * as userServiceModule from '../../../features/user/api/userService';
+import * as subjectServiceModule from '../../../features/subjects/api/subjectService';
 
 function makeUser(overrides: {
   id?: string;
@@ -191,5 +193,60 @@ describe('AdminDashboardPage — server-side pagination (26.7)', () => {
       await screen.findByText('Student Enrollments');
       expect(screen.queryByText(/Total:/)).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('AdminDashboardPage — no form prefetch (30.4)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function setupEmptyHandlers() {
+    server.use(
+      pagedUsersHandler(emptyPaged()),
+      pagedSubjectsHandler(emptyPaged()),
+      pagedEnrollmentsHandler(emptyPaged()),
+    );
+  }
+
+  it('opening SubjectCreateForm makes no getAllUsers or getAllSubjects call', async () => {
+    setupEmptyHandlers();
+    const getUsersSpy = vi.spyOn(userServiceModule, 'getAllUsers');
+    const getSubjectsSpy = vi.spyOn(subjectServiceModule, 'getAllSubjects');
+
+    const { user } = mountAdminDashboard();
+    await screen.findByText('Manage Users');
+
+    // Clear counts after the page's own initial fetch
+    getUsersSpy.mockClear();
+    getSubjectsSpy.mockClear();
+
+    await user.click(screen.getByRole('button', { name: /^subjects$/i }));
+    await screen.findByText('Manage Subjects');
+    await user.click(screen.getByRole('button', { name: /create new subject/i }));
+    await screen.findByRole('heading', { name: /create new subject/i });
+
+    expect(getUsersSpy).not.toHaveBeenCalled();
+    expect(getSubjectsSpy).not.toHaveBeenCalled();
+  });
+
+  it('opening EnrollmentCreateForm makes no getAllUsers or getAllSubjects call', async () => {
+    setupEmptyHandlers();
+    const getUsersSpy = vi.spyOn(userServiceModule, 'getAllUsers');
+    const getSubjectsSpy = vi.spyOn(subjectServiceModule, 'getAllSubjects');
+
+    const { user } = mountAdminDashboard();
+    await screen.findByText('Manage Users');
+
+    getUsersSpy.mockClear();
+    getSubjectsSpy.mockClear();
+
+    await user.click(screen.getByRole('button', { name: /^enrollments$/i }));
+    await screen.findByText('Student Enrollments');
+    await user.click(screen.getByRole('button', { name: /create new enrollment/i }));
+    await screen.findByRole('heading', { name: /create new enrollment/i });
+
+    expect(getUsersSpy).not.toHaveBeenCalled();
+    expect(getSubjectsSpy).not.toHaveBeenCalled();
   });
 });
