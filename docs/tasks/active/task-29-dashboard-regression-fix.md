@@ -33,9 +33,9 @@ Not in scope: the loop/crash fixes (29.2, 29.3); the refresh/auth path.
 Docs to update: Tech-Frontend §4, UI §11
 Verify: `npm run test -- ErrorBoundary`
 
-- [ ] A route-level `errorElement` (in `providers/router.tsx`) renders a friendly fallback instead of the raw React Router error page.
-- [ ] The fallback keeps the session intact — a render error does not clear auth or redirect to login.
-- [ ] The fallback offers a way back (reload / go home) and is covered by a unit test that throws inside a child and asserts the fallback renders.
+- [x] A route-level `errorElement` (in `providers/router.tsx`) renders a friendly fallback instead of the raw React Router error page.
+- [x] The fallback keeps the session intact — a render error does not clear auth or redirect to login.
+- [x] The fallback offers a way back (reload / go home) and is covered by a unit test that throws inside a child and asserts the fallback renders.
 - Commit: `feat(frontend): app-wide route error boundary`
 
 ---
