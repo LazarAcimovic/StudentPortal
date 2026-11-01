@@ -63,11 +63,11 @@ Not in scope: wiring into the admin forms (30.4); the endpoints.
 Docs to update: UI §11
 Verify: `npm run test -- SearchableSelect`
 
-- [ ] A Bootstrap-styled combobox: text input + scrollable results list, ~300 ms debounce before each request, 15 per page, appends the next page on scroll to the bottom.
-- [ ] Query change resets pagination and results; duplicate records are prevented when appending; loading, empty-result and error states are shown.
-- [ ] Stale responses cannot overwrite newer ones (abort or sequence-guard in-flight requests).
-- [ ] A **selected value stays displayed even when it is not in the current result page** (the component holds the chosen label/id independently of the search list).
-- [ ] Co-located unit tests cover debounce, append-without-duplicates, query-change cancellation, and the preserved-selection case.
+- [x] A Bootstrap-styled combobox: text input + scrollable results list, ~300 ms debounce before each request, 15 per page, appends the next page on scroll to the bottom.
+- [x] Query change resets pagination and results; duplicate records are prevented when appending; loading, empty-result and error states are shown.
+- [x] Stale responses cannot overwrite newer ones (abort or sequence-guard in-flight requests).
+- [x] A **selected value stays displayed even when it is not in the current result page** (the component holds the chosen label/id independently of the search list).
+- [x] Co-located unit tests cover debounce, append-without-duplicates, query-change cancellation, and the preserved-selection case.
 - Commit: `feat(ui): searchable combobox with debounced server search and infinite scroll`
 
 ---

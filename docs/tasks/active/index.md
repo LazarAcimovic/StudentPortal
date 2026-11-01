@@ -16,7 +16,7 @@ Progress counts **subtasks**, and a subtask counts as done only when every one o
 | 25 | Align the shipped UI with the rules settled in the consistency pass | 0/4 | not started | — | 22 (22c.7) | [task-25-ui-alignment.md](task-25-ui-alignment.md) |
 | 26 | Pagination across the dashboards | 8/8 | all done | — | 28 (28.4 reuses 26.1) | [task-26-pagination.md](task-26-pagination.md) |
 | 27 | Serbian translation (i18n) | 0/9 | not started | — | — | [task-27-i18n-serbian.md](task-27-i18n-serbian.md) |
-| 30 | Admin dropdowns: server-side search and pagination | 3/6 | subject search done; combobox primitive next | — | — | [task-30-admin-searchable-dropdowns.md](task-30-admin-searchable-dropdowns.md) |
+| 30 | Admin dropdowns: server-side search and pagination | 4/6 | combobox primitive done; wire admin dropdowns next | — | — | [task-30-admin-searchable-dropdowns.md](task-30-admin-searchable-dropdowns.md) |
 
 ## Order of work
 
