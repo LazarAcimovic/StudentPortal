@@ -45,7 +45,6 @@ const UsersTable: React.FC<UsersTableProps> = ({
         <table className="table table-striped table-hover align-middle">
           <thead>
             <tr>
-              <th>ID</th>
               <th>First Name</th>
               <th>Last Name</th>
               <th>Email</th>
@@ -57,7 +56,6 @@ const UsersTable: React.FC<UsersTableProps> = ({
           <tbody>
             {users.map((user) => (
               <tr key={user.id}>
-                <td>{user.id}</td>
                 <td>{user.firstName}</td>
                 <td>{user.lastName}</td>
                 <td className="text-break">{user.email}</td>
@@ -95,7 +93,6 @@ const UsersTable: React.FC<UsersTableProps> = ({
               <div className="text-muted small mb-1">
                 Role: {roleLabel(user.userRole)}
               </div>
-              <div className="text-muted small mb-2">ID: {user.id}</div>
               {user.id !== currentUserId && (
                 <button
                   className="btn btn-warning btn-sm w-100"

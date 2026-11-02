@@ -34,7 +34,6 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
         <table className="table table-striped table-hover align-middle">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Subject Name</th>
               <th>Subject Code</th>
               <th>ECTS</th>
@@ -46,7 +45,6 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
           <tbody>
             {subjects.map((subject) => (
               <tr key={subject.id}>
-                <td>{subject.id}</td>
                 <td>{subject.subjectName}</td>
                 <td>{subject.subjectCode}</td>
                 <td>{subject.ects}</td>
@@ -86,7 +84,6 @@ const SubjectsTable: React.FC<SubjectsTableProps> = ({
                 {subject.professorLastName}
               </div>
               <div className="text-muted small mb-1">ECTS: {subject.ects}</div>
-              <div className="text-muted small mb-2">ID: {subject.id}</div>
               <button
                 className="btn btn-warning btn-sm w-100"
                 onClick={() => onStartEdit(subject)}

@@ -31,7 +31,6 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
         <table className="table table-striped table-hover align-middle">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Student</th>
               <th>Subject</th>
               <th>Status</th>
@@ -41,7 +40,6 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
           <tbody>
             {enrollments.map((enrollment) => (
               <tr key={enrollment.id}>
-                <td>{enrollment.id}</td>
                 <td>
                   {enrollment.studentFirstName} {enrollment.studentLastName}
                 </td>
@@ -69,10 +67,9 @@ const EnrollmentsTable: React.FC<EnrollmentsTableProps> = ({
               <div className="text-break mb-1">
                 Subject: {enrollment.subjectName}
               </div>
-              <div className="text-muted small mb-1">
+              <div className="text-muted small">
                 Enrolled: {new Date(enrollment.enrolledAt).toLocaleDateString()}
               </div>
-              <div className="text-muted small">ID: {enrollment.id}</div>
             </div>
           </div>
         ))}
