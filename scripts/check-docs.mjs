@@ -272,6 +272,75 @@ for (const rel of PLAN_DOCS) {
   });
 }
 
+// --------------------------------------- sub-tag and Verify: gate contract (§9.1)
+
+// A subtask heading names exactly one sub-tag (AGENTS §9), and that sub-tag fixes the gate: the
+// suites that must be green before the diff (AGENTS §9.1). `Verify:` is the subtask's own narrow
+// proof command, so it may never name a suite outside that gate — a `Frontend-page` subtask
+// verifying with `dotnet test` means either the heading or the command is wrong, and an e2e
+// command in a single-stack subtask claims a sweep that subtask does not own.
+const SUITE_OF = [
+  ['backend', /dotnet\s+(?:test|build)\s+backend\//],
+  ['e2e', /npm\s+run\s+e2e\b|playwright\s+test/],
+  ['frontend', /npm\s+run\s+(?:test|build)\b|\bvitest\b|tsc\s+--noEmit/],
+];
+const STACK_OF_SUBTAG = {
+  'Backend-service': 'backend',
+  'Backend-endpoint': 'backend',
+  'Backend-migration': 'backend',
+  Seed: 'backend',
+  'Frontend-service': 'frontend',
+  'Frontend-component': 'frontend',
+  'Frontend-page': 'frontend',
+};
+const VALID_SUBTAGS = new Set([...Object.keys(STACK_OF_SUBTAG), 'UI', 'Docs', 'DevOps', 'Test', 'Refactor']);
+// A `Refactor` writes no new test, so its `Verify:` must still name something runnable.
+const TOOLING = /check-docs\.mjs|check-prompt\.mjs|tsc\s+--noEmit|npm\s+run\s+build/;
+const suitesIn = (text) => SUITE_OF.filter(([, re]) => re.test(text)).map(([name]) => name);
+
+for (const rel of PLAN_DOCS) {
+  const lines = docs.get(rel);
+  if (!lines) continue;
+  lines.forEach((text, i) => {
+    if (!/^####\s/.test(text) || NON_SUBTASK_HEADINGS.test(text)) return;
+
+    const m = /^####\s+(\S+)\s+[—–-]\s+([A-Za-z][A-Za-z-]*)\s*:/.exec(text);
+    if (!m) {
+      fail(rel, i + 1, 'subtask heading must read `#### <id> — <Sub-tag>: <title>` (AGENTS §9)');
+      return;
+    }
+    const subtag = m[2];
+    if (!VALID_SUBTAGS.has(subtag)) {
+      const bare = /^(Backend|Frontend)$/.test(subtag) ? ' — bare `Backend` and `Frontend` are never valid' : '';
+      fail(rel, i + 1, `"${subtag}" is not a sub-tag from the AGENTS §9 table${bare}`);
+      return;
+    }
+
+    let vLine = -1;
+    for (let k = i + 1; k < Math.min(i + 16, lines.length); k++) {
+      if (/^Verify:/.test(lines[k])) {
+        vLine = k;
+        break;
+      }
+    }
+    if (vLine === -1) return; // the mandatory-lines check already reported it
+
+    const verify = lines[vLine];
+    const found = suitesIn(verify);
+    const stack = STACK_OF_SUBTAG[subtag];
+    if (stack) {
+      for (const suite of found) {
+        if (suite !== stack) {
+          fail(rel, vLine + 1, `a \`${subtag}\` subtask verifies with the ${suite} suite — its gate is ${stack} only (AGENTS §9.1)`);
+        }
+      }
+    }
+    if (subtag === 'Refactor' && found.length === 0 && !TOOLING.test(verify)) {
+      fail(rel, vLine + 1, 'a `Refactor` subtask must name the suites that stay green in `Verify:` (AGENTS §9.1)');
+    }
+  });
+}
+
 // --------------------------------------------- task and campaign index integrity
 
 // Progress is counted in SUBTASKS, not individual boxes: a subtask is done when it has
