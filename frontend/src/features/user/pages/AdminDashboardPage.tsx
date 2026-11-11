@@ -31,7 +31,7 @@ const PAGE_SIZE_OPTIONS = [15, 20, 50];
 const DEFAULT_PAGE_SIZE = 15;
 
 const AdminDashboardPage: React.FC = () => {
-  const { currentUser } = useUserStore();
+  const currentUser = useUserStore((s) => s.currentUser);
   const [activeTab, setActiveTab] = useState("users");
 
   // Users tab

@@ -11,13 +11,11 @@ import axiosClient from "./shared/api/axiosClient";
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    currentUser,
-    setCurrentUser,
-    clearCurrentUser,
-    setHydrating,
-    isHydrating,
-  } = useUserStore();
+  const currentUser = useUserStore((s) => s.currentUser);
+  const setCurrentUser = useUserStore((s) => s.setCurrentUser);
+  const clearCurrentUser = useUserStore((s) => s.clearCurrentUser);
+  const setHydrating = useUserStore((s) => s.setHydrating);
+  const isHydrating = useUserStore((s) => s.isHydrating);
 
   useEffect(() => {
     registerNavigate(navigate);

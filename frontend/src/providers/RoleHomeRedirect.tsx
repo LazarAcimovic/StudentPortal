@@ -15,7 +15,7 @@ const DASHBOARD_BY_ROLE: Record<UserRole, string> = {
 };
 
 export default function RoleHomeRedirect() {
-  const { currentUser } = useUserStore();
+  const currentUser = useUserStore((s) => s.currentUser);
   const target = currentUser
     ? DASHBOARD_BY_ROLE[currentUser.userRole]
     : APP_ROUTES.AUTH_LOGIN;

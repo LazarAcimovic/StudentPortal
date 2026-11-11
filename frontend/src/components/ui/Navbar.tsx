@@ -6,7 +6,8 @@ import { APP_ROUTES } from "../../config/constants";
 import { logout } from "../../features/auth/api/authService";
 
 const Navbar: React.FC = () => {
-  const { currentUser, clearCurrentUser } = useUserStore();
+  const currentUser = useUserStore((s) => s.currentUser);
+  const clearCurrentUser = useUserStore((s) => s.clearCurrentUser);
   const navigate = useNavigate();
 
   const handleLogout = async () => {

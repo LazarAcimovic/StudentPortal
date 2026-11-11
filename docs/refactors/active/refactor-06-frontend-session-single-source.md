@@ -75,13 +75,13 @@ Not in scope: adding, removing or renaming a store member. No change to `useUser
 Docs to update: none — `Tech-Frontend.md` §2 already states the rule this subtask starts obeying.
 Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
 
-- [ ] `grep -rn "useUserStore()" frontend/src --include=*.tsx --include=*.ts | grep -v '\.test\.'` — record the 8 hits and their files in the commit message.
-- [ ] One commit per file, in this order: `providers/authGuard.tsx`, `components/shared/RoleGate.tsx`, `providers/RoleHomeRedirect.tsx`, `components/ui/Navbar.tsx`, `features/auth/pages/LoginPage.tsx`, `features/user/pages/MyProfilePage.tsx`, `features/user/pages/AdminDashboardPage.tsx`, `App.tsx` last — it reads five members and is the largest change.
-- [ ] Each read becomes its own selector call: `const currentUser = useUserStore((s) => s.currentUser);`. Actions are stable identities in Zustand, so selecting them individually is safe and does not need `useCallback`.
-- [ ] Do **not** return an object from a selector — that defeats the point by creating a new reference each render, the same failure mode D-033 describes for effect dependencies.
-- [ ] After the last file: `grep -c "useUserStore()"` outside tests is 0.
-- [ ] `src/store/user/useUserStore.test.ts` and the integration tests under `src/test/integration/auth/` green at every step.
-- [ ] Named suites green, typecheck clean.
+- [x] `grep -rn "useUserStore()" frontend/src --include=*.tsx --include=*.ts | grep -v '\.test\.'` — record the 8 hits and their files in the commit message.
+- [x] One commit per file, in this order: `providers/authGuard.tsx`, `components/shared/RoleGate.tsx`, `providers/RoleHomeRedirect.tsx`, `components/ui/Navbar.tsx`, `features/auth/pages/LoginPage.tsx`, `features/user/pages/MyProfilePage.tsx`, `features/user/pages/AdminDashboardPage.tsx`, `App.tsx` last — it reads five members and is the largest change.
+- [x] Each read becomes its own selector call: `const currentUser = useUserStore((s) => s.currentUser);`. Actions are stable identities in Zustand, so selecting them individually is safe and does not need `useCallback`.
+- [x] Do **not** return an object from a selector — that defeats the point by creating a new reference each render, the same failure mode D-033 describes for effect dependencies.
+- [x] After the last file: `grep -c "useUserStore()"` outside tests is 0.
+- [x] `src/store/user/useUserStore.test.ts` and the integration tests under `src/test/integration/auth/` green at every step.
+- [x] Named suites green, typecheck clean.
 - Commit: `refactor(frontend): slice-selector store reads in <file>`
 
 ---

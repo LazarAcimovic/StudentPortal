@@ -10,7 +10,8 @@ import { AXIOS_CANCELED_ERROR_CODE } from '../../../shared/constants/constants';
 import type { User } from '../../../shared/models/User';
 
 const MyProfilePage: React.FC = () => {
-  const { currentUser, setCurrentUser } = useUserStore();
+  const currentUser = useUserStore((s) => s.currentUser);
+  const setCurrentUser = useUserStore((s) => s.setCurrentUser);
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

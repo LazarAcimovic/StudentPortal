@@ -3,7 +3,8 @@ import { useUserStore } from '../store/user/useUserStore';
 import { APP_ROUTES } from '../config/constants';
 
 export default function AuthGuard() {
-  const { currentUser, isHydrating } = useUserStore();
+  const currentUser = useUserStore((s) => s.currentUser);
+  const isHydrating = useUserStore((s) => s.isHydrating);
 
   if (isHydrating) {
     return null;

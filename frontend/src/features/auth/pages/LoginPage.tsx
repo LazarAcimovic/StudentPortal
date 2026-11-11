@@ -21,7 +21,8 @@ const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(LOGIN_INITIAL_IS_SUBMITTING);
 
   const navigate = useNavigate();
-  const { currentUser, setCurrentUser } = useUserStore();
+  const currentUser = useUserStore((s) => s.currentUser);
+  const setCurrentUser = useUserStore((s) => s.setCurrentUser);
 
   if (currentUser) {
     if (currentUser.userRole === USER_ROLES.Admin) return <Navigate to={APP_ROUTES.ADMIN_DASHBOARD} replace />;
