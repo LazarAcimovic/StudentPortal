@@ -66,10 +66,10 @@ Deployment work reads `Tech.md` §3 plus `PRD.md` §8. A localized bug fix insid
 
 `PRD.md`, `Tech.md`, `Tech-Backend.md`, `Tech-Frontend.md` and `UI.md` each carry a **Section index** listing headings only — deliberately with no line numbers (D-011). Never Read these files whole. The flow is:
 
-1. `grep -n "^## " docs/<file>.md` — this gives you live, correct line numbers. For a subsection, grep -n "^### " docs/<file>.md to locate it the same way.
-2. Pick the section(s) your task touches; the next heading's line number minus one is the end of yours.
+1. A **section map** for all five files is already in context: the `SessionStart` hook in `.claude/settings.json` runs `scripts/section-map.mjs`, which prints one row per `## ` heading as `<first line>-<last line> ## <heading>`, computed from the files at session start (per D-037). Take your range straight off it.
+2. No map in context — it was cleared, or the hook did not run? `grep -n "^## " docs/<file>.md` gives the same live numbers, and the next heading's line number minus one is the end of your section. Either way, a `### ` subsection still needs `grep -n "^### " docs/<file>.md` inside the parent range.
 3. `Read` with `offset` and `limit` for just that range.
-4. Multiple non-adjacent sections → multiple targeted Reads.
+4. **Several sections → several `Read` calls in ONE message, never one call per message** (per D-036). §2's `Loaded:` echo names a *set* of sections, so load the set together, and send any other independent reads, greps and globs in the same message. An extra tool call is nearly free; an extra message re-sends the entire conversation.
 
 Never trust a line number written inside a document; grep for the heading instead. If you ever see a stored line range anywhere, treat it as a stale hint and verify the heading before relying on it.
 
@@ -213,6 +213,8 @@ Verify:         <the exact command that must pass>
 It runs from the pre-commit hook (`.githooks/pre-commit`, enabled with `git config core.hooksPath .githooks`). Run it yourself before you commit documentation. If it fails, fix the documents — do not bypass the hook.
 
 `node scripts/check-prompt.mjs --reference` does the same for `docs/old/prompt.md` — the bootstrap prompt this system was generated from. It checks the prompt against itself (section numbering, its file list against its own sections, placeholders that are used but never explained, appendix and `§` cross-references) and, with `--reference`, against this repo (every file it mandates exists, its `AGENTS.md` seed matches the live one, and twenty invariants are present in both). It runs from the same hook on every documentation commit, because a git-ignored file can never stage a change and so could never trigger its own check. It exits 0 when the prompt is absent.
+
+`scripts/section-map.mjs` is the third script and the only one that validates nothing: it prints the live `## ` section map that §3 step 1 reads its line numbers from, and `.claude/settings.json` runs it as a `SessionStart` hook. Run it with `--plain` to see what an agent sees. Add or rename a `##` section and the next session picks it up with no action from you — which is the whole reason the map is computed instead of stored (D-011, D-037). It is not part of the pre-commit hook; nothing it prints can fail a commit.
 
 ---
 
