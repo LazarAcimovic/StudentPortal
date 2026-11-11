@@ -139,12 +139,12 @@ Not in scope: allowing a non-admin to change their own email, which `PRD.md` §6
 Docs to update: DB §2.1 (the normalisation rule and the index form), PRD §6, plus a new `docs/Decisions.md` entry (next free id) recording that email identity is case-insensitive and where normalisation happens.
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter AdminUserCrud`
 
-- [ ] **Subtask 0 first:** the rule does not exist in any document yet. Write it into `DB.md` §2.1 and `PRD.md` §6 and append the Decisions entry, in its own `docs:` commit, before any code (AGENTS §0, D-010).
-- [ ] Decide and record one mechanism: a `citext` column, or a functional unique index on `lower("Email")` plus normalisation at the single write boundary. Do not do both.
-- [ ] A `Backend-migration` commit of its own carries the index change and the `DB.md` §5 row.
-- [ ] Normalise on create, on admin update and on self-service profile update; `FindByEmailAsync` matches the normalised form.
-- [ ] Check the existing rows for case-colliding pairs before applying the unique index, exactly as in R03.3.
-- [ ] Integration tests: creating `A@uni.edu` then `a@uni.edu` returns `409`; logging in with either casing succeeds.
+- [x] **Subtask 0 first:** the rule does not exist in any document yet. Write it into `DB.md` §2.1 and `PRD.md` §6 and append the Decisions entry, in its own `docs:` commit, before any code (AGENTS §0, D-010). (Commit `docs: case-insensitive email identity (D-042)`.)
+- [x] Decide and record one mechanism: a `citext` column, or a functional unique index on `lower("Email")` plus normalisation at the single write boundary. Do not do both. (Chose `citext` — recorded in D-042. No `lower()` index and no per-write normalisation.)
+- [x] A `Backend-migration` commit of its own carries the index change and the `DB.md` §5 row. (Commit `feat(db): case-insensitive email via citext (D-042)`; `CaseInsensitiveEmail` migration, DB §5 row 8.)
+- [x] Normalise on create, on admin update and on self-service profile update; `FindByEmailAsync` matches the normalised form. (Not needed with `citext`: the column compares case-insensitively, so `FindByEmailAsync`, the admin duplicate check and login are all CI with no code change — the mechanism D-042 chose in place of normalisation.)
+- [x] Check the existing rows for case-colliding pairs before applying the unique index, exactly as in R03.3. (`seed.sql` has no case-colliding emails; the fixture `Migrate()` converts the column cleanly.)
+- [x] Integration tests: creating `A@uni.edu` then `a@uni.edu` returns `409`; logging in with either casing succeeds. (`AdminCreateUser_EmailDifferingOnlyInCase_Returns409`, `Login_EmailCasingDiffersFromStored_Succeeds`.)
 - Commit: `feat(backend): case-insensitive email identity`
 
 ---

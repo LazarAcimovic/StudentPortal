@@ -52,6 +52,20 @@ public class LoginTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task Login_EmailCasingDiffersFromStored_Succeeds()
+    {
+        var client = CreateAnonymousClient();
+
+        var response = await client.PostAsJsonAsync("/api/Account/Login",
+            new LoginRequestDto { Email = SeedUsers.Admin.Email.ToUpperInvariant(), Password = SeedUsers.Password });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK,
+            "email identity is case-insensitive (D-042): login accepts any casing");
+        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        body!.Id.Should().Be(SeedUsers.Admin.Id);
+    }
+
+    [Fact]
     public async Task Login_OversizedPassword_RejectedWithoutPbkdf2Work()
     {
         var client = CreateAnonymousClient();

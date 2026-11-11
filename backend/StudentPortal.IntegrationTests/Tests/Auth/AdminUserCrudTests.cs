@@ -23,6 +23,38 @@ public class AdminUserCrudTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task AdminCreateUser_EmailDifferingOnlyInCase_Returns409()
+    {
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+
+        var first = new AdminCreateUserDto
+        {
+            FirstName = "Case",
+            LastName = "Upper",
+            Email = "CaseUser@uni.edu",
+            Password = "Password123!",
+            IndexNumber = "CASE-UP-1",
+            UserRole = RoleEnum.Student,
+        };
+        (await client.PostAsJsonAsync("/api/User", first)).StatusCode
+            .Should().Be(HttpStatusCode.Created);
+
+        var second = new AdminCreateUserDto
+        {
+            FirstName = "Case",
+            LastName = "Lower",
+            Email = "caseuser@uni.edu",
+            Password = "Password123!",
+            IndexNumber = "CASE-LO-1",
+            UserRole = RoleEnum.Student,
+        };
+        var response = await client.PostAsJsonAsync("/api/User", second);
+
+        ((int)response.StatusCode).Should().Be(409,
+            "email identity is case-insensitive (D-042): a case-only duplicate is a conflict");
+    }
+
+    [Fact]
     public async Task AdminUpdateUser_StudentAllFields_Succeeds()
     {
         var client = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
