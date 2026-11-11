@@ -32,16 +32,18 @@ Users ──< RefreshTokens
 | `Id`              | `uuid`           | NO   |                      | PK                                     |
 | `FirstName`       | `varchar(50)`    | NO   |                      |                                        |
 | `LastName`        | `varchar(50)`    | NO   |                      |                                        |
-| `Email`           | `varchar(100)`   | NO   |                      | UQ index                               |
+| `Email`           | `citext`         | NO   |                      | UQ index; **case-insensitive** (D-042) |
 | `UserPassword`    | `varchar(255)`   | NO   |                      | PBKDF2-SHA512 hash (kept column name)  |
 | `IndexNumber`     | `varchar(100)`   | YES  |                      | ASCII; only students have one          |
 | `IsDeleted`       | `boolean`        | NO   | `false`              | Soft delete                            |
 | `UserRole`        | `varchar(50)`    | NO   |                      | `Student` / `Professor` / `Admin`      |
 | `CreatedAt`       | `timestamp`      | YES  | `CURRENT_TIMESTAMP`  |                                        |
 
-**Indexes:** `UQ Users_Email (Email)`.
+**Indexes:** `UQ Users_Email (Email)` — case-insensitive, because `Email` is `citext` (D-042).
 
-**Changes:** no schema change in this round. Password hashing algorithm stays. The column name `UserPassword` is kept for backwards compat with existing seed data; the entity property may be renamed to `PasswordHash` in the C# model with a `[Column("UserPassword")]` attribute.
+**Email identity (per D-042).** `Email` is a `citext` column (the `citext` extension is enabled by the model), so the unique index and every lookup compare without regard to case — `A@uni.edu` and `a@uni.edu` are one account. No per-write normalisation is performed; `citext` handles it at the column. `citext` has no length modifier, so the 100-character cap is enforced by the FluentValidation validators rather than the column type.
+
+**Changes:** Password hashing algorithm stays. The column name `UserPassword` is kept for backwards compat with existing seed data; the entity property may be renamed to `PasswordHash` in the C# model with a `[Column("UserPassword")]` attribute.
 
 ---
 
