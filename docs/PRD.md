@@ -361,6 +361,7 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 - Student-only endpoints enforce the Student role plus a service-level ownership check (student can only touch their own enrollments, grades, and appeals).
 - Self-service profile edit (`PUT /api/Account/profile`) is role-agnostic authenticated. Server guard: non-Admin callers cannot change their own `Email`; attempting to send a different Email returns `403`.
 - Password change (`POST /api/Account/change-password`) requires the correct current password. On success, every refresh row for the user is revoked (sign-out-everywhere, including the current session), the SPA is redirected to `/login`, and the user re-authenticates with the new password.
+- **Authority change revokes sessions (per D-043).** When an admin changes a user's role or soft-deletes/deletes them, every refresh row for that user is revoked — the same sign-out-everywhere a password change triggers — so the user cannot mint fresh access tokens via `/Refresh`. The `role` claim inside an already-issued access token still survives until it expires (≤15 minutes, the documented residual); the 7-day refresh window is closed immediately.
 - Admin cannot soft-delete himself or demote himself; backend returns `403` even if the frontend UI is bypassed.
 - Mass-assignment is impossible: incoming DTOs for self-service flows do not expose role, soft-delete flag, or password-hash fields.
 - Access token lives in an **httpOnly, Secure, SameSite=Strict** cookie set by the server. The SPA never reads a token in JS.
