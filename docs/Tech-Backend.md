@@ -40,7 +40,9 @@ backend/
     Dtos/                             request + response shapes
     Validators/                       FluentValidation AbstractValidators
     Profiles/                         AutoMapper profiles
-    Handlers/                         PasswordHashHandler · PagingHelper
+    Exceptions/                       typed business exceptions (NotFound / Forbidden / Validation / Conflict)
+    Handlers/                         GlobalExceptionHandler · PasswordHashHandler · PagingHelper · ControllerCallerExtensions
+    TestSupport/                      ControllableTimeProvider + /api/__test__ endpoints (e2e only, four-layer guard — §6)
     Migrations/                       EF migrations + model snapshot + seed.sql
     Properties/launchSettings.json    dev launch URLs
   StudentPortal.Tests/                unit tests (xUnit + NSubstitute + FluentAssertions)

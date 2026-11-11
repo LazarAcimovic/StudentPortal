@@ -134,9 +134,9 @@ Not in scope: code.
 Docs to update: Tech-Backend §1, Tech-Backend §6
 Verify: `node scripts/check-docs.mjs`
 
-- [ ] Layout block regenerated from a real directory listing of `backend/`.
-- [ ] `Exceptions/` appears in the block — `Tech-Backend.md` §1 does not list it today, although the folder exists.
-- [ ] `TestSupport/` appears in the block for the same reason.
-- [ ] The "No per-controller `catch (Exception ex)`" line in §6 now describes the tree rather than contradicting it, and the "two known deviations" paragraph is trimmed to whatever is still true.
-- [ ] `node scripts/check-docs.mjs` passes.
+- [x] Layout block regenerated from a real directory listing of `backend/`.
+- [x] `Exceptions/` appears in the block — `Tech-Backend.md` §1 does not list it today, although the folder exists.
+- [x] `TestSupport/` appears in the block for the same reason.
+- [x] The "No per-controller `catch (Exception ex)`" line in §6 now describes the tree rather than contradicting it, and the "two known deviations" paragraph is trimmed to whatever is still true. (Verified: zero `catch (Exception`/`StatusCode(500` in `Controllers/` after R02.3, so the §6 rule now matches; both deviations — `EscalationService` threading `DateTime now`, `AuthService`/`TokenService` on `DateTime.UtcNow` — are still true in the tree, so the paragraph stands unchanged.)
+- [x] `node scripts/check-docs.mjs` passes.
 - Commit: `docs(tech): refresh the backend layout block after the error-contract campaign`

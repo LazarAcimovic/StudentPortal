@@ -12,7 +12,7 @@ Progress counts subtasks; a subtask counts as done only when every one of its bo
 
 | Campaign | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 02 | Backend error contract and observability | 5/6 | R02.6; start here — 03 and 04 throw its typed exceptions | — | 03, 04 | [refactor-02-backend-error-contract.md](refactor-02-backend-error-contract.md) |
+| 02 | Backend error contract and observability | 6/6 | all subtasks done — ready to archive | — | 03, 04 | [refactor-02-backend-error-contract.md](refactor-02-backend-error-contract.md) |
 | 03 | Authentication system hardening | 1/9 | R03.2–R03.9 | 02 | — | [refactor-03-backend-auth-hardening.md](refactor-03-backend-auth-hardening.md) |
 | 04 | Endpoint authorization and data exposure | 0/8 | all; R04.1 and R04.2 close the student-email exposure | 02 | — | [refactor-04-backend-access-control.md](refactor-04-backend-access-control.md) |
 | 05 | Data access: query shape, indexes and the crash order | 0/7 | all; capture the baseline plans before R05.1 | — | — | [refactor-05-backend-data-access-scale.md](refactor-05-backend-data-access-scale.md) |
