@@ -193,4 +193,4 @@ Two sibling test projects:
 
 **Anti-patterns.** Hardcoded ports, unpinned image tags, `postgres:latest`, a shared container with no reset, mocking the database, EF InMemory, infrastructure code inside test bodies, hand-minted JWTs, wall-clock sleeps (`Thread.Sleep`, `await Task.Delay`) in time-dependent tests.
 
-**Running.** Unit: `dotnet test backend/StudentPortal.Tests` (no Docker). Integration: `dotnet test backend/StudentPortal.IntegrationTests` (requires Docker Desktop; the first run pulls `postgres:17`).
+**Running.** The commands are the gate table in `AGENTS.md` §9.1 — the unit suite needs no Docker, the integration suite requires Docker Desktop and pulls `postgres:17` on its first run. Narrow a run with `--filter <domain>` while you are in Red and Green; the gate itself runs unfiltered.

@@ -377,4 +377,4 @@ Vitest + jsdom + React Testing Library + user-event + jest-dom. MSW 2 is the HTT
 
 **MSW setup.** `src/test/server.ts` with `onUnhandledRequest: 'error'`. Handlers emit `Set-Cookie` headers so axios plus jsdom cookie-jar emulation cover the full cookie plumbing. Vitest globals (`describe`, `it`, `expect`, `vi`) are configured, not imported.
 
-**Running.** `npm run test` from `frontend/` (equivalent to `vitest`). jsdom and MSW are configured in `vitest.config.ts`.
+**Running.** The command is the gate table in `AGENTS.md` §9.1 — one run covers both layouts above (it is `vitest` underneath). jsdom and MSW are configured in `vitest.config.ts`. Narrow a run with `npm run test -- <pattern>` while you are in Red and Green; the gate itself runs unfiltered, and a `Refactor` adds `npx tsc --noEmit`.

@@ -16,6 +16,7 @@
 | 2 | Database tooling |
 | 3 | Deployment (Render — scaffolding only) |
 | 4 | What's intentionally simple |
+| 5 | End-to-end suite |
 
 ---
 
@@ -57,7 +58,7 @@
 
 - `@playwright/test 1.64.1` — Playwright + Chromium e2e suite, in its own project under `e2e/` (task 22d). Drives the real frontend, the backend in its `e2e` environment, and a Dockerized `postgres:17`.
 - `dotenv 16.6.1` — loads `e2e/.env.e2e` (ports, URLs, test-mode secret, seeded credentials).
-- Run from `e2e/`: `npm run e2e`. Requires Docker Desktop and `npx playwright install chromium`. See `e2e/README.md`.
+- When it runs, what it needs, and why it is never part of a per-subtask gate: §5.
 
 ### Explicitly NOT installed (per user direction)
 
@@ -104,3 +105,22 @@
 - Pagination, caching, optimistic updates: not implemented.
 - Logging: default ASP.NET console logging. Serilog is not added.
 - Overdue and escalation states are computed on read. No background jobs, no schedulers, no message queues.
+
+---
+
+## 5. End-to-end suite
+
+One Playwright suite under `e2e/` drives the whole stack at once — the React frontend, the backend in its `e2e` environment, and a Dockerized `postgres:17`. **There is no backend e2e and no frontend e2e:** the suite cannot be scoped to one stack, so the only decision is whether to run it at all. It is serial by construction (`fullyParallel: false`, `workers: 1`) because the backend clock and the database are one shared service; it needs Docker Desktop plus `npx playwright install chromium`; and it binds ports 7253, 5173 and 55432, so it conflicts with a dev backend of your own. `e2e/README.md` is the operator guide (prerequisites, `--grep` tags, `E2E_MANAGE_SERVERS=false`); the gate command is in `AGENTS.md` §9.1.
+
+**When to run it.** Never as part of a sub-tag's gate (`AGENTS.md` §9.1). Run it when, and only when, at least one of these holds:
+
+1. **Boot and wiring** — the subtask touched `Program.cs` startup, DI registration or middleware order, the cookie pipeline (`sp_access` / `sp_refresh`, refresh-and-retry on 401), CORS, the Vite dev proxy, the `TestSupport` folder, `/api/__test__/*`, or anything under `e2e/`.
+2. **A change crossing the wire** — one subtask changed both sides of an HTTP contract: a DTO field, a route, a status code, a cookie.
+3. **Clock- or data-shaped rules** — a migration, `seed.sql`, or a rule keyed on time: the 7-day window, the second-appeal window, the 24 h undo-deny window, day-8 auto-finalize, escalation Scenario A or B.
+4. **The test being written is an e2e test** — sub-tag `Test`, with a spec under `e2e/tests/`.
+5. **A sweep** — a task's final report subtask, the `AGENTS.md` §4 archival gate, or a pre-deploy run (§3).
+6. **The user asks.**
+
+In cases 2–4, run the narrowest tag that covers the change (`npm run e2e -- --grep boundary`). Case 1 runs the whole suite, because the harness itself is what changed.
+
+**Why that list, and not "whenever you feel unsure."** Each case names a seam the cheaper suites mock or bypass on purpose. MSW replaces the network for frontend tests, so a contract change is invisible there. `WebApplicationFactory<Program>` runs the pipeline in-process, so boot order, Kestrel, CORS and the dev proxy are not exercised. And `FakeTimeProvider` lives inside the test host, so it cannot move a *running* server's clock — which is the entire reason `/api/__test__/advance-clock` exists (`Tech-Backend.md` §6). Outside those seams the suite re-proves what `StudentPortal.IntegrationTests` already proved against real HTTP and a real Postgres, and what the frontend integration tests already proved through the real router (per D-038).

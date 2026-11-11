@@ -34,7 +34,7 @@ Read `docs/Overview.md` first, every time. It is short on purpose: one paragraph
 
 ## 2. Pick documents by sub-tag, not by habit
 
-Your subtask's sub-tag determines the **minimum** you must read. This is a floor, not a suggestion.
+Your sub-tag decides two things: **what to read** (the table below) and **what to run** (the gate in §9.1). The reads are a floor, not a suggestion.
 
 | Sub-tag | Minimum reads |
 |---|---|
@@ -54,9 +54,10 @@ Your subtask's sub-tag determines the **minimum** you must read. This is a floor
 
 ```
 Loaded: PRD §4.8, UI §7.6, Tech-Frontend §1, Tech-Frontend §3
+Gate:   npm run test (frontend) — §9.1
 ```
 
-That echo is the whole point: it turns "I forgot to read PRD" from an invisible failure into a visible one. A subtask whose `Rules:` line names a section you did not load is not started correctly — go back and load it.
+That echo is the whole point: it turns "I forgot to read PRD" from an invisible failure into a visible one. A subtask whose `Rules:` line names a section you did not load is not started correctly — go back and load it. The `Gate:` line does the same for the suites: declaring it before you write code means a wrong gate is caught before you have booted anything.
 
 Deployment work reads `Tech.md` §3 plus `PRD.md` §8. A localized bug fix inside one existing file still reads the PRD section that owns the behaviour you are touching; the architecture documents are what you may skip when the pattern is already visible in the code around you.
 
@@ -118,7 +119,7 @@ Structural work that changes no behaviour is a **campaign**, tracked exactly lik
 - Campaigns live as **one file per campaign** in `docs/refactors/active/`. Read `docs/refactors/active/index.md` first, then only the campaign file you are working on.
 - Campaigns have their own number sequence — `refactor-01`, `refactor-02` — independent of task numbers. A new campaign follows `docs/refactors/TEMPLATE.md`. Copy it; do not improvise the shape, and do not reuse the task template.
 - Subtask ids are `RNN.M` (`#### R01.3 — Refactor: …`), so they grep the same way as task subtasks.
-- **A campaign changes structure only.** Its sub-tag is `Refactor`, which means **no new test** (§9): the existing suites are the safety net, and `Verify:` names the suites that must *stay* green. `Rules:` points at the `Tech*.md` section defining the target structure, never at PRD behaviour — nothing behavioural changes. If you find a bug while moving code, leave it and open a box on the task that owns it.
+- **A campaign changes structure only.** Its sub-tag is `Refactor`, which means **no new test** (§9): the existing suites are the safety net, and `Verify:` names the suites that must *stay* green — §9.1 picks them from the paths in your diff. `Rules:` points at the `Tech*.md` section defining the target structure, never at PRD behaviour — nothing behavioural changes. If you find a bug while moving code, leave it and open a box on the task that owns it.
 - Every campaign records a **baseline** before its first subtask. "No behaviour change" is only checkable against a recorded before.
 - **Archival gate.** A campaign may be archived only when every subtask is `- [x]`, the baseline table's "After" column is filled in, the named suites are green, and any `Tech*.md` layout block it touched carries a fresh `verified at <sha>`. Then, in one commit: **move the whole file** to `docs/refactors/done/YYYY-MM-<slug>.md` and remove its row from `docs/refactors/active/index.md`.
 
@@ -166,7 +167,7 @@ Every implementation subtask follows red-green-refactor-verify:
 1. **Red** — write a failing test for the behaviour this subtask adds. Run it; confirm it fails for the right reason.
 2. **Green** — write the minimum code that makes it pass. Nothing more.
 3. **Refactor** — clean up without changing behaviour. Keep tests green.
-4. **Verify** — run the full suite for the touched layer. All green before committing.
+4. **Verify** — run the gate for your sub-tag (§9.1): those suites, unfiltered, and nothing else. All green before committing.
 
 Backend conventions: `Tech-Backend.md` §7. Frontend conventions: `Tech-Frontend.md` §7. Load the relevant one before writing tests.
 
@@ -185,7 +186,7 @@ Each subtask body carries a mandatory `Rules:` line naming the PRD / UI / DB / T
 | `Seed` | `seed.sql` | Integration test against the real DB |
 | `UI` | `UI.md` only — no code changes | None required |
 | `Test` | tests only (coverage backfill, e2e, hardening) | the task body says which |
-| `Refactor` | behaviour-preserving restructuring | **No new test.** Existing suites must stay green, and you must say which you ran |
+| `Refactor` | behaviour-preserving restructuring | **No new test.** Existing suites must stay green — §9.1 picks them by path |
 | `Docs` | documentation only | Exempt |
 | `DevOps` | CI, hooks, scripts, local tooling | Exempt |
 
@@ -203,6 +204,41 @@ Verify:         <the exact command that must pass>
 ```
 
 `Not in scope` is what keeps a subtask from growing. `Verify` is what stops you inventing your own definition of done.
+
+### 9.1 Which suites must be green
+
+Your sub-tag decides the gate. Run it unfiltered before you show the diff — it, and nothing else.
+
+| Sub-tag | Gate |
+|---|---|
+| `Backend-service` · `Backend-endpoint` · `Backend-migration` | `dotnet test backend/StudentPortal.Tests` **and** `dotnet test backend/StudentPortal.IntegrationTests` |
+| `Seed` | `dotnet test backend/StudentPortal.IntegrationTests` |
+| `Frontend-service` · `Frontend-component` · `Frontend-page` | `npm run test` from `frontend/` — one run covers the co-located unit tests **and** `src/test/integration` |
+| `UI` | none — no code changed |
+| `Docs` | `node scripts/check-docs.mjs` |
+| `Refactor` · `DevOps` · `Test` | by path — the table below |
+
+**Three sub-tags do not name a stack.** For `Refactor`, `DevOps` and `Test` the gate comes from the paths you changed, and `git status --porcelain` is the whole lookup — not `git diff`, which cannot see the untracked files a refactor creates when it splits one file into three:
+
+| Paths in `git status --porcelain` | Gate |
+|---|---|
+| `backend/**` | `dotnet test backend/StudentPortal.Tests` **and** `dotnet test backend/StudentPortal.IntegrationTests` |
+| `frontend/**` | `npm run test` **and** `npx tsc --noEmit`, both from `frontend/` |
+| `e2e/**` | `npm run e2e` from `e2e/` — the whole suite, because the harness itself changed |
+| only `docs/**` or `scripts/**` | `node scripts/check-docs.mjs` |
+| two or more of the above | every gate that matched |
+
+One line reduces it to the row you need:
+
+```bash
+git status --porcelain | cut -c4- | cut -d/ -f1 | sort -u
+```
+
+**`Verify:` is not this table.** `Verify:` is the one narrow command that proves this subtask's own behaviour — `--filter Appeals`, `npm run test -- GradePanel` — run during Red and Green. The gate is the stack's suites run unfiltered before the diff. Both run; neither replaces the other, and `scripts/check-docs.mjs` fails a commit whose `Verify:` names a suite outside its sub-tag's gate.
+
+**Never cross the stack on a hunch.** A backend subtask does not run the frontend suite, and a frontend subtask does not run the backend suites. One exception: a subtask that changes a DTO field, route, status code or cookie the *other* stack consumes is not single-stack — run both gates and the e2e suite. Its `Not in scope:` line should normally have prevented that from happening at all.
+
+**The e2e suite is never in a sub-tag's gate**, only in the `e2e/**` path row. `Tech.md` §5 owns the six cases that call for it. The full four-suite sweep belongs to a task's final report subtask, to the §4 archival gate and to a pre-deploy run — not to every commit (per D-038).
 
 ---
 
