@@ -187,9 +187,9 @@ Not in scope: code.
 Docs to update: Tech-Backend §1, Tech-Backend §4, DB §2.7, README
 Verify: `node scripts/check-docs.mjs`
 
-- [ ] Every number in `Tech-Backend.md` §4 and `DB.md` §2.7 matches the tree, each defined in exactly one place.
-- [ ] `.env.example` lists every variable `Tech.md` §3 calls required — it is missing `JwtConfig__Issuer`, `JwtConfig__Audience` and `ASPNETCORE_ENVIRONMENT` today.
-- [ ] `README.md`'s accepted-limitation paragraph still matches `PRD.md` §6 after this campaign, and names anything this campaign deliberately left open.
-- [ ] Backend layout block carries a fresh `verified at <sha>`.
-- [ ] `node scripts/check-docs.mjs` passes.
+- [x] Every number in `Tech-Backend.md` §4 and `DB.md` §2.7 matches the tree, each defined in exactly one place. (§4: `Max-Age=900`/15 min, `Max-Age=604800`/7 days; §2.7: `varchar(128)`, `varchar(45)`, 30-day retention, cap 10 — all match `TokenLifetimeOptions` and the model.)
+- [x] `.env.example` lists every variable `Tech.md` §3 calls required — it is missing `JwtConfig__Issuer`, `JwtConfig__Audience` and `ASPNETCORE_ENVIRONMENT` today. (All three added.)
+- [x] `README.md`'s accepted-limitation paragraph still matches `PRD.md` §6 after this campaign, and names anything this campaign deliberately left open. (Added the access-token-revocation residual: a demoted/deleted/logged-out user keeps a usable access token until it expires, ≤15 min — D-043, D-044.)
+- [x] Backend layout block carries a fresh `verified at <sha>`. (`Layout verified at 33cffa1`.)
+- [x] `node scripts/check-docs.mjs` passes.
 - Commit: `docs: reconcile the auth sections with the tree after refactor-03`

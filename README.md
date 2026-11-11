@@ -378,7 +378,7 @@ Scoped as a junior / learning project, with the boundaries written down rather t
 - **Validation at the edge** through FluentValidation, returning `400 ValidationProblemDetails` with no controller code.
 - **Opaque errors.** One exception middleware returns `ProblemDetails { title, traceId }`; details go to the log, never to the client.
 
-**Known and accepted limitation.** Password hashing is PBKDF2-SHA512 at **100 000 iterations**, which is *below* OWASP 2023 guidance (600 000 for PBKDF2-SHA256). It is retained deliberately for this project and is not suitable as-is for production. Also explicitly out of scope: rate limiting, account lockout, CSRF middleware beyond `SameSite=Strict`, password-reset and email flows, and audit tables. See PRD §6 and §10.
+**Known and accepted limitation.** Password hashing is PBKDF2-SHA512 at **100 000 iterations**, which is *below* OWASP 2023 guidance (600 000 for PBKDF2-SHA256). It is retained deliberately for this project and is not suitable as-is for production. Also explicitly out of scope: rate limiting, account lockout, CSRF middleware beyond `SameSite=Strict`, password-reset and email flows, and audit tables. **Access-token revocation is also out of scope:** a JWT stays valid until it expires, so a user who is demoted, deleted, or logged out keeps a usable access token for up to its 15-minute lifetime — their refresh rows are revoked at once (D-043, D-044), which bounds the exposure to that one access-token lifetime. See PRD §6 and §10.
 
 ---
 
