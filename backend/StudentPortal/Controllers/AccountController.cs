@@ -13,6 +13,12 @@ namespace StudentPortal.Controllers
     [Authorize]
     public class AccountController : ControllerBase
     {
+        // Reject an oversized auth payload before model binding. A login or
+        // change-password body is a few hundred bytes; 8 KB is generous headroom and
+        // removes the "hand the server a 1 MB password" PBKDF2-amplification surface
+        // on top of the per-field MaximumLength(128) bound (Tech-Backend §5, R03.5).
+        private const long AuthBodyByteLimit = 8 * 1024;
+
         private readonly IAuthService _authService;
         private readonly IUserService _userService;
         private readonly IWebHostEnvironment _env;
@@ -32,6 +38,7 @@ namespace StudentPortal.Controllers
 
         [AllowAnonymous]
         [HttpPost("Login")]
+        [RequestSizeLimit(AuthBodyByteLimit)]
         public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -111,6 +118,7 @@ namespace StudentPortal.Controllers
         }
 
         [HttpPost("change-password")]
+        [RequestSizeLimit(AuthBodyByteLimit)]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
             if (this.CallerId() is not { } callerId)

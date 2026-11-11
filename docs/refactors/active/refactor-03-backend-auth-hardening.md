@@ -122,12 +122,12 @@ Not in scope: changing the complexity rules, which D-024 fixes on both layers. N
 Docs to update: Tech-Backend §5 (state that the bound applies to `LoginRequestDto.Password` and `ChangePasswordDto.CurrentPassword` too)
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Login`
 
-- [ ] `LoginRequestDtoValidator` gains `MaximumLength(128)` on `Password`. A login must **not** enforce the complexity rules — that would tell an attacker which candidate passwords are even possible.
-- [ ] `ChangePasswordDtoValidator` gains `MaximumLength(128)` on `CurrentPassword`.
-- [ ] Add a request-body size limit to the two auth endpoints so an oversized payload is rejected before model binding.
-- [ ] An integration test posts a 1 MB password to `/api/Account/Login` and asserts `400` with no measurable PBKDF2 work (assert on the status code and on response time staying in the same order as a normal 400, not on a wall-clock threshold).
-- [ ] `frontend/src/features/auth/models/schemas/loginSchema.ts` gains a matching `.max(128)` so the client blocks it first — D-024 is explicit that client and server mirror each other.
-- [ ] Named suite green, plus `npm run test` from `frontend/` because this subtask touches both stacks (AGENTS §9.1, cross-stack exception).
+- [x] `LoginRequestDtoValidator` gains `MaximumLength(128)` on `Password`. A login must **not** enforce the complexity rules — that would tell an attacker which candidate passwords are even possible. (No complexity rules added.)
+- [x] `ChangePasswordDtoValidator` gains `MaximumLength(128)` on `CurrentPassword`.
+- [x] Add a request-body size limit to the two auth endpoints so an oversized payload is rejected before model binding. (`[RequestSizeLimit(8 KB)]` on `Login` and `change-password`.)
+- [x] An integration test posts a 1 MB password to `/api/Account/Login` and asserts `400` with no measurable PBKDF2 work (assert on the status code and on response time staying in the same order as a normal 400, not on a wall-clock threshold). (`Login_OversizedPassword_RejectedWithoutPbkdf2Work`: asserts `400` and that the oversized rejection is faster than a request that did run PBKDF2 — a relative check, not a wall-clock threshold.)
+- [x] `frontend/src/features/auth/models/schemas/loginSchema.ts` gains a matching `.max(128)` so the client blocks it first — D-024 is explicit that client and server mirror each other.
+- [x] Named suite green, plus `npm run test` from `frontend/` because this subtask touches both stacks (AGENTS §9.1, cross-stack exception). (Backend: 177 unit, 200 integration; frontend: 378 passed.)
 - Commit: `fix(backend): bound password fields on login and change-password`
 
 ---

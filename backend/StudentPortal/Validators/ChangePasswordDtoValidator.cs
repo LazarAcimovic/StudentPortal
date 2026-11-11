@@ -8,7 +8,8 @@ namespace StudentPortal.Validators
         public ChangePasswordDtoValidator()
         {
             RuleFor(x => x.CurrentPassword)
-                .NotEmpty().WithMessage("Current password is required.");
+                .NotEmpty().WithMessage("Current password is required.")
+                .MaximumLength(128).WithMessage("Current password must not exceed 128 characters.");
 
             RuleFor(x => x.NewPassword)
                 .NotEmpty().WithMessage("New password is required.")

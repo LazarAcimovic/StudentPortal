@@ -52,6 +52,40 @@ public class LoginTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task Login_OversizedPassword_RejectedWithoutPbkdf2Work()
+    {
+        var client = CreateAnonymousClient();
+
+        // Warm up so first-request JIT cost does not skew the comparison.
+        await client.PostAsJsonAsync("/api/Account/Login",
+            new LoginRequestDto { Email = SeedUsers.Admin.Email, Password = "warmup-wrong-password" });
+
+        // A wrong password of valid length runs the full PBKDF2 verify (→ 401).
+        var hashSw = System.Diagnostics.Stopwatch.StartNew();
+        var hashResponse = await client.PostAsJsonAsync("/api/Account/Login",
+            new LoginRequestDto { Email = SeedUsers.Admin.Email, Password = "wrong-but-valid-length-password" });
+        hashSw.Stop();
+        hashResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        // A 1 MB password must be rejected before any PBKDF2 work.
+        var oversized = new string('a', 1024 * 1024);
+        var json = JsonSerializer.Serialize(
+            new LoginRequestDto { Email = SeedUsers.Admin.Email, Password = oversized });
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var bigSw = System.Diagnostics.Stopwatch.StartNew();
+        var bigResponse = await client.PostAsync("/api/Account/Login", content);
+        bigSw.Stop();
+
+        bigResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "an oversized login payload must be rejected with 400, not processed");
+        // No wall-clock threshold: the oversized rejection must simply be faster than a
+        // request that did run PBKDF2, proving the hash never executed.
+        bigSw.Elapsed.Should().BeLessThan(hashSw.Elapsed,
+            "rejecting the oversized body must be faster than a real PBKDF2 verify");
+    }
+
+    [Fact]
     public async Task Login_WrongPassword_Returns401WithGenericMessage()
     {
         var client = CreateAnonymousClient();

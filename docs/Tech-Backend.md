@@ -145,7 +145,7 @@ Each validator covers non-null / non-empty, length bounds, email format (`EmailA
 
 - Grade DTOs: point ranges per PRD §3.1, multiples of 0.5, decimal precision.
 - Appeal DTO: text length ≤ 1000.
-- Password DTOs: 12–128 characters.
+- Password DTOs: 12–128 characters, with complexity, on the DTOs that set a new password (`AdminCreateUserDto`, `ChangePasswordDto.NewPassword`). The two fields that only *present* an existing password — `LoginRequestDto.Password` and `ChangePasswordDto.CurrentPassword` — carry the `MaximumLength(128)` cap **without** the complexity rules (a login must not reveal which candidate passwords are possible). The `/Login` and `/change-password` endpoints also carry a `[RequestSizeLimit]` (8 KB) so an oversized body is rejected before model binding — together these remove the PBKDF2 amplification surface on an unauthenticated endpoint (rate limiting stays out of scope, PRD §6).
 - `SubjectCreateDto` / `SubjectUpdateDto`: `SubjectCode` required, 1–20 characters (D-015 — the column is `varchar(50)` for migration headroom, but 20 is the contract).
 - `AdminCreateUserDto`: password 12–128 characters with complexity (≥1 upper, ≥1 lower, ≥1 digit, ≥1 of `!@#$%^&*`, no spaces). **Email uniqueness is not a FluentValidation rule** — FluentValidation cannot read the database; `UserService.AddUserAsync` checks the store and throws `EmailAlreadyExistsException`, which the controller returns as `409 Conflict` (per D-024).
 - `SubjectCreateDto`: beyond field validation, `SubjectService.AddSubjectAsync` requires the `ProfessorId` to resolve to an **active** user — a missing or soft-deleted professor yields a failure that the controller returns as `400` (per D-025).
