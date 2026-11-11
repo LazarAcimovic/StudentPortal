@@ -132,6 +132,7 @@ The overdue guard (`appeal.SubmittedAt.AddDays(7) < now`) in `AcceptAsync` / `De
 - On `/Refresh`: read the cookie, hash with SHA-256, look the row up in `RefreshTokens`, reject if missing / expired / revoked / `ReplacedByTokenId` set. On success insert a new row, revoke the old one (`RevokedUtc` + `ReplacedByTokenId`), re-issue both cookies. **Reuse detection:** a presented token whose row is already revoked revokes every active refresh row for that user → 401.
 - On `/Logout`: revoke the current refresh row, overwrite both cookies with `Max-Age=0`.
 - On `POST /change-password`: verify current password, re-hash, `RevokeAllForUserAsync`, clear both cookies, return `204`. The SPA treats this as a hard logout.
+- **Refresh-row retention (per D-041):** on each token issue, the acting user's dead rows (revoked **and** expired more than 30 days ago) are hard-deleted and live rows beyond 10 per user are revoked oldest-first — pruned opportunistically on the write path in `AuthService`, with no scheduled job (Tech-Backend §2). Values are `TokenLifetimeOptions.RevokedTokenRetentionDays` and `MaxLiveTokensPerUser`.
 - JWT claims: `sub` = user GUID, `nameidentifier` = user GUID, `role`, `email`, `jti` = random GUID, `exp` = 15 minutes out.
 
 ---

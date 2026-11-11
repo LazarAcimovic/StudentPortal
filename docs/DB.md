@@ -174,6 +174,8 @@ Users ──< RefreshTokens
 
 **Reuse detection:** on `/Refresh`, if the submitted hash matches a row whose `RevokedUtc IS NOT NULL`, the service invokes `RevokeAllForUserAsync(userId)` and returns 401. (A legitimate client never presents a revoked token; its presentation implies theft.)
 
+**Retention (per D-041).** Rows are pruned opportunistically on the write path (token issuance in `AuthService`), never by a scheduled job — the project has no background service. When a row is issued, for that user: rows that are **both revoked and expired more than 30 days ago** are hard-deleted, and **live** (unrevoked, unexpired) rows beyond **10 per user** are revoked oldest-first. The values are `TokenLifetimeOptions.RevokedTokenRetentionDays` (30) and `TokenLifetimeOptions.MaxLiveTokensPerUser` (10). Nothing deleted these rows before — a single active session rotates ~4×/hour, so the table only grew.
+
 ---
 
 ### 2.8 `Escalations`
