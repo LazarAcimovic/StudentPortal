@@ -38,6 +38,9 @@ public partial class StudentPortalApiContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Case-insensitive email identity (D-042): Users.Email is citext.
+        modelBuilder.HasPostgresExtension("citext");
+
         modelBuilder.Entity<Enrollment>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -228,7 +231,9 @@ public partial class StudentPortalApiContext : DbContext
 
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.Email).HasMaxLength(100);
+            // citext — case-insensitive (D-042). No length modifier; the 100-char cap
+            // is enforced by the validators (Tech-Backend §5).
+            entity.Property(e => e.Email).HasColumnType("citext");
             entity.Property(e => e.FirstName).HasMaxLength(50);
             entity.Property(e => e.IndexNumber)
                 .HasMaxLength(100)

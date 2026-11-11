@@ -307,6 +307,7 @@ Migration names are the stable identifiers — not task numbers, which change as
 | 5 | `AddSubjectCode` | Adds `Subjects.SubjectCode varchar(50) NOT NULL DEFAULT ''` (§2.2). |
 | 6 | `AddEscalationWorkflow` | Adds `Grades.AssignedProfessorId`, creates `Escalations` (§2.8) and `EscalationAssignments` (§2.9) with their indexes and FKs. |
 | 7 | `AddRefreshTokenHashUniqueIndex` | Unique index `IX_RefreshTokens_TokenHash` on `RefreshTokens.TokenHash` (§2.7). |
+| 8 | `CaseInsensitiveEmail` | Enables the `citext` extension and converts `Users.Email` to `citext`, making the unique index and all lookups case-insensitive (§2.1, D-042). |
 
 Each migration is one commit. The agent generates it with `dotnet ef migrations add <Name>` and commits the files; the human runs `dotnet ef database update`. Append new rows to the end of this table in the same commit as the migration.
 
