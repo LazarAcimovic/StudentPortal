@@ -217,6 +217,58 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task AdminUpdateUserAsync_RoleChanged_RevokesAllRefreshTokens()
+    {
+        // D-043: an authority change signs the user out everywhere.
+        var admin = MakeUser(RoleEnum.Admin);
+        var student = MakeUser(RoleEnum.Student);
+        _userRepo.GetUserByIdForUpdateAsync(student.Id).Returns(student);
+
+        var sut = CreateSut();
+
+        await sut.AdminUpdateUserAsync(student.Id, admin.Id, new AdminUpdateUserDto
+        {
+            FirstName = student.FirstName, LastName = student.LastName, Email = student.Email,
+            IndexNumber = student.IndexNumber, UserRole = RoleEnum.Professor, IsDeleted = false,
+        });
+
+        await _refreshTokenRepo.Received(1).RevokeAllForUserAsync(student.Id);
+    }
+
+    [Fact]
+    public async Task AdminUpdateUserAsync_NameOnlyChange_DoesNotRevokeRefreshTokens()
+    {
+        // D-043: a save that touches no authority flag must NOT sign the user out.
+        var admin = MakeUser(RoleEnum.Admin);
+        var student = MakeUser(RoleEnum.Student);
+        _userRepo.GetUserByIdForUpdateAsync(student.Id).Returns(student);
+
+        var sut = CreateSut();
+
+        await sut.AdminUpdateUserAsync(student.Id, admin.Id, new AdminUpdateUserDto
+        {
+            FirstName = "Renamed", LastName = student.LastName, Email = student.Email,
+            IndexNumber = student.IndexNumber, UserRole = student.UserRole, IsDeleted = false,
+        });
+
+        await _refreshTokenRepo.DidNotReceiveWithAnyArgs().RevokeAllForUserAsync(default);
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_RevokesAllRefreshTokens()
+    {
+        // D-043: deleting a user is an authority change.
+        var student = MakeUser(RoleEnum.Student);
+        _userRepo.GetUserByIdAsync(student.Id).Returns(student);
+
+        var sut = CreateSut();
+        var result = await sut.DeleteUserAsync(student.Id);
+
+        Assert.True(result);
+        await _refreshTokenRepo.Received(1).RevokeAllForUserAsync(student.Id);
+    }
+
+    [Fact]
     public async Task AdminUpdateUserAsync_PromotingStudentToProfessor_ClearsIndexNumber()
     {
         // PRD §2 implicit: index numbers belong to students only.

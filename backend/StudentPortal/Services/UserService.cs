@@ -112,6 +112,12 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
 
         await _userRepository.UpdateUserAsync(target);
 
+        // Authority change revokes every refresh row for the target (D-043), so a demoted
+        // or disabled user cannot mint fresh access tokens via /Refresh. Only when the
+        // authority flags actually changed — not on a name/email-only save.
+        if (roleChanged || softDeleted)
+            await _refreshTokenRepository.RevokeAllForUserAsync(targetId);
+
         if (roleChanged)
             _logger.LogInformation("Role changed for UserId {TargetId}: {NewRole}", targetId, dto.UserRole);
         if (softDeleted)
@@ -125,6 +131,8 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         var userToDelete = await _userRepository.GetUserByIdAsync(id);
         if (userToDelete == null) return false;
 
+        // Deleting a user is an authority change: revoke their refresh rows (D-043).
+        await _refreshTokenRepository.RevokeAllForUserAsync(id);
         await _userRepository.DeleteUserAsync(id);
         return true;
     }

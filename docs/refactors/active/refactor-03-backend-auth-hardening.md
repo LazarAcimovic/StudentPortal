@@ -156,11 +156,11 @@ Not in scope: access-token revocation, which is out of scope above. This subtask
 Docs to update: PRD §6 and Tech-Backend §3 (extend the sign-out-everywhere rule to role change and soft-delete), plus a new `docs/Decisions.md` entry (next free id).
 Verify: `dotnet test backend/StudentPortal.Tests --filter UserService`
 
-- [ ] **Subtask 0 first:** `PRD.md` §6 states the revoke rule for password change only. Extend it to role change and soft-delete there, append the Decisions entry, and commit that alone before any code.
-- [ ] `AdminUpdateUserAsync` calls `RevokeAllForUserAsync(targetId)` when `UserRole` or `IsDeleted` actually changed — not on every save.
-- [ ] `DeleteUserAsync` does the same. (`AuthService.RefreshAsync` already refuses a soft-deleted user, so this closes the gap rather than opening it.)
-- [ ] Unit tests: a role change revokes; a first-name change does not.
-- [ ] Record in the commit message that the stale `role` claim still survives for up to the access-token lifetime, and that this is the documented residual.
+- [x] **Subtask 0 first:** `PRD.md` §6 states the revoke rule for password change only. Extend it to role change and soft-delete there, append the Decisions entry, and commit that alone before any code. (Commit `docs: revoke sessions on authority change (D-043)`; also Tech-Backend §3.)
+- [x] `AdminUpdateUserAsync` calls `RevokeAllForUserAsync(targetId)` when `UserRole` or `IsDeleted` actually changed — not on every save. (Guarded by the existing `roleChanged`/`softDeleted` flags.)
+- [x] `DeleteUserAsync` does the same. (`AuthService.RefreshAsync` already refuses a soft-deleted user, so this closes the gap rather than opening it.)
+- [x] Unit tests: a role change revokes; a first-name change does not. (`AdminUpdateUserAsync_RoleChanged_RevokesAllRefreshTokens`, `AdminUpdateUserAsync_NameOnlyChange_DoesNotRevokeRefreshTokens`, plus `DeleteUserAsync_RevokesAllRefreshTokens`.)
+- [x] Record in the commit message that the stale `role` claim still survives for up to the access-token lifetime, and that this is the documented residual.
 - Commit: `feat(backend): revoke refresh rows when a role or delete flag changes`
 
 ---
