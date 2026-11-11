@@ -15,9 +15,9 @@ Backend **unit** tests are not a subtask here: `backend/StudentPortal.Tests` alr
 
 Conventions: backend in `Tech-Backend.md` §7, frontend in `Tech-Frontend.md` §7. Load the relevant one before writing tests.
 
-> **Reconciled against the code on 2026-10-23.** 22a, 22b and 22c have essentially landed. Outstanding: `frontend/TESTING.md` (22b.10), the full-suite reports (22a.9, 22c.9), and **all of 22d — Playwright has never been scaffolded**. Escalation coverage is *not* part of this task; it is task 23.15.
+> **Reconciled against the code on 2026-10-23.** 22a, 22b and 22c have essentially landed. Outstanding: `frontend/TESTING.md` (22b.10), the full-suite reports (22a.9, 22c.9), and **all of 22d — Playwright has never been scaffolded**. Escalation coverage is *not* part of this task; task 23 owned it and was dropped on 2026-11-10, so nothing owns it now.
 
-**Depends on:** task 23 (its 23.15 owns escalation coverage) · **Blocks:** nothing
+**Depends on:** nothing · **Blocks:** nothing
 
 ---
 

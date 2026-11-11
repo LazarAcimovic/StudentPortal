@@ -12,21 +12,13 @@ Progress counts **subtasks**, and a subtask counts as done only when every one o
 
 | Task | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 22 | Tests — backend integration, frontend unit + integration, e2e | 32/38 | all four suites landed; 6 boxes defer to tasks 23.6 / 25 | 23 (23.15 owns escalation coverage) | — | [task-22-tests.md](task-22-tests.md) |
-| 25 | Align the shipped UI with the rules settled in the consistency pass | 0/4 | not started | — | 22 (22c.7) | [task-25-ui-alignment.md](task-25-ui-alignment.md) |
-| 26 | Pagination across the dashboards | 8/8 | all done | — | 28 (28.4 reuses 26.1) | [task-26-pagination.md](task-26-pagination.md) |
-| 27 | Serbian translation (i18n) | 0/9 | not started | — | — | [task-27-i18n-serbian.md](task-27-i18n-serbian.md) |
+| 22 | Tests — backend integration, frontend unit + integration, e2e | 32/38 | all four suites landed; 6 boxes lost their owner when tasks 23 and 25 were dropped | — | — | [task-22-tests.md](task-22-tests.md) |
 
 ## Order of work
 
-**Subtasks are done in the order they appear in their task file.** The numbering *is* the order, which is why an agent resumes at the first unchecked subtask (AGENTS §4.1) rather than picking what looks most urgent. Task 23 therefore runs 23.12 → 23.13 → 23.14 → 23.15 → 23.16.
+**Subtasks are done in the order they appear in their task file.** The numbering *is* the order, which is why an agent resumes at the first unchecked subtask (AGENTS §4.1) rather than picking what looks most urgent.
 
-Two things to be aware of while working through it, neither of which changes the order:
-
-- **23.13 is fixing a live bug, not adding a feature.** The API requires `SubjectCode` and no admin form sends it, so creating or editing a subject from the UI fails with `400` until 23.13 lands. If that blocks you sooner, pull 23.13 forward deliberately — do not drift into it halfway through 23.12.
-- **23.12 cannot be manually verified before 23.14.** Until the seed sets subject codes, every subject shares the empty code, so the eligible-professor list is noise. The subtask carries its own `Depends on:` line saying so. Unit tests are unaffected.
-
-Across tasks, 22d (Playwright) stays last — it is the end-loaded e2e sweep and depends on everything else existing.
+Within task 22, 22d (Playwright) stays last — it is the end-loaded e2e sweep and depends on everything else existing.
 
 New tasks follow [`../TEMPLATE.md`](../TEMPLATE.md).
 
