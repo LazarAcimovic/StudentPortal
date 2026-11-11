@@ -262,7 +262,15 @@ COMMIT;
 
 **No time-sensitive row is seeded (per D-022).** `seed.sql` replays before every integration test, so a backdated `SubmittedAt` or `ReviewedAt` would inject an overdue or escalated case into every test in the suite. Overdue appeals, escalation Scenarios A and B, and the 24-hour undo window are created per test by the backdating helpers on `IntegrationTestBase` (`Tech-Backend.md` §7); for manual (in-browser) testing, the dev-only companion script `Migrations/seed-dev-escalations.sql` layers those escalated states on top of `seed.sql` and is never loaded by the integration-test fixture. The appeals the seed does create are freshly submitted or already reviewed, never mid-deadline.
 
-**Dev-only volume fixtures.** `seed.sql` keeps small, fixed counts (10 students, 15 subjects) because integration tests assert them exactly (`AdminUserSearchTests`, `AdminSubjectSearchTests`, `AdminPaginationTests`). To exercise paging and the search comboboxes by hand, the dev-only companion `Migrations/seed-dev-pagination.sql` layers 20 extra students on top of `seed.sql` — 10 of them enrolled in Calculus — so the professor students list spans several pages and the enrollment student combobox needs a second fetch. Like `seed-dev-escalations.sql` it is applied manually with `psql`, is re-runnable, and is never loaded by the integration-test fixture.
+**Dev-only volume fixtures.** `seed.sql` keeps small, fixed counts — **17 users (2 admins, 4 professors, 11 students, of which 10 are active) and 15 subjects** — because integration tests assert them exactly (`AdminUserSearchTests` expects 10 active students, `AdminSubjectSearchTests` 15 subjects, `AdminPaginationTests` stable totals). Volume belongs in a companion, never here. There are three companions, all applied manually with `psql`, all re-runnable, and **none of them ever loaded by the integration-test fixture**, which resolves `seed.sql` by exact path:
+
+| Companion | Adds | For |
+|---|---|---|
+| `Migrations/seed-dev-escalations.sql` | 5 demo students plus backdated escalated states | seeing Scenarios A and B in a browser (§4, D-022) |
+| `Migrations/seed-dev-pagination.sql` | 20 extra students, 10 of them in Calculus | professor students list spanning pages; enrollment combobox needing a second fetch (D-031, D-034) |
+| `Migrations/seed-dev-volume.sql` | 100 000 extra students (`b0000000-…`, `BLK-0000001`…) | `EXPLAIN ANALYZE` on the admin Users list and user search before deciding whether the `pg_trgm`/GIN index of §6.5 is justified (D-034). Users-table paths only — these students have no enrollments, so no dashboard, aggregate or escalation query is exercised |
+
+**Why `seed-dev-volume.sql` exists as a separate file.** Its rows were in `seed.sql` for a time, which is precisely the failure this paragraph warns about: `seed.sql` replays before **every** test, so the 100 000-row insert ran 190 times per suite (3 m 12 s instead of seconds) and `AdminUserSearchTests.Search_RoleStudent_ReturnsOnlyStudents` and `Search_EmptyQuery_ReturnsPaginatedAll` both failed with `TotalCount = 100010` against an expected 10. Adding volume rows to `seed.sql` is not a trade-off to weigh — it breaks the suite.
 
 Fixed GUID prefixes (as in the pre-reset seed) keep FKs predictable:
 

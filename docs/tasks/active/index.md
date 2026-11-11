@@ -12,7 +12,7 @@ Progress counts **subtasks**, and a subtask counts as done only when every one o
 
 | Task | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 22 | Tests — backend integration, frontend unit + integration, e2e | 32/38 | all four suites landed; 6 boxes lost their owner when tasks 23 and 25 were dropped | — | — | [task-22-tests.md](task-22-tests.md) |
+| 22 | Tests — backend integration, frontend unit + integration, e2e | 33/39 | all four suites landed and green; 6 boxes lost their owner when tasks 23 and 25 were dropped | — | — | [task-22-tests.md](task-22-tests.md) |
 
 ## Order of work
 
@@ -22,4 +22,4 @@ Within task 22, 22d (Playwright) stays last — it is the end-loaded e2e sweep a
 
 New tasks follow [`../TEMPLATE.md`](../TEMPLATE.md).
 
-Structural work that changes no behaviour is tracked separately as a **refactor campaign**, with its own index and its own number sequence: [`../../refactors/active/index.md`](../../refactors/active/index.md). One campaign is open.
+Structural work that changes no behaviour is tracked separately as a **refactor campaign**, with its own index and its own number sequence: [`../../refactors/active/index.md`](../../refactors/active/index.md). Seven campaigns are open.

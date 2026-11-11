@@ -382,7 +382,10 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 ## 7. Data seeding
 
 A re-runnable `seed.sql` populates the database with:
-- **1 Admin + 4 Professors + 10 Students = 15 Users anchor**.
+- **2 Admins + 4 Professors + 11 Students = 17 Users anchor.** Ten students are active and one is soft-deleted; the second admin and the soft-deleted student each exist to make a documented rule testable, so neither is optional:
+  - **Admin #2** (`…-0011`, Jane Roberts) is what makes the Admin→Admin edit matrix reachable — §6's "an admin cannot demote another admin", and the `UserRole` / `IsDeleted` fields being hidden when the target is another admin (UI §11.6). With one admin there is nothing to point that rule at.
+  - **The soft-deleted student** (`…-0010`, Thomas Lee) surfaces the Inactive status badge in the admin Users tab (§6, Overview glossary, D-035). It deliberately has no enrollments, grades or drafts, so it changes no dashboard, aggregate or eligibility result — and because every search and dashboard query filters `IsDeleted`, the **active** student count stays 10, which is what `AdminUserSearchTests` asserts.
+- **No volume rows.** `seed.sql` holds exactly the anchor above. Bulk data for manual performance work lives in a dev-only companion that the integration fixture never loads (DB §4) — putting it in `seed.sql` breaks the suite, which is the mistake `seed-dev-volume.sql` was extracted from.
 - ~15 Subjects, each 6 ECTS (default), spread across the 4 professors. **Every subject carries a `SubjectCode`**, and at least two subjects taught by different professors share one, so an eligible professor exists for escalation (§4.8).
 - ~30 Enrollments covering realistic student-subject pairs.
 - ~20 Grades across mixed states:

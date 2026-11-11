@@ -121,7 +121,7 @@ INSERT INTO "Users" (
    'AQAAAAIAAYagAAAAEFYs++5b/7gnchHZ9/9SZ7h7Ii9qyuQXNOBD4j8jSu5eI6hNSYhG0jAij+6klaSo9Q==',
    'SW-010-2024',false,'Student','2024-09-05T08:00:00+00'),
 
-  -- Admin #2 (active) — exercises the Admin→Admin edit matrix (UI §5.9: UserRole/IsDeleted
+  -- Admin #2 (active) — exercises the Admin→Admin edit matrix (UI §11.6: UserRole/IsDeleted
   -- hidden when the target is another Admin). The original admin's own row has no Edit button.
   ('10000000-0000-0000-0000-000000000011',
    'Jane','Roberts','jane.roberts@uni.edu',
@@ -422,25 +422,5 @@ INSERT INTO "Appeals" (
   ('60000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000005',
    'I believe my exam was graded incorrectly. Several of my answers were partially correct and deserved more credit.',
    '2026-07-18T08:00:00+00','Denied','2026-07-25T10:00:00+00');
-
--- ─── BULK STUDENTS (100 000 rows for pagination / performance testing) ────────
--- UUIDs use prefix b0000000- to avoid collision with hand-crafted rows.
--- Index numbers: BLK-0000001 through BLK-0100000.
--- All share the same PBKDF2 hash as the rest (password: Password123!).
-INSERT INTO "Users" (
-  "Id","FirstName","LastName","Email","UserPassword",
-  "IndexNumber","IsDeleted","UserRole","CreatedAt"
-)
-SELECT
-  ('b0000000-0000-0000-0000-' || lpad(i::text, 12, '0'))::uuid,
-  'Student' || i,
-  'Test' || i,
-  'student' || i || '@test.edu',
-  'AQAAAAIAAYagAAAAEKIzF5k/n5N0AMPcPu5bjZuhTcSTcONR3e3G65CFMs4dEBCjUT4xLAfIZ4MP0d5b0w==',
-  'BLK-' || lpad(i::text, 7, '0'),
-  false,
-  'Student',
-  '2024-09-05T08:00:00+00'
-FROM generate_series(1, 100000) AS s(i);
 
 COMMIT;

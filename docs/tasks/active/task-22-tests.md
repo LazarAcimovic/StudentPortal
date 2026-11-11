@@ -2,12 +2,13 @@
 
 #### Overview
 
-Four suites covering the stack:
+Four suites covering the stack, plus the seed the integration suite depends on:
 
 - **22a** — Backend integration tests (xUnit + Testcontainers + Respawn + WebApplicationFactory + FakeTimeProvider).
 - **22b** — Frontend unit tests (Vitest + jsdom + React Testing Library + MSW).
 - **22c** — Frontend integration tests (Vitest + jsdom + RTL + MSW, multi-component flows).
 - **22d** — End-to-end tests (Playwright + real backend + real frontend + Dockerized Postgres).
+- **22e** — Seed hygiene. `seed.sql` is part of this task's surface, not a neighbour of it: the fixture replays it before every test and several tests assert its counts exactly, so a row added there is a change to the integration suite (DB §4).
 
 Backend **unit** tests are not a subtask here: `backend/StudentPortal.Tests` already exists and every implementation subtask adds to it in its own Red step (AGENTS §9). This task is the integration, frontend and e2e sweep on top of that.
 
@@ -16,6 +17,8 @@ Backend **unit** tests are not a subtask here: `backend/StudentPortal.Tests` alr
 Conventions: backend in `Tech-Backend.md` §7, frontend in `Tech-Frontend.md` §7. Load the relevant one before writing tests.
 
 > **Reconciled against the code on 2026-10-23.** 22a, 22b and 22c have essentially landed. Outstanding: `frontend/TESTING.md` (22b.10), the full-suite reports (22a.9, 22c.9), and **all of 22d — Playwright has never been scaffolded**. Escalation coverage is *not* part of this task; task 23 owned it and was dropped on 2026-11-10, so nothing owns it now.
+>
+> **Suite state measured 2026-11-11.** Backend unit 173 passed; backend integration **190 passed in 24 s**; frontend 382 passed in 56 files; `tsc --noEmit` clean; `npm run build` succeeds; `npm run lint` **2 errors, 2 warnings** (pre-existing, unowned — two unused variables in test files, and two `react-hooks/exhaustive-deps` warnings that must not be "fixed" because satisfying them reintroduces the D-033 render loop). The integration suite was 188/190 in 3 m 12 s until 22e.1.
 
 **Depends on:** nothing · **Blocks:** nothing
 
@@ -523,3 +526,22 @@ Verify: the suite runs from a clean checkout following the README
 - [x] `e2e/README.md`: Docker + `npx playwright install chromium`, the one-command runbook, the test-mode safety guard, how to add a journey.
 - [x] Run the full suite and report in chat, same shape as 22a.9.
 - Commit: `docs(e2e): README for Playwright e2e suite`
+
+---
+
+**22e — Seed hygiene**
+
+#### 22e.1 — Seed: Move the 100 000-row volume block out of seed.sql
+
+Rules: DB §4 (seed.sql keeps fixed counts; volume belongs in a dev-only companion), PRD §7, Tech-Backend §7
+Not in scope: the anchor rows themselves. Admin #2 and the soft-deleted student both exist to make a documented rule testable and must stay. No test assertion changes — the two failing tests were correct and stayed untouched.
+Docs to update: DB §4, PRD §7
+Verify: `dotnet test backend/StudentPortal.IntegrationTests`
+
+- [x] Red confirmed first, for the right reason: `AdminUserSearchTests.Search_RoleStudent_ReturnsOnlyStudents` and `Search_EmptyQuery_ReturnsPaginatedAll` failed with `TotalCount = 100010` against an expected 10, and the suite took 3 m 12 s.
+- [x] Cause: `seed.sql` carried a block headed `BULK STUDENTS (100 000 rows for pagination / performance testing)` ending in `FROM generate_series(1, 100000)`. `IntegrationTestFixture.ResetAndSeedAsync` replays `seed.sql` before **every** test, so those rows were inserted 190 times per run. The warning against doing this was already written in `seed-dev-pagination.sql`.
+- [x] Docs first (AGENTS §12 case D): the anchor count in `PRD.md` §7 and `DB.md` §4 was stale at 15 users while the seed holds 17, and both extras are required — Admin #2 makes the Admin-to-Admin edit matrix reachable (PRD §6, UI §11.6) and the soft-deleted student surfaces the Inactive badge (D-035). So the documents moved, not the seed.
+- [x] Block moved verbatim to `Migrations/seed-dev-volume.sql`, in the house style of the two existing dev companions: re-runnable by id prefix, documented, never loaded by the fixture. No `csproj` change needed — only `seed.sql` is copied to the output directory.
+- [x] `seed.sql` back to the anchor only: 446 lines down to 426, with no `generate_series` and no `b0000000-` id left.
+- [x] Gate green, unfiltered: **190 passed, 0 failed, 24 s** — from 188 passed / 2 failed in 3 m 12 s.
+- Commit: `fix(seed): move the 100k volume block to a dev-only companion`
