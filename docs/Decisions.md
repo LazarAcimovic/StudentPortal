@@ -327,3 +327,10 @@ The four statuses:
 **Answer:** Yes. `UserService.AdminUpdateUserAsync` and `DeleteUserAsync` call `IRefreshTokenRepository.RevokeAllForUserAsync(targetId)` whenever the user's `UserRole` or `IsDeleted` **actually** changes (not on every save), the same sign-out-everywhere a password change already triggers. The already-issued access token keeps its stale `role` claim until `exp` (≤15 minutes) — the accepted residual — but the 7-day refresh window is closed at once.
 **Lives in:** PRD §6, Tech-Backend §3
 **Why:** Before this, a demoted professor kept a `Professor` `role` claim and could silently mint fresh access tokens via `/Refresh` for up to seven days, because only a password change revoked refresh rows. Access-token revocation (a `jti` deny-list) is out of scope and none exists, so closing the refresh window bounds the exposure to one access-token lifetime — the same residual the whole cookie/JWT design already accepts.
+
+### D-044 — Can a user log out after their access token has expired?
+
+**Decided:** 2026-11-11 · **Status:** Accepted
+**Answer:** Yes. `POST /api/Account/Logout` is `[AllowAnonymous]` and authenticates by the `sp_refresh` cookie alone: it hashes the presented refresh token, revokes the matching live row, clears both cookies, and returns `204` whether or not a row matched — so it cannot be used as an oracle. A user whose 15-minute access token has expired can still revoke their refresh session server-side.
+**Lives in:** Tech-Backend §3, Tech-Backend §4
+**Why:** `Logout` was `[Authorize]`, so an expired access token yielded `401`, and the refresh row survived for the remaining seven days while the SPA cleared its store only client-side — a hole (the frontend `clearAuthSession` path has the same shape; refactor-06). Authenticating `Logout` by the refresh cookie closes it. Returning `204` unconditionally avoids leaking whether a given refresh token exists, and the surface is safe because a valid `sp_refresh` is already proof of possession.

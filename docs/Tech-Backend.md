@@ -95,7 +95,7 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 - `GradeController` → `[Authorize]`; confirm / reconfirm-exam → `Professor`; student-confirm → `Student`.
 - `AppealController` → `[Authorize]`; submit → `Student`; accept / deny / undo-deny → `Professor`.
 - `EscalationController` → `[Authorize(Roles = "Admin")]` on the whole class.
-- `AccountController`: `Login` and `Refresh` are `[AllowAnonymous]`; `Me`, `Logout`, `PUT /profile`, `POST /change-password` are `[Authorize]` (role-agnostic).
+- `AccountController`: `Login`, `Refresh` and `Logout` are `[AllowAnonymous]`; `Me`, `PUT /profile`, `POST /change-password` are `[Authorize]` (role-agnostic). `Logout` is `[AllowAnonymous]` because it authenticates by the `sp_refresh` cookie alone and returns `204` either way — so it still revokes the session after the 15-minute access token has expired, and cannot be used as an oracle (per D-044).
 - `ProfessorController` → `[Authorize(Roles = "Professor")]` on the whole class; `GET /professor/subjects/{subjectId}/students?page=N&pageSize=N` returns a paged list of enrolled students for the given subject (per D-031, DB §6.4). `IProfessorStudentsService.GetPagedAsync(subjectId, callerProfId, page, pageSize)` performs the ownership check (`Subject.ProfessorId == callerProfId`) before querying.
 
 **Layer 2 — service ownership check** reads `currentUserId` from the `ClaimTypes.NameIdentifier` claim and is the authoritative layer: it must hold even if the UI is bypassed.
@@ -133,7 +133,7 @@ The overdue guard (`appeal.SubmittedAt.AddDays(7) < now`) in `AcceptAsync` / `De
 - **`sp_refresh`** — the raw refresh token. `HttpOnly; Secure; SameSite=Strict; Path=/api/Account; Max-Age=604800` (7 days). Scoping `Path` means it is sent only to `/Refresh` and `/Logout`.
 - The browser sends both automatically; the SPA never reads either (`HttpOnly` blocks JS access).
 - On `/Refresh`: read the cookie, hash with SHA-256, look the row up in `RefreshTokens`, reject if missing / expired / revoked / `ReplacedByTokenId` set. On success insert a new row, revoke the old one (`RevokedUtc` + `ReplacedByTokenId`), re-issue both cookies. **Reuse detection:** a presented token whose row is already revoked revokes every active refresh row for that user → 401.
-- On `/Logout`: revoke the current refresh row, overwrite both cookies with `Max-Age=0`.
+- On `/Logout`: `[AllowAnonymous]`, authenticated by the `sp_refresh` cookie alone — hash it, revoke the matching live row, overwrite both cookies with `Max-Age=0`, and return `204` whether or not a row matched (per D-044) so it works with an expired access token and is not an oracle.
 - On `POST /change-password`: verify current password, re-hash, `RevokeAllForUserAsync`, clear both cookies, return `204`. The SPA treats this as a hard logout.
 - **Refresh-row retention (per D-041):** on each token issue, the acting user's dead rows (revoked **and** expired more than 30 days ago) are hard-deleted and live rows beyond 10 per user are revoked oldest-first — pruned opportunistically on the write path in `AuthService`, with no scheduled job (Tech-Backend §2). Values are `TokenLifetimeOptions.RevokedTokenRetentionDays` and `MaxLiveTokensPerUser`.
 - JWT claims: `sub` = user GUID, `nameidentifier` = user GUID, `role`, `email`, `jti` = random GUID, `exp` = 15 minutes out.
