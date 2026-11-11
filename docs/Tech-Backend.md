@@ -154,6 +154,19 @@ Each validator covers non-null / non-empty, length bounds, email format (`EmailA
 
 **Error handling.** A single `UseExceptionHandler` middleware returns `ProblemDetails { title: "An error occurred.", traceId }`. Business failures surface as typed exceptions — `NotFoundException`, `ForbiddenAccessException`, `ValidationException`, `ConflictException` — which the middleware maps to 404 / 403 / 400 / 409. Exceptions are logged with the traceId; the client sees only the opaque message. No per-controller `catch (Exception ex) { return StatusCode(500, ex.Message) }`.
 
+**Auth event logging** (per D-040). `AuthService` and `UserService` inject `ILogger<T>` and emit structured log events. No log call ever receives a raw password, a raw token, a token hash, or a full email address — user id and an outcome only.
+
+| Level | Event |
+|---|---|
+| `Warning` | Failed login — includes `UserId` when a user record resolved, omits it when no user matched |
+| `Warning` | Refresh presented with an unknown hash |
+| `Warning` | Refresh re-use — token was already rotated; whole chain revoked |
+| `Information` | Successful login |
+| `Information` | Logout |
+| `Information` | Password change |
+| `Information` | Role change (admin mutation) |
+| `Information` | Soft-delete (admin mutation) |
+
 **Secrets.**
 
 - Local dev: `dotnet user-secrets` (`JwtConfig:Key`, `ConnectionStrings:DefaultConnection`).

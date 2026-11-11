@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using StudentPortal.Dtos;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
@@ -13,7 +15,7 @@ public class AuthServiceTests
     private readonly ITokenService _tokens = Substitute.For<ITokenService>();
     private readonly IRefreshTokenRepository _refreshRepo = Substitute.For<IRefreshTokenRepository>();
 
-    private AuthService CreateSut() => new(_users, _tokens, _refreshRepo);
+    private AuthService CreateSut() => new(_users, _tokens, _refreshRepo, NullLogger<AuthService>.Instance);
 
     private static User MakeUser(string plainPassword = "Password123!", bool isDeleted = false)
     {
@@ -350,5 +352,49 @@ public class AuthServiceTests
             t.CreatedByIp == "10.0.0.1" &&
             t.ExpiresUtc >= before.AddDays(7) &&
             t.ExpiresUtc <= after.AddDays(7)));
+    }
+
+    // ---------- Logging ----------
+
+    [Fact]
+    public async Task RefreshAsync_ReuseDetected_LogsAtWarning()
+    {
+        var user = MakeUser();
+        var stored = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TokenHash = "stored-hash",
+            ExpiresUtc = DateTime.UtcNow.AddDays(3),
+            RevokedUtc = DateTime.UtcNow.AddHours(-1),
+            ReplacedByTokenId = Guid.NewGuid(),
+        };
+        _tokens.HashRefreshToken("raw-reused").Returns("stored-hash");
+        _refreshRepo.FindByHashAsync("stored-hash").Returns(stored);
+
+        var log = new CapturingLogger<AuthService>();
+        var sut = new AuthService(_users, _tokens, _refreshRepo, log);
+
+        await sut.RefreshAsync("raw-reused");
+
+        Assert.Contains(log.Entries, e => e.Level == LogLevel.Warning && e.Message.Contains("re-use", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task AuthService_LogEventsNeverContainRawPasswordOrRawToken()
+    {
+        const string rawPassword = "Password123!";
+        const string rawToken = "raw-refresh-secret";
+        var user = MakeUser(rawPassword);
+        _users.FindByEmailAsync(user.Email).Returns(user);
+        StubTokenGeneration(rawRefresh: rawToken);
+
+        var log = new CapturingLogger<AuthService>();
+        var sut = new AuthService(_users, _tokens, _refreshRepo, log);
+
+        await sut.AuthenticateAsync(new LoginRequestDto { Email = user.Email, Password = rawPassword });
+
+        Assert.DoesNotContain(log.Entries, e => e.Message.Contains(rawPassword));
+        Assert.DoesNotContain(log.Entries, e => e.Message.Contains(rawToken));
     }
 }

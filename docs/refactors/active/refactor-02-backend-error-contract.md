@@ -101,11 +101,11 @@ Not in scope: an audit **table** — `PRD.md` §6 and `README.md` list audit tab
 Docs to update: Tech-Backend §6 (add the event list), plus a new `docs/Decisions.md` entry (next free id) recording that auth events are logged while audit tables stay out of scope.
 Verify: `dotnet test backend/StudentPortal.Tests --filter Auth`
 
-- [ ] **Subtask 0 first:** write the event list into `Tech-Backend.md` §6 and append the Decisions entry, in its own `docs:` commit, before any code (AGENTS §0, D-010).
-- [ ] Inject `ILogger<T>` into `AuthService` and `UserService`.
-- [ ] Log at `Warning`: a failed login (carrying the user id when one resolved, never the submitted address), a refresh presented with an unknown hash, and refresh re-use detection — which already revokes the whole chain and today does so silently.
-- [ ] Log at `Information`: successful login, logout, password change, and the two admin mutations that move authority — role change and soft-delete.
-- [ ] Unit tests assert the re-use path logs at `Warning`, and that no log call receives a raw password or raw token.
+- [x] **Subtask 0 first:** write the event list into `Tech-Backend.md` §6 and append the Decisions entry, in its own `docs:` commit, before any code (AGENTS §0, D-010).
+- [x] Inject `ILogger<T>` into `AuthService` and `UserService`.
+- [x] Log at `Warning`: a failed login (carrying the user id when one resolved, never the submitted address), a refresh presented with an unknown hash, and refresh re-use detection — which already revokes the whole chain and today does so silently.
+- [x] Log at `Information`: successful login, logout, password change, and the two admin mutations that move authority — role change and soft-delete.
+- [x] Unit tests assert the re-use path logs at `Warning`, and that no log call receives a raw password or raw token.
 - Commit: `feat(backend): log authentication and authority-change events`
 
 ---

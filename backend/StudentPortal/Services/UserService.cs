@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
 using StudentPortal.Models.Enums;
-
 
 namespace StudentPortal.Services;
 
@@ -14,12 +14,14 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IMapper _mapper;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, IMapper mapper)
+    public UserService(IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, IMapper mapper, ILogger<UserService> logger)
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _mapper = mapper;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
@@ -94,6 +96,9 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         if (target.UserRole == RoleEnum.Admin && dto.UserRole != RoleEnum.Admin)
             throw new ForbiddenAccessException("Admin cannot demote another admin.");
 
+        var roleChanged = dto.UserRole != target.UserRole;
+        var softDeleted = dto.IsDeleted && !target.IsDeleted;
+
         target.FirstName = dto.FirstName;
         target.LastName = dto.LastName;
         target.Email = dto.Email;
@@ -106,6 +111,12 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
             target.IndexNumber = null;
 
         await _userRepository.UpdateUserAsync(target);
+
+        if (roleChanged)
+            _logger.LogInformation("Role changed for UserId {TargetId}: {NewRole}", targetId, dto.UserRole);
+        if (softDeleted)
+            _logger.LogInformation("User soft-deleted: UserId {TargetId} by AdminId {CallerId}", targetId, callerId);
+
         return _mapper.Map<UserDto>(target);
     }
 
@@ -129,6 +140,7 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         user.UserPassword = PasswordHashHandler.HashPassword(dto.NewPassword);
         await _userRepository.UpdateUserAsync(user);
         await _refreshTokenRepository.RevokeAllForUserAsync(callerId);
+        _logger.LogInformation("Password changed for UserId {UserId}", callerId);
     }
 
     public async Task<PagedResultDto<AdminUserDto>> GetPagedAsync(int page, int pageSize)
@@ -183,4 +195,3 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         return studentSubjectData;
     }
 }
-

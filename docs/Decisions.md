@@ -293,6 +293,13 @@ The four statuses:
 **Lives in:** AGENTS §2, AGENTS §9, AGENTS §9.1, Tech §5, Tech-Backend §7, Tech-Frontend §7
 **Why:** §9 step 4 used to read "run the full suite for the touched layer" — it never defined "layer", never named a command, and said nothing at all about e2e. So a careful agent ran all four suites for a one-file change, booting Testcontainers and Chromium to re-prove what the touched stack had already proved, while a hasty one ran nothing, and the commit looked identical either way. Keying the gate on the sub-tag costs no new metadata, because every subtask already carries exactly one, and it is mechanical enough for `scripts/check-docs.mjs` to enforce against the `Verify:` line. The path rows use `git status --porcelain` rather than `git diff --name-only` because a refactor that splits one file into three leaves the new files untracked, where `git diff` cannot see them.
 
+### D-040 — Are authentication events logged, and where?
+
+**Decided:** 2026-11-11 · **Status:** Accepted
+**Answer:** Auth events are written to `ILogger<T>` only — `AuthService` and `UserService`. No audit table is added. Eight events are logged (see `Tech-Backend.md` §6): three at `Warning` (failed login, unknown-hash refresh, re-use detection) and five at `Information` (successful login, logout, password change, role change, soft-delete). No log call may carry a raw password, raw token, token hash, or email address — user id and an outcome string only.
+**Lives in:** Tech-Backend §6
+**Why:** `PRD.md` §6 and `README.md` list audit tables as explicitly out of scope. Structured logging satisfies the observability goal (suspicious auth traffic surfaced in a log stream) without adding a persistent table. Separating the two in a Decisions entry prevents a future agent from treating "log the event" and "write an audit row" as interchangeable.
+
 ### D-039 — Why does the App.tsx bootstrap bypass the axios interceptor?
 
 **Decided:** 2026-11-11 · **Status:** Accepted

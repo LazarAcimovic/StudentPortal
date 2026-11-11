@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.Extensions.Logging.Abstractions;
 using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
 using StudentPortal.Handlers;
@@ -16,7 +17,7 @@ public class UserServiceTests
     // Use the real AutoMapper profile so DTO mappings behave as they would in production.
     private readonly IMapper _mapper = TestMapper.Create();
 
-    private UserService CreateSut() => new(_userRepo, _refreshTokenRepo, _mapper);
+    private UserService CreateSut() => new(_userRepo, _refreshTokenRepo, _mapper, NullLogger<UserService>.Instance);
 
     private static User MakeUser(RoleEnum role = RoleEnum.Student, string email = "jane@example.com")
     {

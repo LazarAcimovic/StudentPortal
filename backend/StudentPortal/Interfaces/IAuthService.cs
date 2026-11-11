@@ -9,4 +9,5 @@ public interface IAuthService
 {
     Task<AuthResult?> AuthenticateAsync(LoginRequestDto request, string? ipAddress = null);
     Task<AuthResult?> RefreshAsync(string rawRefreshToken, string? ipAddress = null);
+    Task LogoutAsync(Guid callerId, string? rawRefreshToken);
 }

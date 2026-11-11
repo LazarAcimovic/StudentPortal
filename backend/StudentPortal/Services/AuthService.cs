@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using StudentPortal.Dtos;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
@@ -10,15 +11,18 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IUserRepository userRepository,
         ITokenService tokenService,
-        IRefreshTokenRepository refreshTokenRepository)
+        IRefreshTokenRepository refreshTokenRepository,
+        ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _refreshTokenRepository = refreshTokenRepository;
+        _logger = logger;
     }
 
     public async Task<AuthResult?> AuthenticateAsync(LoginRequestDto request, string? ipAddress = null)
@@ -28,12 +32,20 @@ public class AuthService : IAuthService
 
         var user = await _userRepository.FindByEmailAsync(request.Email);
         if (user is null || user.IsDeleted)
+        {
+            _logger.LogWarning("Failed login — no matching active user");
             return null;
+        }
 
         if (!PasswordHashHandler.VerifyPassword(request.Password, user.UserPassword))
+        {
+            _logger.LogWarning("Failed login — wrong password for UserId {UserId}", user.Id);
             return null;
+        }
 
-        return await IssueTokensAsync(user, ipAddress);
+        var result = await IssueTokensAsync(user, ipAddress);
+        _logger.LogInformation("Successful login for UserId {UserId}", user.Id);
+        return result;
     }
 
     public async Task<AuthResult?> RefreshAsync(string rawRefreshToken, string? ipAddress = null)
@@ -42,11 +54,15 @@ public class AuthService : IAuthService
         var stored = await _refreshTokenRepository.FindByHashAsync(hash);
 
         if (stored is null)
+        {
+            _logger.LogWarning("Refresh presented with unknown hash");
             return null;
+        }
 
         // Re-use attack: token was already rotated — revoke everything for this user
         if (stored.RevokedUtc is not null)
         {
+            _logger.LogWarning("Refresh re-use detected for UserId {UserId} — revoking all tokens", stored.UserId);
             await _refreshTokenRepository.RevokeAllForUserAsync(stored.UserId);
             return null;
         }
@@ -76,6 +92,18 @@ public class AuthService : IAuthService
         });
 
         return new AuthResult(user, accessToken, rawNew);
+    }
+
+    public async Task LogoutAsync(Guid callerId, string? rawRefreshToken)
+    {
+        if (!string.IsNullOrEmpty(rawRefreshToken))
+        {
+            var hash = _tokenService.HashRefreshToken(rawRefreshToken);
+            var stored = await _refreshTokenRepository.FindByHashAsync(hash);
+            if (stored is not null && stored.RevokedUtc is null)
+                await _refreshTokenRepository.RevokeAsync(stored.Id);
+        }
+        _logger.LogInformation("Logout for UserId {UserId}", callerId);
     }
 
     private async Task<AuthResult> IssueTokensAsync(User user, string? ipAddress)
