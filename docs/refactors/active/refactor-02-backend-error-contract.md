@@ -87,9 +87,9 @@ Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Auth`
 - [x] `grep -c "StatusCode(500" backend/StudentPortal/Controllers/*.cs` before and after; the after must be 0, recorded in the commit message.
 - [x] One commit per controller, in this order: `UserController` (4), `SubjectController` (5), `EnrollmentController` (3), `AccountController` (2) — so a regression is one revert, not a bisect.
 - [x] Each removed block either disappears entirely (the middleware handles it) or becomes a typed throw in the **service**, never a new catch in the controller.
-- [ ] `SubjectController.UpdateSubject` is the one action with no generic catch today; leave its typed `InvalidOperationException` handling intact so the diff stays about removal.
-- [ ] Integration tests assert that the former 500 paths return the documented code, and that no response body contains the substring `Internal server error`.
-- [ ] Named suite green after each controller.
+- [x] `SubjectController.UpdateSubject` is the one action with no generic catch today; leave its typed `InvalidOperationException` handling intact so the diff stays about removal.
+- [x] Integration tests assert that the former 500 paths return the documented code, and that no response body contains the substring `Internal server error`.
+- [x] Named suite green after each controller.
 - Commit: `fix(backend): stop returning exception messages from <Controller>`
 
 ---
