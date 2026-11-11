@@ -46,57 +46,36 @@ namespace StudentPortal.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<SubjectDto>> GetSubjectById(Guid id)
         {
-            try
+            var subject = await _subjectService.GetSubjectByIdAsync(id);
+            if (subject == null)
             {
-                var subject = await _subjectService.GetSubjectByIdAsync(id);
-                if (subject == null)
-                {
-                    return NotFound($"Subject with ID {id} not found.");
-                }
-                return Ok(subject);
+                return NotFound($"Subject with ID {id} not found.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Ok(subject);
         }
 
-                // GET: api/subject/professor/{professorId}
+        // GET: api/subject/professor/{professorId}
         [HttpGet("professor/{professorId}")]
         public async Task<ActionResult<IEnumerable<SubjectDto>>> GetSubjectsByProfessorId(Guid professorId)
         {
-            try
+            var subjects = await _subjectService.GetSubjectsByProfessorIdAsync(professorId);
+            if (subjects == null || !subjects.Any())
             {
-                var subjects = await _subjectService.GetSubjectsByProfessorIdAsync(professorId);
-                if (subjects == null || !subjects.Any())
-                {
-                    return NotFound("No subjects found for this professor.");
-                }
-                return Ok(subjects);
+                return NotFound("No subjects found for this professor.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Ok(subjects);
         }
         
         // GET: api/subject/{subjectId}/students
         [HttpGet("{subjectId}/students")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetStudentsBySubjectId(Guid subjectId)
         {
-            try
+            var students = await _subjectService.GetStudentsBySubjectIdAsync(subjectId);
+            if (students == null || !students.Any())
             {
-                var students = await _subjectService.GetStudentsBySubjectIdAsync(subjectId);
-                if (students == null || !students.Any())
-                {
-                    return NotFound("No students enrolled in this subject.");
-                }
-                return Ok(students);
+                return NotFound("No students enrolled in this subject.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Ok(students);
         }
 
 
@@ -106,20 +85,12 @@ namespace StudentPortal.Controllers
         [HttpPost]
         public async Task<ActionResult<SubjectDto>> AddSubject([FromBody] SubjectCreateDto subjectDto)
         {
-            try
+            var newSubject = await _subjectService.AddSubjectAsync(subjectDto);
+            if (newSubject == null)
             {
-                var newSubject = await _subjectService.AddSubjectAsync(subjectDto);
-                if (newSubject == null)
-                {
-                    // This can be due to a non-existent ProfessorId or a validation issue
-                    return BadRequest("Subject could not be created. Please check provided data.");
-                }
-                return CreatedAtAction(nameof(GetSubjectById), new { id = newSubject.Id }, newSubject);
+                return BadRequest("Subject could not be created. Please check provided data.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return CreatedAtAction(nameof(GetSubjectById), new { id = newSubject.Id }, newSubject);
         }
 
         // PUT: api/subject/{id}
@@ -149,19 +120,12 @@ namespace StudentPortal.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSubject(Guid id)
         {
-            try
+            var success = await _subjectService.DeleteSubjectAsync(id);
+            if (!success)
             {
-                var success = await _subjectService.DeleteSubjectAsync(id);
-                if (!success)
-                {
-                    return NotFound($"Subject with ID {id} not found or deletion failed.");
-                }
-                return NoContent();
+                return NotFound($"Subject with ID {id} not found or deletion failed.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return NoContent();
         }
     }
 }

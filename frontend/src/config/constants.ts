@@ -1,3 +1,6 @@
+import { USER_ROLES } from '../shared/constants/constants';
+import type { UserRole } from '../shared/constants/constants';
+
 export const APP_ROUTES = {
   HOME: '/',
   AUTH_LOGIN: '/login',
@@ -7,6 +10,15 @@ export const APP_ROUTES = {
   PROFILE: '/profile',
   CHANGE_PASSWORD: '/profile/change-password',
 } as const;
+
+// The dashboard each role is sent to after login or when redirected home.
+// Exhaustive by type — a new role becomes a compile error rather than a silent fall-through.
+// Each call site keeps its own fallback for the no-user and unrecognised-role cases explicitly.
+export const DASHBOARD_BY_ROLE: Record<UserRole, string> = {
+  [USER_ROLES.Admin]: APP_ROUTES.ADMIN_DASHBOARD,
+  [USER_ROLES.Professor]: APP_ROUTES.PROFESSOR_DASHBOARD,
+  [USER_ROLES.Student]: APP_ROUTES.STUDENT_DASHBOARD,
+};
 
 export const API_ROUTES = {
   ACCOUNT_LOGIN: '/Account/Login',

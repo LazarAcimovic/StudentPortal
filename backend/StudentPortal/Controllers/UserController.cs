@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
-using StudentPortal.Exceptions;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Enums;
@@ -52,19 +51,12 @@ namespace StudentPortal.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUserById(Guid id)
         {
-            try
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user == null)
             {
-                var user = await _userService.GetUserByIdAsync(id);
-                if (user == null)
-                {
-                    return NotFound($"User with ID {id} not found.");
-                }
-                return Ok(user);
+                return NotFound($"User with ID {id} not found.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Ok(user);
         }
 
         // POST: api/user
@@ -72,25 +64,13 @@ namespace StudentPortal.Controllers
         [HttpPost]
         public async Task<ActionResult<UserDto>> AddUser([FromBody] AdminCreateUserDto userDto)
         {
-            try
+            var newUser = await _userService.AddUserAsync(userDto);
+            if (newUser == null)
             {
-                //var user = userDto;
-                var newUser = await _userService.AddUserAsync(userDto);
-                if (newUser == null)
-                {
-                    return BadRequest("User could not be created.");
-                }
+                return BadRequest("User could not be created.");
+            }
 
-                return CreatedAtAction(nameof(GetUserById), new { id = newUser.Id }, newUser);
-            }
-            catch (EmailAlreadyExistsException ex)
-            {
-                return Conflict(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return CreatedAtAction(nameof(GetUserById), new { id = newUser.Id }, newUser);
         }
 
         // PUT: api/user/{id}
@@ -102,22 +82,11 @@ namespace StudentPortal.Controllers
             if (!Guid.TryParse(callerIdStr, out var callerId))
                 return Unauthorized();
 
-            try
-            {
-                var updatedUser = await _userService.AdminUpdateUserAsync(id, callerId, userDto);
-                if (updatedUser == null)
-                    return NotFound($"User with ID {id} not found.");
+            var updatedUser = await _userService.AdminUpdateUserAsync(id, callerId, userDto);
+            if (updatedUser == null)
+                return NotFound($"User with ID {id} not found.");
 
-                return Ok(updatedUser);
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return StatusCode(403, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Ok(updatedUser);
         }
 
         // DELETE: api/user/{id}
@@ -125,19 +94,12 @@ namespace StudentPortal.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            try
+            var success = await _userService.DeleteUserAsync(id);
+            if (!success)
             {
-                var success = await _userService.DeleteUserAsync(id);
-                if (!success)
-                {
-                    return NotFound($"User with ID {id} not found or deletion failed.");
-                }
-                return NoContent();
+                return NotFound($"User with ID {id} not found or deletion failed.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return NoContent();
         }
 
         [Authorize(Roles = "Admin")]

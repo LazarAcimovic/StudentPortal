@@ -1,35 +1,18 @@
 import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useUserStore } from "../../store/user/useUserStore";
-import { USER_ROLES } from "../../shared/constants/constants";
-import { APP_ROUTES } from "../../config/constants";
+import { APP_ROUTES, DASHBOARD_BY_ROLE } from "../../config/constants";
 import { logout } from "../../features/auth/api/authService";
+import { clearAuthSession } from "../../lib/auth";
 
 const Navbar: React.FC = () => {
   const currentUser = useUserStore((s) => s.currentUser);
-  const clearCurrentUser = useUserStore((s) => s.clearCurrentUser);
-  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await logout();
     } finally {
-      clearCurrentUser();
-      navigate(APP_ROUTES.AUTH_LOGIN, { replace: true });
-    }
-  };
-
-  const getDashboardLink = () => {
-    if (!currentUser) return APP_ROUTES.HOME;
-    switch (currentUser.userRole) {
-      case USER_ROLES.Admin:
-        return APP_ROUTES.ADMIN_DASHBOARD;
-      case USER_ROLES.Professor:
-        return APP_ROUTES.PROFESSOR_DASHBOARD;
-      case USER_ROLES.Student:
-        return APP_ROUTES.STUDENT_DASHBOARD;
-      default:
-        return APP_ROUTES.HOME;
+      clearAuthSession({ redirectToLogin: true });
     }
   };
 
@@ -60,7 +43,7 @@ const Navbar: React.FC = () => {
                       className={({ isActive }) =>
                         isActive ? "nav-link active" : "nav-link"
                       }
-                      to={getDashboardLink()}
+                      to={DASHBOARD_BY_ROLE[currentUser.userRole] ?? APP_ROUTES.HOME}
                     >
                       Dashboard
                     </NavLink>

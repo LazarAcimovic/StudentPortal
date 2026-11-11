@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
-using StudentPortal.Exceptions;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers
@@ -108,22 +107,11 @@ namespace StudentPortal.Controllers
             if (!Guid.TryParse(callerIdStr, out var callerId))
                 return Unauthorized();
 
-            try
-            {
-                var updated = await _userService.UpdateProfileAsync(callerId, dto);
-                if (updated == null)
-                    return NotFound();
+            var updated = await _userService.UpdateProfileAsync(callerId, dto);
+            if (updated == null)
+                return NotFound();
 
-                return Ok(updated);
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return StatusCode(403, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Ok(updated);
         }
 
         [HttpPost("change-password")]
@@ -142,10 +130,6 @@ namespace StudentPortal.Controllers
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { field = "currentPassword", message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 

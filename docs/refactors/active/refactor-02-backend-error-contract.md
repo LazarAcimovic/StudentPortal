@@ -84,9 +84,9 @@ Not in scope: adding a status code no document names. Where the current behaviou
 Docs to update: Tech-Backend §6 (trim the deviations note if this campaign empties it)
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Auth`
 
-- [ ] `grep -c "StatusCode(500" backend/StudentPortal/Controllers/*.cs` before and after; the after must be 0, recorded in the commit message.
-- [ ] One commit per controller, in this order: `UserController` (4), `SubjectController` (5), `EnrollmentController` (3), `AccountController` (2) — so a regression is one revert, not a bisect.
-- [ ] Each removed block either disappears entirely (the middleware handles it) or becomes a typed throw in the **service**, never a new catch in the controller.
+- [x] `grep -c "StatusCode(500" backend/StudentPortal/Controllers/*.cs` before and after; the after must be 0, recorded in the commit message.
+- [x] One commit per controller, in this order: `UserController` (4), `SubjectController` (5), `EnrollmentController` (3), `AccountController` (2) — so a regression is one revert, not a bisect.
+- [x] Each removed block either disappears entirely (the middleware handles it) or becomes a typed throw in the **service**, never a new catch in the controller.
 - [ ] `SubjectController.UpdateSubject` is the one action with no generic catch today; leave its typed `InvalidOperationException` handling intact so the diff stays about removal.
 - [ ] Integration tests assert that the former 500 paths return the documented code, and that no response body contains the substring `Internal server error`.
 - [ ] Named suite green after each controller.

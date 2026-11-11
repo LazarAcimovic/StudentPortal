@@ -22,19 +22,6 @@ export function clearAuthSession(options: ClearAuthSessionOptions = {}): void {
   } 
 }
 
-export function getRedirectTarget(role: string): string {
-  switch (role) {
-    case 'Admin':
-      return APP_ROUTES.ADMIN_DASHBOARD;
-    case 'Professor':
-      return APP_ROUTES.PROFESSOR_DASHBOARD;
-    case 'Student':
-      return APP_ROUTES.STUDENT_DASHBOARD;
-    default:
-      return APP_ROUTES.HOME;
-  }
-}
-
 // Runs fn(); on a 401 response, clears the session and redirects to login.
 export async function withAuthRedirect<T>(
   fn: () => Promise<T>

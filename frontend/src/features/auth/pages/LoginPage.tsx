@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../../store/user/useUserStore";
-import { USER_ROLES } from "../../../shared/constants/constants";
 import { login } from "../api/authService";
 import { loginSchema } from "../models/schemas/loginSchema";
 import type { LoginFormValues } from "../models/schemas/loginSchema";
-import { APP_ROUTES } from "../../../config/constants";
+import { APP_ROUTES, DASHBOARD_BY_ROLE } from "../../../config/constants";
 import {
   LOGIN_INITIAL_VALUES,
   LOGIN_INITIAL_TOUCHED,
@@ -25,9 +24,7 @@ const LoginPage: React.FC = () => {
   const setCurrentUser = useUserStore((s) => s.setCurrentUser);
 
   if (currentUser) {
-    if (currentUser.userRole === USER_ROLES.Admin) return <Navigate to={APP_ROUTES.ADMIN_DASHBOARD} replace />;
-    if (currentUser.userRole === USER_ROLES.Professor) return <Navigate to={APP_ROUTES.PROFESSOR_DASHBOARD} replace />;
-    return <Navigate to={APP_ROUTES.STUDENT_DASHBOARD} replace />;
+    return <Navigate to={DASHBOARD_BY_ROLE[currentUser.userRole] ?? APP_ROUTES.STUDENT_DASHBOARD} replace />;
   }
 
   const parseResult = loginSchema.safeParse(values);
@@ -55,13 +52,7 @@ const LoginPage: React.FC = () => {
       const user = await login(parseResult.data);
       setCurrentUser(user);
 
-      if (user.userRole === USER_ROLES.Admin) {
-        navigate(APP_ROUTES.ADMIN_DASHBOARD, { replace: true });
-      } else if (user.userRole === USER_ROLES.Professor) {
-        navigate(APP_ROUTES.PROFESSOR_DASHBOARD, { replace: true });
-      } else {
-        navigate(APP_ROUTES.STUDENT_DASHBOARD, { replace: true });
-      }
+      navigate(DASHBOARD_BY_ROLE[user.userRole] ?? APP_ROUTES.STUDENT_DASHBOARD, { replace: true });
     } catch {
       setServerError("Invalid email or password");
     } finally {

@@ -3,17 +3,15 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../../test/helpers/renderWithProviders';
 import { makeAdmin, makeStudent } from '../../test/factories';
-import { useUserStore } from '../../store/user/useUserStore';
-
-const mockedNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return { ...actual, useNavigate: () => mockedNavigate };
-});
 
 const logoutMock = vi.fn();
 vi.mock('../../features/auth/api/authService', () => ({
   logout: () => logoutMock(),
+}));
+
+const clearAuthSessionMock = vi.fn();
+vi.mock('../../lib/auth', () => ({
+  clearAuthSession: (...a: unknown[]) => clearAuthSessionMock(...a),
 }));
 
 const toastSuccess = vi.fn();
@@ -24,8 +22,8 @@ vi.mock('react-toastify', () => ({
 import Navbar from './Navbar';
 
 beforeEach(() => {
-  mockedNavigate.mockReset();
   logoutMock.mockReset();
+  clearAuthSessionMock.mockReset();
   toastSuccess.mockReset();
 });
 
@@ -56,7 +54,7 @@ describe('Navbar — logged-in state', () => {
     expect(screen.queryByRole('link', { name: /students/i })).not.toBeInTheDocument();
   });
 
-  it('Logout calls authService.logout, clears the store, and navigates to /login', async () => {
+  it('Logout calls authService.logout then clearAuthSession with redirectToLogin', async () => {
     logoutMock.mockResolvedValueOnce(undefined);
     renderWithProviders(<Navbar />, { user: makeStudent() });
 
@@ -64,8 +62,7 @@ describe('Navbar — logged-in state', () => {
     await ue.click(screen.getByRole('button', { name: /logout/i }));
 
     expect(logoutMock).toHaveBeenCalled();
-    expect(useUserStore.getState().currentUser).toBeNull();
-    expect(mockedNavigate).toHaveBeenCalledWith('/login', { replace: true });
+    expect(clearAuthSessionMock).toHaveBeenCalledWith({ redirectToLogin: true });
     // UI §11.5: logout fires no toast (the toast list has no logout entry; removed in dc99eea).
     expect(toastSuccess).not.toHaveBeenCalled();
   });

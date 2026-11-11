@@ -33,19 +33,12 @@ namespace StudentPortal.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<EnrollmentDto>> GetEnrollmentById(Guid id)
         {
-            try
+            var enrollment = await _enrollmentService.GetEnrollmentByIdAsync(id);
+            if (enrollment == null)
             {
-                var enrollment = await _enrollmentService.GetEnrollmentByIdAsync(id);
-                if (enrollment == null)
-                {
-                    return NotFound($"Enrollment with ID {id} not found.");
-                }
-                return Ok(enrollment);
+                return NotFound($"Enrollment with ID {id} not found.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Ok(enrollment);
         }
 
         // POST: api/enrollment
@@ -62,10 +55,6 @@ namespace StudentPortal.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
         }
 
   
@@ -75,19 +64,12 @@ namespace StudentPortal.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEnrollment(Guid id)
         {
-            try
+            var success = await _enrollmentService.DeleteEnrollmentAsync(id);
+            if (!success)
             {
-                var success = await _enrollmentService.DeleteEnrollmentAsync(id);
-                if (!success)
-                {
-                    return NotFound($"Enrollment with ID {id} not found or deletion failed.");
-                }
-                return NoContent();
+                return NotFound($"Enrollment with ID {id} not found or deletion failed.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return NoContent();
         }
     }
 }

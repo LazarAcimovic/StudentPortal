@@ -93,7 +93,7 @@ Not in scope: **the fallbacks.** The role → dashboard rows agree across all fo
 Docs to update: Tech-Frontend §1 (if `lib/auth.ts`'s exported surface changes), Tech-Frontend §4
 Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
 
-- [ ] Record the four definitions **and their differing fallbacks** in the commit message, because this is what makes a naive consolidation a behaviour change:
+- [x] Record the four definitions **and their differing fallbacks** in the commit message, because this is what makes a naive consolidation a behaviour change:
 
   | Call site | Role rows | No user | Unrecognised role |
   |---|---|---|---|
@@ -102,13 +102,13 @@ Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
   | `lib/auth.getRedirectTarget` | agree | n/a (takes a role) | `HOME` |
   | `LoginPage` (`<Navigate>` and `navigate()`) | agree | n/a (guarded by `currentUser`) | `STUDENT_DASHBOARD` |
 
-- [ ] Move `DASHBOARD_BY_ROLE` to `config/constants.ts` beside `APP_ROUTES` as the single role → dashboard mapping. It is already a `Record<UserRole, string>`, exhaustive by type, so a new role becomes a compile error rather than a silent fall-through.
-- [ ] Each of the four call sites imports that record and **keeps its own fallback explicitly** — `DASHBOARD_BY_ROLE[role] ?? APP_ROUTES.HOME` in `Navbar`, `?? APP_ROUTES.STUDENT_DASHBOARD` in `LoginPage`, and so on. The divergence becomes visible in one line per site instead of hidden in four `switch` bodies. Do not collapse it.
-- [ ] `lib/auth.getRedirectTarget` becomes a one-line lookup over that record, or is deleted — `grep -rn "getRedirectTarget" frontend/src` first; it has no caller today, and `lib/auth.test.ts` may be its only reference.
-- [ ] `Navbar.handleLogout` calls `clearAuthSession({ redirectToLogin: true })` instead of clearing the store and navigating by hand. Note this is the one call site where the unconditional redirect in `clearAuthSession` is the *wanted* behaviour — the user asked to log out (compare D-039).
-- [ ] The three `switch` statements and the two inline chains are gone; `grep -c "ADMIN_DASHBOARD" frontend/src` drops from 7 to the router, the record and the test helper.
-- [ ] `RoleHomeRedirect.test.tsx`, `Navbar.test.tsx` and the integration tests under `src/test/integration/auth/` green — unchanged, which is the proof no fallback moved.
-- [ ] Named suites green, typecheck clean.
+- [x] Move `DASHBOARD_BY_ROLE` to `config/constants.ts` beside `APP_ROUTES` as the single role → dashboard mapping. It is already a `Record<UserRole, string>`, exhaustive by type, so a new role becomes a compile error rather than a silent fall-through.
+- [x] Each of the four call sites imports that record and **keeps its own fallback explicitly** — `DASHBOARD_BY_ROLE[role] ?? APP_ROUTES.HOME` in `Navbar`, `?? APP_ROUTES.STUDENT_DASHBOARD` in `LoginPage`, and so on. The divergence becomes visible in one line per site instead of hidden in four `switch` bodies. Do not collapse it.
+- [x] `lib/auth.getRedirectTarget` becomes a one-line lookup over that record, or is deleted — `grep -rn "getRedirectTarget" frontend/src` first; it has no caller today, and `lib/auth.test.ts` may be its only reference.
+- [x] `Navbar.handleLogout` calls `clearAuthSession({ redirectToLogin: true })` instead of clearing the store and navigating by hand. Note this is the one call site where the unconditional redirect in `clearAuthSession` is the *wanted* behaviour — the user asked to log out (compare D-039).
+- [x] The three `switch` statements and the two inline chains are gone; `grep -c "ADMIN_DASHBOARD" frontend/src` drops from 7 to the router, the record and the test helper.
+- [x] `RoleHomeRedirect.test.tsx`, `Navbar.test.tsx` and the integration tests under `src/test/integration/auth/` green — unchanged, which is the proof no fallback moved.
+- [x] Named suites green, typecheck clean.
 - Commit: `refactor(frontend): share the role-to-dashboard mapping, keep fallbacks explicit`
 
 ---
