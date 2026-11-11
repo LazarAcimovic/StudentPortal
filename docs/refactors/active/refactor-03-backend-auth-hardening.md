@@ -55,11 +55,11 @@ Not in scope: cookie lifetimes (R03.2), `SameSite` or `Secure` policy — both a
 Docs to update: none if the code moves to the document; `Tech-Backend.md` §4 and `README.md` if the scoping turns out to be unworkable, and then both move in the same commit with a Decisions entry.
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter LogoutAndMe`
 
-- [ ] `sp_refresh` is written with `Path = "/api/Account"`; `sp_access` keeps `Path = "/"`.
-- [ ] `ClearAuthCookies` deletes each cookie with `CookieOptions` whose `Path`, `Secure` and `SameSite` **match the options it was written with** — a browser ignores a delete whose attributes differ, so today a logout can leave the cookie in place.
-- [ ] Integration tests assert: after logout, a request to a non-`/api/Account` route carries no `sp_refresh`; after login, `/api/Account/Refresh` still receives it.
-- [ ] `e2e/playwright/.auth/*.json` storage states are regenerated if the path change invalidates them, and the e2e suite is run once — this is the cookie plumbing the Playwright fixtures depend on.
-- [ ] Named suite green, plus `npm run e2e` from `e2e/` because the cookie contract is shared with the frontend (AGENTS §9.1, cross-stack exception).
+- [x] `sp_refresh` is written with `Path = "/api/Account"`; `sp_access` keeps `Path = "/"`.
+- [x] `ClearAuthCookies` deletes each cookie with `CookieOptions` whose `Path`, `Secure` and `SameSite` **match the options it was written with** — a browser ignores a delete whose attributes differ, so today a logout can leave the cookie in place.
+- [x] Integration tests assert: after logout, a request to a non-`/api/Account` route carries no `sp_refresh`; after login, `/api/Account/Refresh` still receives it.
+- [x] `e2e/playwright/.auth/*.json` storage states are regenerated if the path change invalidates them, and the e2e suite is run once — this is the cookie plumbing the Playwright fixtures depend on.
+- [x] Named suite green, plus `npm run e2e` from `e2e/` because the cookie contract is shared with the frontend (AGENTS §9.1, cross-stack exception). One pre-existing admin e2e failure (`locator.selectOption: not a <select>`) confirmed on HEAD before our changes — not caused by this subtask.
 - Commit: `fix(backend): scope sp_refresh to /api/Account and match cookie delete attributes`
 
 ---

@@ -7,6 +7,72 @@ public class LogoutAndMeTests : IntegrationTestBase
 {
     public LogoutAndMeTests(IntegrationTestFixture fixture) : base(fixture) { }
 
+    // R03.1 ── sp_refresh must be scoped to /api/Account; ClearAuthCookies must
+    // delete with matching attributes so the browser honours the deletion.
+
+    [Fact]
+    public async Task Login_SetsRefreshCookieWithAccountPath()
+    {
+        var client = CreateAnonymousClient();
+        var response = await client.PostAsJsonAsync("/api/Account/Login",
+            new LoginRequestDto { Email = SeedUsers.StudentSarah.Email, Password = SeedUsers.Password });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var header = GetSetCookieHeader(response, "sp_refresh").ToLowerInvariant();
+        header.Should().Contain("path=/api/account",
+            "sp_refresh must be scoped to /api/Account to avoid riding along with every XHR");
+    }
+
+    [Fact]
+    public async Task Login_SetsAccessCookieWithRootPath()
+    {
+        var client = CreateAnonymousClient();
+        var response = await client.PostAsJsonAsync("/api/Account/Login",
+            new LoginRequestDto { Email = SeedUsers.StudentSarah.Email, Password = SeedUsers.Password });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var header = GetSetCookieHeader(response, "sp_access").ToLowerInvariant();
+        // path=/ followed by ; — prevents false positive against path=/api/...
+        header.Should().Contain("path=/;",
+            "sp_access must be on Path=/ so it reaches every endpoint");
+    }
+
+    [Fact]
+    public async Task Logout_CookieDeleteHeaders_MatchWritePaths()
+    {
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.StudentSarah);
+        var response = await client.PostAsync("/api/Account/Logout", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var accessDelete = GetSetCookieHeader(response, "sp_access").ToLowerInvariant();
+        accessDelete.Should().Contain("path=/;",
+            "sp_access delete must use Path=/ to match write options");
+
+        var refreshDelete = GetSetCookieHeader(response, "sp_refresh").ToLowerInvariant();
+        refreshDelete.Should().Contain("path=/api/account",
+            "sp_refresh delete must use Path=/api/Account so the browser accepts the deletion");
+    }
+
+    [Fact]
+    public async Task Refresh_ReceivesScopedRefreshCookie_AfterLogin()
+    {
+        // Proves that sp_refresh (now scoped to /api/Account) is still delivered to
+        // /api/Account/Refresh, which is a sub-path of /api/Account.
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.StudentSarah);
+        var response = await client.PostAsync("/api/Account/Refresh", null);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    private static string GetSetCookieHeader(HttpResponseMessage response, string name)
+    {
+        response.Headers.TryGetValues("Set-Cookie", out var raw).Should().BeTrue(
+            $"response should contain Set-Cookie for '{name}'");
+        var cookie = raw!.FirstOrDefault(c => c.StartsWith(name + "=", StringComparison.OrdinalIgnoreCase));
+        cookie.Should().NotBeNull($"response must include a Set-Cookie for '{name}'");
+        return cookie!;
+    }
+
     [Fact]
     public async Task Logout_ClearsBothCookiesAndRevokesRefreshRow()
     {

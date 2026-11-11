@@ -67,20 +67,11 @@ namespace StudentPortal.Controllers
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {
+            var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(callerIdStr, out var callerId);
+
             var rawRefreshToken = Request.Cookies["sp_refresh"];
-            if (!string.IsNullOrEmpty(rawRefreshToken))
-            {
-                var hash = HttpContext.RequestServices
-                    .GetRequiredService<ITokenService>()
-                    .HashRefreshToken(rawRefreshToken);
-
-                var refreshTokenRepo = HttpContext.RequestServices
-                    .GetRequiredService<IRefreshTokenRepository>();
-
-                var stored = await refreshTokenRepo.FindByHashAsync(hash);
-                if (stored is not null && stored.RevokedUtc is null)
-                    await refreshTokenRepo.RevokeAsync(stored.Id);
-            }
+            await _authService.LogoutAsync(callerId, rawRefreshToken);
 
             ClearAuthCookies();
             return NoContent();
@@ -133,12 +124,12 @@ namespace StudentPortal.Controllers
             }
         }
 
-        private CookieOptions CreateCookieOptions(DateTimeOffset expires) => new()
+        private CookieOptions CreateCookieOptions(DateTimeOffset? expires = null, string path = "/") => new()
         {
             HttpOnly = true,
             Secure = !_env.IsDevelopment(),
             SameSite = SameSiteMode.Strict,
-            Path = "/",
+            Path = path,
             Expires = expires,
         };
 
@@ -147,14 +138,13 @@ namespace StudentPortal.Controllers
             Response.Cookies.Append("sp_access", accessToken,
                 CreateCookieOptions(DateTimeOffset.UtcNow.AddMinutes(15)));
             Response.Cookies.Append("sp_refresh", rawRefreshToken,
-                CreateCookieOptions(DateTimeOffset.UtcNow.AddDays(7)));
+                CreateCookieOptions(DateTimeOffset.UtcNow.AddDays(7), "/api/Account"));
         }
 
         private void ClearAuthCookies()
         {
-            var options = new CookieOptions { Path = "/" };
-            Response.Cookies.Delete("sp_access", options);
-            Response.Cookies.Delete("sp_refresh", options);
+            Response.Cookies.Delete("sp_access", CreateCookieOptions(path: "/"));
+            Response.Cookies.Delete("sp_refresh", CreateCookieOptions(path: "/api/Account"));
         }
     }
 }
