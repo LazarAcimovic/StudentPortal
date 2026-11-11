@@ -163,12 +163,12 @@ Users ──< RefreshTokens
 |----------------------|----------------|------|---------|---------------------------------------------------------|
 | `Id`                 | `uuid`         | NO   |         | PK                                                      |
 | `UserId`             | `uuid`         | NO   |         | FK → `Users.Id`. Index on this column.                  |
-| `TokenHash`          | `varchar(100)` | NO   |         | SHA-256(raw) in base64 or hex. **Never stores the raw.**|
+| `TokenHash`          | `varchar(128)` | NO   |         | SHA-256(raw) in base64 or hex. **Never stores the raw.** `UQ` index.|
 | `ExpiresUtc`         | `timestamp`    | NO   |         | 7 days after creation                                   |
 | `RevokedUtc`         | `timestamp`    | YES  | `NULL`  | Set when rotated out or on logout                       |
 | `ReplacedByTokenId`  | `uuid`         | YES  | `NULL`  | Points at the row created to replace this one           |
 | `CreatedUtc`         | `timestamp`    | NO   |         |                                                         |
-| `CreatedByIp`        | `varchar(64)`  | YES  |         | For auditing (nice-to-have)                             |
+| `CreatedByIp`        | `varchar(45)`  | YES  |         | For auditing (nice-to-have). 45 = longest IPv6 + zone id.|
 
 **Indexes:** `IX RefreshTokens_UserId (UserId)`, `UQ RefreshTokens_TokenHash (TokenHash)`.
 
@@ -302,6 +302,7 @@ Migration names are the stable identifiers — not task numbers, which change as
 | 4 | `SubjectEctsDefault` | Adds `DEFAULT 6` to `Subjects.ECTS` and back-fills. |
 | 5 | `AddSubjectCode` | Adds `Subjects.SubjectCode varchar(50) NOT NULL DEFAULT ''` (§2.2). |
 | 6 | `AddEscalationWorkflow` | Adds `Grades.AssignedProfessorId`, creates `Escalations` (§2.8) and `EscalationAssignments` (§2.9) with their indexes and FKs. |
+| 7 | `AddRefreshTokenHashUniqueIndex` | Unique index `IX_RefreshTokens_TokenHash` on `RefreshTokens.TokenHash` (§2.7). |
 
 Each migration is one commit. The agent generates it with `dotnet ef migrations add <Name>` and commits the files; the human runs `dotnet ef database update`. Append new rows to the end of this table in the same commit as the migration.
 

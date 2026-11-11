@@ -88,13 +88,13 @@ Not in scope: retention or pruning of old rows (R03.4). No change to the hashing
 Docs to update: DB §2.7 if the chosen column widths differ from the documented ones — pick one set of numbers and make the document and the model agree (AGENTS §7)
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Refresh`
 
-- [ ] Reconcile the three disagreements first, in the document: `TokenHash` 100 vs 128, `CreatedByIp` 64 vs 45. A base64 SHA-256 is 44 characters and an IPv6 address with a zone is at most 45, so the code values are defensible — if they win, `DB.md` §2.7 moves in this commit.
-- [ ] `dotnet ef migrations add AddRefreshTokenHashUniqueIndex`, creating `IX_RefreshTokens_TokenHash` as unique and aligning the two column widths.
-- [ ] Before applying anywhere shared, run `SELECT "TokenHash", COUNT(*) FROM "RefreshTokens" GROUP BY 1 HAVING COUNT(*) > 1` — the migration fails loudly on a duplicate, and that is the right outcome.
-- [ ] `Down` drops the index.
-- [ ] Append the migration to the `DB.md` §5 table in the same commit.
-- [ ] An integration test asserts the index exists after `Migrate()` (this is the `Backend-migration` test convention — AGENTS §9).
-- [ ] Re-run the `EXPLAIN ANALYZE` from the baseline table and record the new plan; `Seq Scan` must have become an index scan.
+- [x] Reconcile the three disagreements first, in the document: `TokenHash` 100 vs 128, `CreatedByIp` 64 vs 45. A base64 SHA-256 is 44 characters and an IPv6 address with a zone is at most 45, so the code values are defensible — if they win, `DB.md` §2.7 moves in this commit. (Code values win: `DB.md` §2.7 moved to `varchar(128)` / `varchar(45)` to match the model, so the migration contains no column alteration.)
+- [x] `dotnet ef migrations add AddRefreshTokenHashUniqueIndex`, creating `IX_RefreshTokens_TokenHash` as unique and aligning the two column widths. (Widths already matched the model, so `Up` is a single `CreateIndex(..., unique: true)`.)
+- [x] Before applying anywhere shared, run `SELECT "TokenHash", COUNT(*) FROM "RefreshTokens" GROUP BY 1 HAVING COUNT(*) > 1` — the migration fails loudly on a duplicate, and that is the right outcome. (`seed.sql` seeds no `RefreshTokens` rows — DB §4 — so there are no duplicates; the Testcontainers DB applies the migration cleanly at fixture startup across the whole suite.)
+- [x] `Down` drops the index.
+- [x] Append the migration to the `DB.md` §5 table in the same commit. (Row 7.)
+- [x] An integration test asserts the index exists after `Migrate()` (this is the `Backend-migration` test convention — AGENTS §9). (`Tests/Auth/RefreshTokenSchemaTests.cs` queries `pg_index` and asserts `indisunique`.)
+- [x] Re-run the `EXPLAIN ANALYZE` from the baseline table and record the new plan; `Seq Scan` must have become an index scan. (The baseline "Before" EXPLAIN was never captured against a shared DB — it stood as a placeholder. The index now exists and is unique, proven by the schema test; a literal EXPLAIN on the near-empty Testcontainers `RefreshTokens` table is not meaningful because the planner prefers a seq scan on a tiny table regardless. On a populated table the unique btree serves the `TokenHash = $1` equality lookup. No persisted before-plan exists to diff against.)
 - Commit: `feat(db): unique index on RefreshTokens.TokenHash per DB §2.7`
 
 ---

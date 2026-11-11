@@ -195,6 +195,11 @@ public partial class StudentPortalApiContext : DbContext
             entity.Property(e => e.TokenHash).HasMaxLength(128).IsRequired();
             entity.Property(e => e.CreatedByIp).HasMaxLength(45);
 
+            // DB §2.7: UQ RefreshTokens_TokenHash. The hash is looked up on every
+            // /Refresh and /Logout; a unique index makes that an index scan and
+            // enforces at the database that a hash maps to at most one row.
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+
             entity.HasOne(d => d.User).WithMany()
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
