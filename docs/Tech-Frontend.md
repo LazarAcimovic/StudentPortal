@@ -300,6 +300,8 @@ Response interceptor:
 - On refresh failure (the retried `401`): call `clearAuthSession({ redirectToLogin: true })` — clears the user store and navigates to `/login` via the navigation singleton.
 - On `403`: **do not touch the session** — reject the promise so the caller handles it. A `403` is an authorization failure (authenticated, wrong role), not an authentication failure; clearing the session on `403` logged users out of a still-valid session whenever a request their role could not make slipped through (per D-029).
 
+**The session bootstrap bypasses this interceptor on purpose (per D-039).** `App.tsx` hydrates the store by calling `GET /api/Account/Me` with `_retry: true`, and handles its own `401` → refresh → retry branch, so the interceptor's refresh-failure path never runs during the anonymous first load. The reason is the bullet above it: `clearAuthSession({ redirectToLogin: true })` navigates to `/login` **unconditionally**, with no view of the current route, so routing the bootstrap through the interceptor gives a logged-out visitor on the public Home page a forced redirect to `/login`. The bootstrap instead clears with plain `clearCurrentUser()` and leaves the redirect to the guarded effect in `App.tsx`, which spares `APP_ROUTES.HOME` and `APP_ROUTES.AUTH_LOGIN`. This is **not** duplication to be refactored away: removing `_retry` on its own is forbidden, and the dedup may only be done together with making the refresh-failure branch clear state without navigating, plus a test that a logged-out visitor opening Home stays on Home.
+
 **Routing:**
 
 - `createBrowserRouter` + `<RouterProvider/>`.
