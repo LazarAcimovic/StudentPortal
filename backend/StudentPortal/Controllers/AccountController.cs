@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers
@@ -67,8 +67,7 @@ namespace StudentPortal.Controllers
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {
-            var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            Guid.TryParse(callerIdStr, out var callerId);
+            var callerId = this.CallerId() ?? Guid.Empty;
 
             var rawRefreshToken = Request.Cookies["sp_refresh"];
             await _authService.LogoutAsync(callerId, rawRefreshToken);
@@ -80,8 +79,7 @@ namespace StudentPortal.Controllers
         [HttpGet("Me")]
         public async Task<ActionResult<UserDto>> Me()
         {
-            var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(callerIdStr, out var callerId))
+            if (this.CallerId() is not { } callerId)
                 return Unauthorized();
 
             var user = await _userService.GetUserByIdAsync(callerId);
@@ -94,8 +92,7 @@ namespace StudentPortal.Controllers
         [HttpPut("profile")]
         public async Task<ActionResult<UserDto>> UpdateProfile([FromBody] UpdateProfileDto dto)
         {
-            var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(callerIdStr, out var callerId))
+            if (this.CallerId() is not { } callerId)
                 return Unauthorized();
 
             var updated = await _userService.UpdateProfileAsync(callerId, dto);
@@ -108,8 +105,7 @@ namespace StudentPortal.Controllers
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
-            var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(callerIdStr, out var callerId))
+            if (this.CallerId() is not { } callerId)
                 return Unauthorized();
 
             try

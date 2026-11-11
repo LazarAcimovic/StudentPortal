@@ -117,12 +117,12 @@ Not in scope: any change to what happens when the claim is missing — it stays 
 Docs to update: Tech-Backend §1 layout block, if a new file lands under `Handlers/`
 Verify: `dotnet test backend/StudentPortal.Tests` and `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] `grep -c "FindFirstValue(ClaimTypes.NameIdentifier)" backend/StudentPortal/Controllers/*.cs` — record the 21 hits and the per-file split in the commit message.
-- [ ] Add one `ControllerBase` extension under `Handlers/` (`TryGetCallerId(out Guid)` or `CallerId()` returning `Guid?`).
-- [ ] Replace all 21 blocks. Behaviour identical.
-- [ ] `AccountController.Logout` stops resolving `ITokenService` and `IRefreshTokenRepository` through `HttpContext.RequestServices` and takes both as constructor dependencies like every other controller (Tech-Backend §2).
-- [ ] No reference to the old inline pattern remains.
-- [ ] Named suites green.
+- [x] `grep -c "FindFirstValue(ClaimTypes.NameIdentifier)" backend/StudentPortal/Controllers/*.cs` — record the 21 hits and the per-file split in the commit message. (Actual: 22 blocks across 8 controllers — Account 4, Appeal 6, Escalation 2, Grade 4, GradeDraft 2, Professor 2, Student 1, User 1.)
+- [x] Add one `ControllerBase` extension under `Handlers/` (`TryGetCallerId(out Guid)` or `CallerId()` returning `Guid?`). (`Handlers/ControllerCallerExtensions.cs`, `CallerId()` → `Guid?`.)
+- [x] Replace all 21 blocks. Behaviour identical. (Call sites use `if (this.CallerId() is not { } callerId) return Unauthorized();`; `Logout` keeps its `Guid.Empty` fallback.)
+- [x] `AccountController.Logout` stops resolving `ITokenService` and `IRefreshTokenRepository` through `HttpContext.RequestServices` and takes both as constructor dependencies like every other controller (Tech-Backend §2). (Already resolved: `Logout` delegates to the constructor-injected `IAuthService.LogoutAsync`; no `RequestServices` lookup exists anywhere in the tree.)
+- [x] No reference to the old inline pattern remains.
+- [x] Named suites green. (`StudentPortal.Tests` 175 passed; `StudentPortal.IntegrationTests` 198 passed.)
 - Commit: `refactor(backend): single caller-id accessor and constructor-injected logout deps`
 
 ---

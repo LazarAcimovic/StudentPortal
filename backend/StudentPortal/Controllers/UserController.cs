@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Handlers;
@@ -78,8 +77,7 @@ namespace StudentPortal.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] AdminUpdateUserDto userDto)
         {
-            var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(callerIdStr, out var callerId))
+            if (this.CallerId() is not { } callerId)
                 return Unauthorized();
 
             var updatedUser = await _userService.AdminUpdateUserAsync(id, callerId, userDto);

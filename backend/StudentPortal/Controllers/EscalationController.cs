@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers;
@@ -56,8 +56,7 @@ public class EscalationController : ControllerBase
     [HttpPost("assign")]
     public async Task<ActionResult<EscalatedCaseDto>> Assign([FromBody] AssignProfessorDto dto)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var adminId))
+        if (this.CallerId() is not { } adminId)
             return Unauthorized();
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;
@@ -84,8 +83,7 @@ public class EscalationController : ControllerBase
     [HttpPost("reassign")]
     public async Task<ActionResult<EscalatedCaseDto>> Reassign([FromBody] ReassignProfessorDto dto)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var adminId))
+        if (this.CallerId() is not { } adminId)
             return Unauthorized();
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;

@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers;
@@ -23,8 +23,7 @@ public class GradeController : ControllerBase
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<GradeDto>> GetByEnrollment(Guid enrollmentId)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
@@ -48,8 +47,7 @@ public class GradeController : ControllerBase
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<GradeDto>> Confirm([FromBody] ConfirmGradeDto dto)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
@@ -79,8 +77,7 @@ public class GradeController : ControllerBase
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<GradeDto>> ReconfirmExam([FromBody] ReconfirmExamDto dto)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
@@ -106,8 +103,7 @@ public class GradeController : ControllerBase
     [Authorize(Roles = "Student")]
     public async Task<ActionResult<GradeDto>> StudentConfirm([FromBody] StudentConfirmGradeDto dto)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try

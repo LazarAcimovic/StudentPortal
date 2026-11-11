@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers;
@@ -22,8 +22,7 @@ public class GradeDraftController : ControllerBase
     [HttpGet("{enrollmentId:guid}")]
     public async Task<ActionResult<GradeDraftDto>> GetDraft(Guid enrollmentId)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
@@ -47,8 +46,7 @@ public class GradeDraftController : ControllerBase
     [HttpPut("{enrollmentId:guid}")]
     public async Task<ActionResult<GradeDraftDto>> SaveDraft(Guid enrollmentId, [FromBody] SaveGradeDraftDto dto)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try

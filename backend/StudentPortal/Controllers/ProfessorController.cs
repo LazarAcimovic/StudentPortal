@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers;
@@ -25,8 +25,7 @@ public class ProfessorController : ControllerBase
     [HttpGet("me/dashboard")]
     public async Task<ActionResult<ProfessorDashboardDto>> GetDashboard()
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         var dashboard = await _dashboardService.GetDashboardAsync(callerId);
@@ -39,8 +38,7 @@ public class ProfessorController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 5)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         if (page < 1) page = 1;

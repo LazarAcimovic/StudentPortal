@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers;
@@ -23,8 +23,7 @@ public class AppealController : ControllerBase
     [Authorize(Roles = "Student")]
     public async Task<ActionResult<AppealDto>> Submit([FromBody] SubmitAppealDto dto)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
@@ -50,8 +49,7 @@ public class AppealController : ControllerBase
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<IEnumerable<AppealDto>>> GetPending()
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         var appeals = await _appealService.GetPendingForProfessorAsync(callerId);
@@ -62,8 +60,7 @@ public class AppealController : ControllerBase
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<IEnumerable<AppealDto>>> GetByGrade(Guid gradeId)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
@@ -85,8 +82,7 @@ public class AppealController : ControllerBase
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<AppealDto>> Accept(Guid id)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
@@ -112,8 +108,7 @@ public class AppealController : ControllerBase
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<AppealDto>> Deny(Guid id)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
@@ -139,8 +134,7 @@ public class AppealController : ControllerBase
     [Authorize(Roles = "Professor")]
     public async Task<ActionResult<AppealDto>> UndoDeny(Guid id)
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try

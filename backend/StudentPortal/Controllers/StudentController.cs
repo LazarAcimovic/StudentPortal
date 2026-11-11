@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Dtos;
+using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 
 namespace StudentPortal.Controllers;
@@ -21,8 +21,7 @@ public class StudentController : ControllerBase
     [HttpGet("me/dashboard")]
     public async Task<ActionResult<StudentDashboardDto>> GetDashboard()
     {
-        var callerIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(callerIdStr, out var callerId))
+        if (this.CallerId() is not { } callerId)
             return Unauthorized();
 
         try
