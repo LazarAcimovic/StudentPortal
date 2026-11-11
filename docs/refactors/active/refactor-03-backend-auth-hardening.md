@@ -172,10 +172,10 @@ Not in scope: `Login` and `Refresh`, which are already `[AllowAnonymous]`.
 Docs to update: Tech-Backend §3 (if `Logout` becomes `[AllowAnonymous]`, the authorization table must say so), plus a new `docs/Decisions.md` entry (next free id).
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter LogoutAndMe`
 
-- [ ] **Subtask 0 first:** this changes a documented attribute, so `Tech-Backend.md` §3 moves in its own `docs:` commit with the Decisions entry.
-- [ ] Today a user whose 15-minute access token has expired gets `401` from `Logout`, so the refresh row survives for the remaining seven days and the SPA clears its store without telling the server. The frontend `clearAuthSession` path has the same hole (see refactor-06).
-- [ ] Make `Logout` `[AllowAnonymous]` and authenticate it by the refresh cookie alone: hash, look up, revoke if live, clear cookies, return `204` either way so it cannot be used as an oracle.
-- [ ] Integration test: logout with an expired `sp_access` but a valid `sp_refresh` revokes the row and returns `204`; logout with no cookies returns `204` and touches nothing.
+- [x] **Subtask 0 first:** this changes a documented attribute, so `Tech-Backend.md` §3 moves in its own `docs:` commit with the Decisions entry. (Commit `docs: logout works without a live access token (D-044)`; also Tech-Backend §4.)
+- [x] Today a user whose 15-minute access token has expired gets `401` from `Logout`, so the refresh row survives for the remaining seven days and the SPA clears its store without telling the server. The frontend `clearAuthSession` path has the same hole (see refactor-06).
+- [x] Make `Logout` `[AllowAnonymous]` and authenticate it by the refresh cookie alone: hash, look up, revoke if live, clear cookies, return `204` either way so it cannot be used as an oracle. (`IAuthService.LogoutAsync(string?)` dropped the caller id; the controller is `[AllowAnonymous]`.)
+- [x] Integration test: logout with an expired `sp_access` but a valid `sp_refresh` revokes the row and returns `204`; logout with no cookies returns `204` and touches nothing. (`Logout_WithOnlyRefreshCookie_RevokesRow_AndReturns204` sends only `sp_refresh`; `Logout_WithNoCookies_Returns204`. The change is backward-compatible for the frontend — success is still `204` — so the cross-stack sweep stays with R03.9 / the archival gate, D-038.)
 - Commit: `fix(backend): allow logout to revoke a session without a live access token`
 
 ---

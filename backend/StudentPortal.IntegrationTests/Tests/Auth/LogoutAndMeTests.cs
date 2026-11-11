@@ -92,6 +92,50 @@ public class LogoutAndMeTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task Logout_WithOnlyRefreshCookie_RevokesRow_AndReturns204()
+    {
+        // D-044: Logout is [AllowAnonymous] and authenticated by sp_refresh alone, so it
+        // works with an expired access token — here the access cookie is never sent.
+        var client = CreateAnonymousClient();
+        var login = await client.PostAsJsonAsync("/api/Account/Login",
+            new LoginRequestDto { Email = SeedUsers.ProfessorSmith.Email, Password = SeedUsers.Password });
+        login.StatusCode.Should().Be(HttpStatusCode.OK);
+        var refreshValue = ExtractCookieValue(login, "sp_refresh");
+
+        // A bare client that sends ONLY sp_refresh — no access token at all.
+        var bare = Fixture.Factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false,
+            BaseAddress = new Uri("http://localhost"),
+        });
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/Account/Logout");
+        req.Headers.TryAddWithoutValidation("Cookie", $"sp_refresh={refreshValue}");
+
+        var response = await bare.SendAsync(req);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var unrevoked = await WithDbAsync(db => db.RefreshTokens
+            .CountAsync(t => t.UserId == SeedUsers.ProfessorSmith.Id && t.RevokedUtc == null));
+        unrevoked.Should().Be(0,
+            "logout authenticated by sp_refresh alone must revoke the live refresh row");
+    }
+
+    [Fact]
+    public async Task Logout_WithNoCookies_Returns204()
+    {
+        // D-044: returns 204 either way so it cannot be used as a token-existence oracle,
+        // and touches no rows when there is no token to revoke.
+        var client = CreateAnonymousClient();
+
+        var response = await client.PostAsync("/api/Account/Logout", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var revoked = await WithDbAsync(db => db.RefreshTokens.CountAsync(t => t.RevokedUtc != null));
+        revoked.Should().Be(0, "a cookieless logout must not revoke anything");
+    }
+
+    [Fact]
     public async Task Me_ReturnsCurrentUserShape_WithoutIsDeleted()
     {
         var client = await CreateAuthenticatedClientAsync(SeedUsers.ProfessorSmith);

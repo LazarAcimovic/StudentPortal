@@ -100,16 +100,21 @@ public class AuthService : IAuthService
         return new AuthResult(user, accessToken, rawNew);
     }
 
-    public async Task LogoutAsync(Guid callerId, string? rawRefreshToken)
+    public async Task LogoutAsync(string? rawRefreshToken)
     {
-        if (!string.IsNullOrEmpty(rawRefreshToken))
+        // Authenticated by the refresh cookie alone (D-044): no caller id, so logout
+        // works after the access token has expired. Revoke the matching live row and
+        // return silently either way so the endpoint is not a token-existence oracle.
+        if (string.IsNullOrEmpty(rawRefreshToken))
+            return;
+
+        var hash = _tokenService.HashRefreshToken(rawRefreshToken);
+        var stored = await _refreshTokenRepository.FindByHashAsync(hash);
+        if (stored is not null && stored.RevokedUtc is null)
         {
-            var hash = _tokenService.HashRefreshToken(rawRefreshToken);
-            var stored = await _refreshTokenRepository.FindByHashAsync(hash);
-            if (stored is not null && stored.RevokedUtc is null)
-                await _refreshTokenRepository.RevokeAsync(stored.Id);
+            await _refreshTokenRepository.RevokeAsync(stored.Id);
+            _logger.LogInformation("Logout for UserId {UserId}", stored.UserId);
         }
-        _logger.LogInformation("Logout for UserId {UserId}", callerId);
     }
 
     private async Task<AuthResult> IssueTokensAsync(User user, string? ipAddress)

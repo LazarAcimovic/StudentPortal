@@ -79,13 +79,14 @@ namespace StudentPortal.Controllers
             return NoContent();
         }
 
+        // [AllowAnonymous] so logout still works once the 15-minute access token has
+        // expired — it is authenticated by the sp_refresh cookie alone (D-044).
+        [AllowAnonymous]
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {
-            var callerId = this.CallerId() ?? Guid.Empty;
-
             var rawRefreshToken = Request.Cookies["sp_refresh"];
-            await _authService.LogoutAsync(callerId, rawRefreshToken);
+            await _authService.LogoutAsync(rawRefreshToken);
 
             ClearAuthCookies();
             return NoContent();
