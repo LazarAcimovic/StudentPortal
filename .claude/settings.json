@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/section-map.mjs",
+            "timeout": 10,
+            "statusMessage": "Loading docs section map"
+          }
+        ]
+      }
+    ]
+  }
+}
