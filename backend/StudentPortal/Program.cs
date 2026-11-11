@@ -148,6 +148,9 @@ builder.Services.AddSwaggerGen(options =>
 
 
 
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -190,16 +193,20 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Note: in e2e the test database is provisioned (migrate + seed) by the first
-// POST /api/__test__/reset from Playwright's globalSetup, not at boot — so the server
-// starts without touching Postgres and there is no startup ordering race.
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseExceptionHandler();
+}
+
+// Note: in e2e the test database is provisioned (migrate + seed) by the first
+// POST /api/__test__/reset from Playwright's globalSetup, not at boot — so the server
+// starts without touching Postgres and there is no startup ordering race.
 
 app.UseHttpsRedirection();
 

@@ -67,12 +67,12 @@ Not in scope: removing the per-controller catch blocks (R02.3) — while they ex
 Docs to update: Tech-Backend §6 only if the implemented shape differs from the documented one in any detail — and then the document is what moves, in the same commit.
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Smoke`
 
-- [ ] `builder.Services.AddProblemDetails()` and `app.UseExceptionHandler()` in `Program.cs`, registered before `UseAuthentication`.
-- [ ] Map `NotFoundException` to 404, `ForbiddenAccessException` to 403, `ValidationException` to 400, `ConflictException` to 409, everything else to 500.
-- [ ] A 500 body carries `title: "An error occurred."` and `traceId`, and **never** `ex.Message`, `ex.StackTrace` or an inner exception.
-- [ ] The handler logs the exception at `Error` level with the same `traceId` it returns.
-- [ ] A new integration test asserts an unhandled exception returns 500 with no exception text in the body. This subtask is `Backend-endpoint`, not `Refactor`, so it writes that test Red first (AGENTS §9).
-- [ ] Development still shows the developer exception page, so local debugging is unchanged.
+- [x] `builder.Services.AddProblemDetails()` and `app.UseExceptionHandler()` in `Program.cs`, registered before `UseAuthentication`.
+- [x] Map `NotFoundException` to 404, `ForbiddenAccessException` to 403, `ValidationException` to 400, `ConflictException` to 409, everything else to 500.
+- [x] A 500 body carries `title: "An error occurred."` and `traceId`, and **never** `ex.Message`, `ex.StackTrace` or an inner exception.
+- [x] The handler logs the exception at `Error` level with the same `traceId` it returns.
+- [x] A new integration test asserts an unhandled exception returns 500 with no exception text in the body. This subtask is `Backend-endpoint`, not `Refactor`, so it writes that test Red first (AGENTS §9).
+- [x] Development still shows the developer exception page, so local debugging is unchanged.
 - Commit: `feat(backend): ProblemDetails exception handler per Tech-Backend §6`
 
 ---
