@@ -24,12 +24,12 @@ Those 14 echoes are the largest information-disclosure surface in the project: a
 
 | Measure | Before | After (fill in at the end) |
 |---|---|---|
-| `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | |
-| `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | |
-| `catch (Exception ex)` in `Controllers/` | 14 | |
-| `StatusCode(500, …ex.Message)` | 14 | |
-| `ILogger` injections | 0 | |
-| duplicated claim-extraction blocks | 21 | |
+| `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | 175 passed, 0 failed |
+| `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | 198 passed, 0 failed |
+| `catch (Exception ex)` in `Controllers/` | 14 | 0 |
+| `StatusCode(500, …ex.Message)` | 14 | 0 |
+| `ILogger` injections | 0 | 3 (`AuthService`, `UserService`, `GlobalExceptionHandler`) |
+| duplicated claim-extraction blocks | 21 | 0 (one shared `ControllerBase.CallerId()`) |
 
 #### Out of scope
 

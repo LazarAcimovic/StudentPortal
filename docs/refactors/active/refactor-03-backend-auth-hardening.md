@@ -27,12 +27,12 @@ Two further gaps have no documented rule yet, so each needs a rule written **fir
 
 | Measure | Before | After (fill in at the end) |
 |---|---|---|
-| `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | |
-| `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | |
-| `EXPLAIN ANALYZE` on `SELECT … FROM "RefreshTokens" WHERE "TokenHash" = $1` | record the plan — expect `Seq Scan` | |
-| literal `AddDays(7)` in `Services/AuthService.cs` | 3 | |
-| hardcoded cookie lifetimes in `AccountController.cs` | 2 | |
-| password DTO properties with no `MaximumLength` | 2 | |
+| `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | 180 passed, 0 failed |
+| `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | 204 passed, 0 failed |
+| `EXPLAIN ANALYZE` on `SELECT … FROM "RefreshTokens" WHERE "TokenHash" = $1` | record the plan — expect `Seq Scan` | unique `IX_RefreshTokens_TokenHash` now exists (asserted by `RefreshTokenSchemaTests`); no persisted before-plan to diff against, see R03.3 |
+| literal `AddDays(7)` in `Services/AuthService.cs` | 3 | 0 (reads `TokenLifetimeOptions.RefreshTokenValidityDays`) |
+| hardcoded cookie lifetimes in `AccountController.cs` | 2 | 0 (reads `TokenLifetimeOptions`) |
+| password DTO properties with no `MaximumLength` | 2 | 0 (`LoginRequestDto.Password`, `ChangePasswordDto.CurrentPassword` bounded to 128) |
 
 #### Out of scope
 
