@@ -15,4 +15,16 @@ public class TokenLifetimeOptions
 
     /// <summary>Refresh-token / <c>sp_refresh</c> lifetime, in days (PRD §6: 7).</summary>
     public int RefreshTokenValidityDays { get; set; }
+
+    /// <summary>
+    /// Grace period, in days, before a revoked-and-expired refresh row is pruned on the
+    /// write path (D-041). Defaults to 30 when the config key is absent.
+    /// </summary>
+    public int RevokedTokenRetentionDays { get; set; } = 30;
+
+    /// <summary>
+    /// Maximum live (unrevoked, unexpired) refresh rows per user; the oldest beyond this
+    /// are revoked on the write path (D-041). Defaults to 10 when the config key is absent.
+    /// </summary>
+    public int MaxLiveTokensPerUser { get; set; } = 10;
 }

@@ -106,11 +106,11 @@ Not in scope: a background job or hosted service — there is none in this proje
 Docs to update: DB §2.7 (state the retention rule), Tech-Backend §4, plus a new `docs/Decisions.md` entry (next free id) recording the retention window and why pruning is opportunistic rather than scheduled.
 Verify: `dotnet test backend/StudentPortal.Tests --filter Auth`
 
-- [ ] **Subtask 0 first:** write the retention rule into `DB.md` §2.7 and append the Decisions entry, in its own `docs:` commit, before any code.
-- [ ] Measure the growth rate and put it in the commit message: one row per login plus one per rotation, and with a 15-minute access token a single active session rotates roughly 4 times an hour, so ~96 rows per user per day of continuous use. Nothing deletes them today.
-- [ ] On `AddAsync`, delete this user rows that are both expired and revoked and older than the retention window.
-- [ ] Cap the number of live (unrevoked, unexpired) rows per user; exceeding it revokes the oldest. This also bounds what a stolen-and-replayed chain can cost.
-- [ ] Unit tests cover: pruning removes only expired-and-revoked rows, never a live one; the cap revokes oldest-first.
+- [x] **Subtask 0 first:** write the retention rule into `DB.md` §2.7 and append the Decisions entry, in its own `docs:` commit, before any code. (Commit `docs: retention rule for refresh-token rows (D-041)`; rule also in Tech-Backend §4.)
+- [x] Measure the growth rate and put it in the commit message: one row per login plus one per rotation, and with a 15-minute access token a single active session rotates roughly 4 times an hour, so ~96 rows per user per day of continuous use. Nothing deletes them today.
+- [x] On `AddAsync`, delete this user rows that are both expired and revoked and older than the retention window. (Pruned in `AuthService.EnforceRetentionAsync`, called on the write path after each `AddAsync`; retention window `RevokedTokenRetentionDays` = 30.)
+- [x] Cap the number of live (unrevoked, unexpired) rows per user; exceeding it revokes the oldest. This also bounds what a stolen-and-replayed chain can cost. (`MaxLiveTokensPerUser` = 10, revoked oldest-first by `CreatedUtc`.)
+- [x] Unit tests cover: pruning removes only expired-and-revoked rows, never a live one; the cap revokes oldest-first. (`AuthenticateAsync_Prunes_OnlyRevokedAndLongExpiredRows_NeverLiveOnes`, `AuthenticateAsync_WhenLiveRowsExceedCap_RevokesOldestFirst`.)
 - Commit: `feat(backend): opportunistic retention for refresh token rows`
 
 ---

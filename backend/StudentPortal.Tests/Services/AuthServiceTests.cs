@@ -401,4 +401,71 @@ public class AuthServiceTests
         Assert.DoesNotContain(log.Entries, e => e.Message.Contains(rawPassword));
         Assert.DoesNotContain(log.Entries, e => e.Message.Contains(rawToken));
     }
+
+    // ---------- Refresh-row retention (R03.4 / D-041) ----------
+
+    private static RefreshToken MakeRow(Guid userId, bool revoked, DateTime expiresUtc, DateTime createdUtc)
+        => new()
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TokenHash = Guid.NewGuid().ToString(),
+            ExpiresUtc = expiresUtc,
+            RevokedUtc = revoked ? createdUtc.AddHours(1) : null,
+            CreatedUtc = createdUtc,
+        };
+
+    [Fact]
+    public async Task AuthenticateAsync_Prunes_OnlyRevokedAndLongExpiredRows_NeverLiveOnes()
+    {
+        var user = MakeUser();
+        _users.FindByEmailAsync(user.Email).Returns(user);
+        StubTokenGeneration();
+
+        var now = DateTime.UtcNow;
+        var live = MakeRow(user.Id, revoked: false, expiresUtc: now.AddDays(5), createdUtc: now);
+        var deadOld = MakeRow(user.Id, revoked: true, expiresUtc: now.AddDays(-40), createdUtc: now.AddDays(-47));
+        var deadRecent = MakeRow(user.Id, revoked: true, expiresUtc: now.AddDays(-5), createdUtc: now.AddDays(-12));
+        var revokedButNotExpired = MakeRow(user.Id, revoked: true, expiresUtc: now.AddDays(3), createdUtc: now.AddDays(-1));
+        _refreshRepo.GetAllForUserAsync(user.Id)
+            .Returns(new List<RefreshToken> { live, deadOld, deadRecent, revokedButNotExpired });
+
+        var sut = CreateSut();
+        await sut.AuthenticateAsync(new LoginRequestDto { Email = user.Email, Password = "Password123!" });
+
+        // Only the revoked-and-long-expired row is pruned — never the live one, the
+        // recently-expired one, or the revoked-but-not-yet-expired one.
+        await _refreshRepo.Received(1).DeleteRangeAsync(
+            Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 1 && ids.Contains(deadOld.Id)));
+    }
+
+    [Fact]
+    public async Task AuthenticateAsync_WhenLiveRowsExceedCap_RevokesOldestFirst()
+    {
+        var user = MakeUser();
+        _users.FindByEmailAsync(user.Email).Returns(user);
+        StubTokenGeneration();
+
+        var options = Options.Create(new TokenLifetimeOptions
+        {
+            TokenValidityMins = 15,
+            RefreshTokenValidityDays = 7,
+            MaxLiveTokensPerUser = 2,
+        });
+
+        var now = DateTime.UtcNow;
+        var oldest = MakeRow(user.Id, revoked: false, expiresUtc: now.AddDays(5), createdUtc: now.AddMinutes(-30));
+        var middle = MakeRow(user.Id, revoked: false, expiresUtc: now.AddDays(5), createdUtc: now.AddMinutes(-20));
+        var newest = MakeRow(user.Id, revoked: false, expiresUtc: now.AddDays(5), createdUtc: now.AddMinutes(-10));
+        _refreshRepo.GetAllForUserAsync(user.Id)
+            .Returns(new List<RefreshToken> { middle, newest, oldest });
+
+        var sut = new AuthService(_users, _tokens, _refreshRepo, NullLogger<AuthService>.Instance, options);
+        await sut.AuthenticateAsync(new LoginRequestDto { Email = user.Email, Password = "Password123!" });
+
+        // 3 live rows, cap 2 → exactly the oldest is revoked.
+        await _refreshRepo.Received(1).RevokeAsync(oldest.Id);
+        await _refreshRepo.DidNotReceive().RevokeAsync(middle.Id);
+        await _refreshRepo.DidNotReceive().RevokeAsync(newest.Id);
+    }
 }

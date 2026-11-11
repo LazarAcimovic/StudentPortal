@@ -45,4 +45,21 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IReadOnlyList<RefreshToken>> GetAllForUserAsync(Guid userId)
+        => await _context.RefreshTokens
+            .Where(t => t.UserId == userId)
+            .ToListAsync();
+
+    public async Task DeleteRangeAsync(IReadOnlyCollection<Guid> ids)
+    {
+        if (ids.Count == 0) return;
+
+        var rows = await _context.RefreshTokens
+            .Where(t => ids.Contains(t.Id))
+            .ToListAsync();
+
+        _context.RefreshTokens.RemoveRange(rows);
+        await _context.SaveChangesAsync();
+    }
 }

@@ -96,6 +96,7 @@ public class AuthService : IAuthService
             CreatedByIp = ipAddress,
         });
 
+        await EnforceRetentionAsync(user.Id);
         return new AuthResult(user, accessToken, rawNew);
     }
 
@@ -126,6 +127,37 @@ public class AuthService : IAuthService
             CreatedByIp = ipAddress,
         });
 
+        await EnforceRetentionAsync(user.Id);
         return new AuthResult(user, accessToken, rawRefreshToken);
+    }
+
+    /// <summary>
+    /// Opportunistic refresh-row retention on the write path (D-041): prune the user's
+    /// rows that are both revoked and expired beyond the retention window, then revoke the
+    /// oldest live rows that exceed the per-user cap. Never touches a live, within-cap row.
+    /// </summary>
+    private async Task EnforceRetentionAsync(Guid userId)
+    {
+        var rows = await _refreshTokenRepository.GetAllForUserAsync(userId);
+        if (rows is not { Count: > 0 })
+            return;
+
+        var now = DateTime.UtcNow;
+
+        var pruneBefore = now.AddDays(-_lifetimes.RevokedTokenRetentionDays);
+        var pruneIds = rows
+            .Where(t => t.RevokedUtc is not null && t.ExpiresUtc < pruneBefore)
+            .Select(t => t.Id)
+            .ToList();
+        if (pruneIds.Count > 0)
+            await _refreshTokenRepository.DeleteRangeAsync(pruneIds);
+
+        var live = rows
+            .Where(t => t.RevokedUtc is null && t.ExpiresUtc >= now)
+            .OrderBy(t => t.CreatedUtc)
+            .ToList();
+        var excess = live.Count - _lifetimes.MaxLiveTokensPerUser;
+        for (var i = 0; i < excess; i++)
+            await _refreshTokenRepository.RevokeAsync(live[i].Id);
     }
 }
