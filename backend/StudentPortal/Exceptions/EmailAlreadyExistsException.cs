@@ -1,6 +1,6 @@
 namespace StudentPortal.Exceptions
 {
-    public class EmailAlreadyExistsException : Exception
+    public class EmailAlreadyExistsException : ConflictException
     {
         public EmailAlreadyExistsException(string message) : base(message) { }
     }

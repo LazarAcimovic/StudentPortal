@@ -51,11 +51,11 @@ Not in scope: the middleware itself (R02.2), any controller edit (R02.3), any ne
 Docs to update: none — `Tech-Backend.md` §6 already names the four types.
 Verify: `dotnet test backend/StudentPortal.Tests` and `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] `grep -rln "Exceptions" backend/StudentPortal --include=*.cs` and record the current hit count in the commit message.
-- [ ] Add `NotFoundException`, `ValidationException` and `ConflictException` beside the existing `ForbiddenAccessException`, each with a single `string message` constructor, in `backend/StudentPortal/Exceptions/`.
-- [ ] Make `EmailAlreadyExistsException` derive from `ConflictException`, so the existing `catch (EmailAlreadyExistsException)` in `UserController` keeps compiling and keeps returning `409` unchanged.
-- [ ] No call-site changes. Nothing throws the new types yet; this commit is additive only.
-- [ ] Named suites green.
+- [x] `grep -rln "Exceptions" backend/StudentPortal --include=*.cs` and record the current hit count in the commit message.
+- [x] Add `NotFoundException`, `ValidationException` and `ConflictException` beside the existing `ForbiddenAccessException`, each with a single `string message` constructor, in `backend/StudentPortal/Exceptions/`.
+- [x] Make `EmailAlreadyExistsException` derive from `ConflictException`, so the existing `catch (EmailAlreadyExistsException)` in `UserController` keeps compiling and keeps returning `409` unchanged.
+- [x] No call-site changes. Nothing throws the new types yet; this commit is additive only.
+- [x] Named suites green.
 - Commit: `refactor(backend): add the three missing typed business exceptions`
 
 ---
