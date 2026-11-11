@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using StudentPortal.Configuration;
 using StudentPortal.Models.Entities;
 using StudentPortal.Models.Enums;
 using StudentPortal.Services;
@@ -10,7 +12,7 @@ public class TokenServiceTests
     // HS512 requires a signing key of at least 64 bytes (512 bits).
     private const string TestSigningKey = "test-signing-key-must-be-long-enough-for-hs512-xxxxxxxxxxxxxxxxxx";
 
-    private static IConfiguration BuildConfig(int validityMins = 15)
+    private static IConfiguration BuildConfig()
     {
         return new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string>
@@ -18,10 +20,16 @@ public class TokenServiceTests
                 ["JwtConfig:Key"] = TestSigningKey,
                 ["JwtConfig:Issuer"] = "test-issuer",
                 ["JwtConfig:Audience"] = "test-audience",
-                ["JwtConfig:TokenValidityMins"] = validityMins.ToString(),
             }!)
             .Build();
     }
+
+    private static IOptions<TokenLifetimeOptions> BuildOptions(int validityMins = 15, int refreshDays = 7)
+        => Options.Create(new TokenLifetimeOptions
+        {
+            TokenValidityMins = validityMins,
+            RefreshTokenValidityDays = refreshDays,
+        });
 
     private static User MakeUser()
     {
@@ -40,7 +48,7 @@ public class TokenServiceTests
     {
         // A JWS compact serialisation is "header.payload.signature". Verifying the shape confirms
         // the handler ran end-to-end (header + payload + signature all produced).
-        var sut = new TokenService(BuildConfig());
+        var sut = new TokenService(BuildConfig(), BuildOptions());
 
         var token = sut.GenerateAccessToken(MakeUser());
 
@@ -53,7 +61,7 @@ public class TokenServiceTests
     public void GenerateAccessToken_TwoCallsForSameUser_ProduceDistinctTokens()
     {
         // Even for the same user, the per-token jti and the iat/exp timestamps make each JWT unique.
-        var sut = new TokenService(BuildConfig());
+        var sut = new TokenService(BuildConfig(), BuildOptions());
         var user = MakeUser();
 
         var a = sut.GenerateAccessToken(user);
@@ -66,7 +74,7 @@ public class TokenServiceTests
     public void GenerateRefreshTokenRaw_ReturnsNonEmptyBase64StringOfExpectedLength()
     {
         // Implementation emits 64 random bytes → base64. 64 bytes encodes to 88 chars (incl. padding).
-        var sut = new TokenService(BuildConfig());
+        var sut = new TokenService(BuildConfig(), BuildOptions());
 
         var raw = sut.GenerateRefreshTokenRaw();
 
@@ -81,7 +89,7 @@ public class TokenServiceTests
     public void GenerateRefreshTokenRaw_ReturnsDistinctValuesAcrossCalls()
     {
         // Entropy sanity: 1000 draws of a 512-bit RNG must not collide.
-        var sut = new TokenService(BuildConfig());
+        var sut = new TokenService(BuildConfig(), BuildOptions());
 
         var samples = Enumerable.Range(0, 1000).Select(_ => sut.GenerateRefreshTokenRaw()).ToHashSet();
 
@@ -93,7 +101,7 @@ public class TokenServiceTests
     {
         // The RefreshAsync flow depends on this: a presented raw token hashed twice must match the
         // stored hash the first login persisted.
-        var sut = new TokenService(BuildConfig());
+        var sut = new TokenService(BuildConfig(), BuildOptions());
 
         Assert.Equal(sut.HashRefreshToken("same-raw-token"), sut.HashRefreshToken("same-raw-token"));
     }
@@ -101,7 +109,7 @@ public class TokenServiceTests
     [Fact]
     public void HashRefreshToken_DistinctInputsProduceDistinctHashes()
     {
-        var sut = new TokenService(BuildConfig());
+        var sut = new TokenService(BuildConfig(), BuildOptions());
 
         Assert.NotEqual(sut.HashRefreshToken("raw-1"), sut.HashRefreshToken("raw-2"));
     }
@@ -110,7 +118,7 @@ public class TokenServiceTests
     public void HashRefreshToken_EmitsBase64EncodedSha256()
     {
         // 256-bit digest → 32 bytes → 44 base64 chars (with padding).
-        var sut = new TokenService(BuildConfig());
+        var sut = new TokenService(BuildConfig(), BuildOptions());
 
         var hash = sut.HashRefreshToken("anything");
 

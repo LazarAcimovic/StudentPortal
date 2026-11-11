@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using StudentPortal.Configuration;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,10 +13,12 @@ namespace StudentPortal.Services;
 public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
+    private readonly TokenLifetimeOptions _lifetimes;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(IConfiguration configuration, IOptions<TokenLifetimeOptions> lifetimes)
     {
         _configuration = configuration;
+        _lifetimes = lifetimes.Value;
     }
 
     public string GenerateAccessToken(User user)
@@ -22,7 +26,7 @@ public class TokenService : ITokenService
         var key = _configuration["JwtConfig:Key"]!;
         var issuer = _configuration["JwtConfig:Issuer"]!;
         var audience = _configuration["JwtConfig:Audience"]!;
-        var tokenValidityMins = _configuration.GetValue<int>("JwtConfig:TokenValidityMins");
+        var tokenValidityMins = _lifetimes.TokenValidityMins;
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {

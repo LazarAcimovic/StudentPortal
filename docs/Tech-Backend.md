@@ -30,6 +30,7 @@ backend/
     Program.cs                        bootstrap, DI, middleware pipeline
     appsettings.json                  non-secret config (Issuer, Audience, lifetimes, CORS origins)
     appsettings.Development.json      dev overrides
+    Configuration/                    strongly-typed options (TokenLifetimeOptions, bound from JwtConfig)
     Controllers/                      thin HTTP layer; one class per resource
     Services/                         business logic; one interface + one implementation per domain
     Repositories/                     EF access; one per aggregate

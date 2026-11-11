@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using StudentPortal.Configuration;
 using StudentPortal.Dtos;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
@@ -14,8 +16,10 @@ public class AuthServiceTests
     private readonly IUserRepository _users = Substitute.For<IUserRepository>();
     private readonly ITokenService _tokens = Substitute.For<ITokenService>();
     private readonly IRefreshTokenRepository _refreshRepo = Substitute.For<IRefreshTokenRepository>();
+    private readonly IOptions<TokenLifetimeOptions> _lifetimes =
+        Options.Create(new TokenLifetimeOptions { TokenValidityMins = 15, RefreshTokenValidityDays = 7 });
 
-    private AuthService CreateSut() => new(_users, _tokens, _refreshRepo, NullLogger<AuthService>.Instance);
+    private AuthService CreateSut() => new(_users, _tokens, _refreshRepo, NullLogger<AuthService>.Instance, _lifetimes);
 
     private static User MakeUser(string plainPassword = "Password123!", bool isDeleted = false)
     {
@@ -373,7 +377,7 @@ public class AuthServiceTests
         _refreshRepo.FindByHashAsync("stored-hash").Returns(stored);
 
         var log = new CapturingLogger<AuthService>();
-        var sut = new AuthService(_users, _tokens, _refreshRepo, log);
+        var sut = new AuthService(_users, _tokens, _refreshRepo, log, _lifetimes);
 
         await sut.RefreshAsync("raw-reused");
 
@@ -390,7 +394,7 @@ public class AuthServiceTests
         StubTokenGeneration(rawRefresh: rawToken);
 
         var log = new CapturingLogger<AuthService>();
-        var sut = new AuthService(_users, _tokens, _refreshRepo, log);
+        var sut = new AuthService(_users, _tokens, _refreshRepo, log, _lifetimes);
 
         await sut.AuthenticateAsync(new LoginRequestDto { Email = user.Email, Password = rawPassword });
 

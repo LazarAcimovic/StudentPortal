@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using StudentPortal.Configuration;
 using StudentPortal.Dtos;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
@@ -14,12 +16,18 @@ namespace StudentPortal.Controllers
         private readonly IAuthService _authService;
         private readonly IUserService _userService;
         private readonly IWebHostEnvironment _env;
+        private readonly TokenLifetimeOptions _lifetimes;
 
-        public AccountController(IAuthService authService, IUserService userService, IWebHostEnvironment env)
+        public AccountController(
+            IAuthService authService,
+            IUserService userService,
+            IWebHostEnvironment env,
+            IOptions<TokenLifetimeOptions> lifetimes)
         {
             _authService = authService;
             _userService = userService;
             _env = env;
+            _lifetimes = lifetimes.Value;
         }
 
         [AllowAnonymous]
@@ -132,9 +140,9 @@ namespace StudentPortal.Controllers
         private void SetAuthCookies(string accessToken, string rawRefreshToken)
         {
             Response.Cookies.Append("sp_access", accessToken,
-                CreateCookieOptions(DateTimeOffset.UtcNow.AddMinutes(15)));
+                CreateCookieOptions(DateTimeOffset.UtcNow.AddMinutes(_lifetimes.TokenValidityMins)));
             Response.Cookies.Append("sp_refresh", rawRefreshToken,
-                CreateCookieOptions(DateTimeOffset.UtcNow.AddDays(7), "/api/Account"));
+                CreateCookieOptions(DateTimeOffset.UtcNow.AddDays(_lifetimes.RefreshTokenValidityDays), "/api/Account"));
         }
 
         private void ClearAuthCookies()

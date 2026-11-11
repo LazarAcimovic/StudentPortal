@@ -71,12 +71,12 @@ Not in scope: changing either lifetime. The numbers stay 15 and 7; only the numb
 Docs to update: Tech-Backend §4 if a config key name changes
 Verify: `dotnet test backend/StudentPortal.Tests` and `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] `grep -n "AddDays(7)\|AddMinutes(15)\|TokenValidityMins" backend/StudentPortal --include=*.cs -r` — record the 6 hits in the commit message.
-- [ ] Add `JwtConfig:RefreshTokenValidityDays` to `appsettings.json` beside the existing `TokenValidityMins`, and to `.env.example`.
-- [ ] Bind both into one options type read by `TokenService`, `AuthService` and `AccountController`, so the JWT `exp` and the `sp_access` `Expires` can no longer drift apart.
-- [ ] `Program.cs` fails fast on a missing or non-positive value, consistent with how it already treats `JwtConfig:Key` (Tech-Backend §6).
-- [ ] No literal lifetime remains in `AuthService` or `AccountController`.
-- [ ] Named suites green.
+- [x] `grep -n "AddDays(7)\|AddMinutes(15)\|TokenValidityMins" backend/StudentPortal --include=*.cs -r` — record the 6 hits in the commit message. (Token-lifetime sites: `AuthService` `AddDays(7)` ×2, `AccountController` `AddMinutes(15)` + `AddDays(7)`, `TokenService` `GetValue<int>("JwtConfig:TokenValidityMins")`, `appsettings.json` key. The many other `AddDays(7)` are appeal/escalation deadlines — PRD §4 product rules, left alone.)
+- [x] Add `JwtConfig:RefreshTokenValidityDays` to `appsettings.json` beside the existing `TokenValidityMins`, and to `.env.example`.
+- [x] Bind both into one options type read by `TokenService`, `AuthService` and `AccountController`, so the JWT `exp` and the `sp_access` `Expires` can no longer drift apart. (`Configuration/TokenLifetimeOptions.cs`, injected as `IOptions<TokenLifetimeOptions>`.)
+- [x] `Program.cs` fails fast on a missing or non-positive value, consistent with how it already treats `JwtConfig:Key` (Tech-Backend §6).
+- [x] No literal lifetime remains in `AuthService` or `AccountController`.
+- [x] Named suites green. (`StudentPortal.Tests` 175 passed; `StudentPortal.IntegrationTests` 198 passed.)
 - Commit: `refactor(backend): single source for access and refresh token lifetimes`
 
 ---

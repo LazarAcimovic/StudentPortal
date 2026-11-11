@@ -44,6 +44,7 @@ public class IntegrationTestFixture : IAsyncLifetime
                 builder.UseSetting("JwtConfig:Issuer", "https://integration-tests/");
                 builder.UseSetting("JwtConfig:Audience", "https://integration-tests");
                 builder.UseSetting("JwtConfig:TokenValidityMins", "15");
+                builder.UseSetting("JwtConfig:RefreshTokenValidityDays", "7");
                 builder.UseSetting("Cors:Origins:0", "http://localhost");
 
                 builder.ConfigureServices(services =>

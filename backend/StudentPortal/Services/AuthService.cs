@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using StudentPortal.Configuration;
 using StudentPortal.Dtos;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
@@ -12,17 +14,20 @@ public class AuthService : IAuthService
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ILogger<AuthService> _logger;
+    private readonly TokenLifetimeOptions _lifetimes;
 
     public AuthService(
         IUserRepository userRepository,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IOptions<TokenLifetimeOptions> lifetimes)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _refreshTokenRepository = refreshTokenRepository;
         _logger = logger;
+        _lifetimes = lifetimes.Value;
     }
 
     public async Task<AuthResult?> AuthenticateAsync(LoginRequestDto request, string? ipAddress = null)
@@ -86,7 +91,7 @@ public class AuthService : IAuthService
             Id = newTokenId,
             UserId = user.Id,
             TokenHash = _tokenService.HashRefreshToken(rawNew),
-            ExpiresUtc = DateTime.UtcNow.AddDays(7),
+            ExpiresUtc = DateTime.UtcNow.AddDays(_lifetimes.RefreshTokenValidityDays),
             CreatedUtc = DateTime.UtcNow,
             CreatedByIp = ipAddress,
         });
@@ -116,7 +121,7 @@ public class AuthService : IAuthService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             TokenHash = _tokenService.HashRefreshToken(rawRefreshToken),
-            ExpiresUtc = DateTime.UtcNow.AddDays(7),
+            ExpiresUtc = DateTime.UtcNow.AddDays(_lifetimes.RefreshTokenValidityDays),
             CreatedUtc = DateTime.UtcNow,
             CreatedByIp = ipAddress,
         });

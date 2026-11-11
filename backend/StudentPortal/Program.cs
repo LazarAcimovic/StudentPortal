@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using StudentPortal.Configuration;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
@@ -30,6 +31,18 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing from configuration.");
 if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
     throw new InvalidOperationException("JwtConfig:Key must be at least 32 bytes.");
+
+var tokenValidityMins = builder.Configuration.GetValue<int?>("JwtConfig:TokenValidityMins")
+    ?? throw new InvalidOperationException("JwtConfig:TokenValidityMins is missing from configuration.");
+if (tokenValidityMins <= 0)
+    throw new InvalidOperationException("JwtConfig:TokenValidityMins must be a positive number of minutes.");
+var refreshTokenValidityDays = builder.Configuration.GetValue<int?>("JwtConfig:RefreshTokenValidityDays")
+    ?? throw new InvalidOperationException("JwtConfig:RefreshTokenValidityDays is missing from configuration.");
+if (refreshTokenValidityDays <= 0)
+    throw new InvalidOperationException("JwtConfig:RefreshTokenValidityDays must be a positive number of days.");
+
+builder.Services.Configure<TokenLifetimeOptions>(
+    builder.Configuration.GetSection(TokenLifetimeOptions.SectionName));
 
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
     ?? throw new InvalidOperationException("Cors:Origins is missing from configuration.");
