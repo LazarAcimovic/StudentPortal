@@ -90,13 +90,13 @@ Not in scope: the four derived statuses, the paging contract, the assign and rea
 Docs to update: Tech-Frontend §1 (the new file list)
 Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
 
-- [ ] Record the starting 460 lines and the final per-file counts in the commit message.
-- [ ] `features/escalations/hooks/useEscalations.ts` and `useEligibleProfessors.ts` already exist as Pattern B hooks. Use them; do not write a third.
-- [ ] Extract the presentational pieces into `features/user/components/admin/`, one per file, each taking props only: the case row, the case table, the assign/reassign modal body.
-- [ ] `EscalationsTab` keeps the state, the hook calls and the mutations, and drops to a composition root.
-- [ ] Every extracted `useEffect` depends on primitives or `useMemo`-stabilised values — never on an array a parent builds inline or with `?? []` (D-033). This is the one way this subtask can introduce a runaway loop.
-- [ ] `src/test/integration/escalations/AdminEscalations.test.tsx` passes unchanged. If it needs editing, behaviour moved — stop.
-- [ ] Named suites green, typecheck clean.
+- [x] Record the starting 460 lines and the final per-file counts in the commit message.
+- [x] `features/escalations/hooks/useEscalations.ts` and `useEligibleProfessors.ts` already exist as Pattern B hooks. Use them; do not write a third.
+- [x] Extract the presentational pieces into `features/user/components/admin/`, one per file, each taking props only: the case row, the case table, the assign/reassign modal body.
+- [x] `EscalationsTab` keeps the state, the hook calls and the mutations, and drops to a composition root.
+- [x] Every extracted `useEffect` depends on primitives or `useMemo`-stabilised values — never on an array a parent builds inline or with `?? []` (D-033). This is the one way this subtask can introduce a runaway loop.
+- [x] `src/test/integration/escalations/AdminEscalations.test.tsx` passes unchanged. If it needs editing, behaviour moved — stop.
+- [x] Named suites green, typecheck clean.
 - Commit: `refactor(frontend): split EscalationsTab into presentational components`
 
 ---

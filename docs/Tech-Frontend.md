@@ -53,7 +53,7 @@ frontend/src/
       components/admin/         UsersTable, UserCreateForm, UserEditForm,
                                 SubjectsTable, SubjectCreateForm, SubjectEditForm,
                                 EnrollmentsTable, EnrollmentCreateForm,
-                                EscalationsTab
+                                EscalationsTab, EscalationsTable, AssignModal
       components/professor/     SubjectsList, StudentsList, GradePanel,
                                 AppealsSection, ViewAppealModal,
                                 AssignedCasesSection, AssignedCaseItem,
