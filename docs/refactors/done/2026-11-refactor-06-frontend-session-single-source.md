@@ -29,13 +29,13 @@ Three smaller session gaps, all one-liners, listed so they are not rediscovered:
 
 | Measure | Before | After (fill in at the end) |
 |---|---|---|
-| `npm run test` from `frontend/` | 56 files, 382 tests passed | |
-| `npx tsc --noEmit` from `frontend/` | clean | |
-| `npm run build` from `frontend/` | succeeds — 268 modules, 629.58 kB JS (190.98 kB gzip), 12.2s | |
-| bare `useUserStore()` calls (non-test) | 8 | |
-| `useUserStore((s => …))` selector calls (non-test) | 0 | |
-| role → dashboard mapping definitions | 4 (with 3 divergent fallbacks) | |
-| deep `../features/...` imports in `providers/router.tsx` | 6 | |
+| `npm run test` from `frontend/` | 56 files, 382 tests passed | 56 files, 380 tests passed |
+| `npx tsc --noEmit` from `frontend/` | clean | clean |
+| `npm run build` from `frontend/` | succeeds — 268 modules, 629.58 kB JS (190.98 kB gzip), 12.2s | succeeds — 268 modules, 629.64 kB JS (191.00 kB gzip), 5.2s |
+| bare `useUserStore()` calls (non-test) | 8 | 0 |
+| `useUserStore((s => …))` selector calls (non-test) | 0 | 8 |
+| role → dashboard mapping definitions | 4 (with 3 divergent fallbacks) | 1 shared map, 4 explicit call-site fallbacks |
+| deep `../features/...` imports in `providers/router.tsx` | 6 | 0 |
 
 #### Out of scope
 
