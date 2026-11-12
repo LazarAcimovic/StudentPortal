@@ -93,4 +93,16 @@ public class AppealSubmitTests : IntegrationTestBase
 
         ((int)response.StatusCode).Should().Be(403);
     }
+
+    [Fact]
+    public async Task Submit_EmptyText_Returns400WithValidationErrors()
+    {
+        var client = await CreateAuthenticatedClientAsync(Liam);
+        var response = await client.PostAsJsonAsync("/api/Appeal",
+            new SubmitAppealDto { EnrollmentId = Liam_LinearAlgebra, Text = "" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain("\"errors\"", "FluentValidation returns a ValidationProblemDetails body");
+    }
 }

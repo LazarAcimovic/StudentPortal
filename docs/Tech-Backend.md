@@ -162,6 +162,12 @@ Each validator covers non-null / non-empty, length bounds, email format (`EmailA
 - `SubjectCreateDto`: beyond field validation, `SubjectService.AddSubjectAsync` requires the `ProfessorId` to resolve to an **active** user — a missing or soft-deleted professor yields a failure that the controller returns as `400` (per D-025).
 - `SubjectUpdateDto`: `UpdateSubjectAsync` enforces the same active-professor rule, except it allows keeping the subject's current professor even if inactive; a disallowed reassignment throws `InvalidOperationException`, which the controller returns as `400` (per D-026).
 - `EnrollmentCreateDto`: `AddEnrollmentAsync` checks the student exists, is active and has the Student role, the subject exists and is active, and the pair is not already enrolled; each failure throws `InvalidOperationException` with a specific message the controller returns as `400` (per D-027).
+- `SubmitAppealDto`: `EnrollmentId` not empty; `Text` not empty, not whitespace-only, `MaximumLength(1000)` (column `varchar(1000) NOT NULL` — DB §2.6).
+- `SaveGradeDraftDto`: each of the five point fields, when present (`decimal?`), obeys the same per-column range and 0.5-step rule as `ConfirmGradeDto`; each is nullable (DB §2.5 allows `NULL` until the professor fills it in).
+- `ReconfirmExamDto`: `EnrollmentId` not empty; `ExamPoints` 0–30 in steps of 0.5 (PRD §3.1).
+- `StudentConfirmGradeDto`: `EnrollmentId` not empty.
+- `AssignProfessorDto`: `GradeId` and `AssignedProfessorId` not empty.
+- `ReassignProfessorDto`: `GradeId` and `NewProfessorId` not empty.
 
 ---
 

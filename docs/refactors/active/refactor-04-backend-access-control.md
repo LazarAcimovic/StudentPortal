@@ -159,13 +159,13 @@ Not in scope: changing any bound. Every number comes from `Tech-Backend.md` §5,
 Docs to update: Tech-Backend §5 (list the six DTOs explicitly)
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter AppealSubmit`
 
-- [ ] `SubmitAppealDtoValidator`: `EnrollmentId` not empty; `Text` not empty, trimmed, `MaximumLength(1000)` — the bound `Tech-Backend.md` §5 already states and the column already enforces with a `500`.
-- [ ] `SaveGradeDraftDtoValidator`: the same per-field ranges and half-step rule as `ConfirmGradeDtoValidator`, but each field nullable (`DB.md` §2.5 allows NULL until the professor fills it).
-- [ ] `ReconfirmExamDtoValidator`: `EnrollmentId` not empty, `ExamPoints` 0–30 in steps of 0.5.
-- [ ] `StudentConfirmGradeDtoValidator`: `EnrollmentId` not empty.
-- [ ] `AssignProfessorDtoValidator` and `ReassignProfessorDtoValidator`: both GUIDs not empty — `EscalationController` currently hand-checks `Guid.Empty` in one action and not the others.
-- [ ] One integration test per validator asserting `400` with a `ValidationProblemDetails` body, replacing the `500` these inputs produce today.
-- [ ] Named suite green.
+- [x] `SubmitAppealDtoValidator`: `EnrollmentId` not empty; `Text` not empty, trimmed, `MaximumLength(1000)` — the bound `Tech-Backend.md` §5 already states and the column already enforces with a `500`.
+- [x] `SaveGradeDraftDtoValidator`: the same per-field ranges and half-step rule as `ConfirmGradeDtoValidator`, but each field nullable (`DB.md` §2.5 allows NULL until the professor fills it).
+- [x] `ReconfirmExamDtoValidator`: `EnrollmentId` not empty, `ExamPoints` 0–30 in steps of 0.5.
+- [x] `StudentConfirmGradeDtoValidator`: `EnrollmentId` not empty.
+- [x] `AssignProfessorDtoValidator` and `ReassignProfessorDtoValidator`: both GUIDs not empty — `EscalationController` currently hand-checks `Guid.Empty` in one action and not the others.
+- [x] One integration test per validator asserting `400` with a `ValidationProblemDetails` body, replacing the `500` these inputs produce today.
+- [x] Named suite green.
 - Commit: `feat(backend): validators for the six unvalidated request DTOs`
 
 ---
