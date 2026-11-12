@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getMe } from '../api/profileService';
 import { useUserStore } from '../../../store/user/useUserStore';
 import Modal from '../../../components/ui/Modal';
-import UserEditForm from '../../../components/ui/UserEditForm';
+import UserEditForm from '../components/admin/UserEditForm';
 import ProfileInfoCard from '../components/profile/ProfileInfoCard';
 import { APP_ROUTES } from '../../../config/constants';
 import { AXIOS_CANCELED_ERROR_CODE } from '../../../shared/constants/constants';

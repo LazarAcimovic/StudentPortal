@@ -38,7 +38,7 @@ frontend/src/
     RoleHomeRedirect.tsx        <RoleGate> fallback: sends a mismatched role to its own dashboard
   components/
     ui/                         ErrorBoundary.tsx, Modal.tsx, Navbar.tsx, Pagination.tsx,
-                                PasswordInput.tsx, SearchableCombobox.tsx, UserEditForm.tsx
+                                PasswordInput.tsx, SearchableCombobox.tsx
     shared/                     RoleGate.tsx
   features/
     auth/
@@ -50,8 +50,8 @@ frontend/src/
     user/                       ← dashboards, profile, and every admin/professor/student component
       api/userService.ts        CRUD on /api/User (admin side)
       api/profileService.ts     getMe, updateProfile, changePassword
-      components/admin/         UsersTable, UserCreateForm, SubjectsTable,
-                                SubjectCreateForm, SubjectEditForm,
+      components/admin/         UsersTable, UserCreateForm, UserEditForm,
+                                SubjectsTable, SubjectCreateForm, SubjectEditForm,
                                 EnrollmentsTable, EnrollmentCreateForm,
                                 EscalationsTab
       components/professor/     SubjectsList, StudentsList, GradePanel,

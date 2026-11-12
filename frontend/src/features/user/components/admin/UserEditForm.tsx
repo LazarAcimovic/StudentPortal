@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import type { User } from '../../shared/models/User';
-import { USER_ROLES } from '../../shared/constants/constants';
-import type { UserRole } from '../../shared/constants/constants';
-import axiosClient from '../../shared/api/axiosClient';
-import { API_ROUTES } from '../../config/constants';
+import type { User } from '../../../../shared/models/User';
+import { USER_ROLES } from '../../../../shared/constants/constants';
+import type { UserRole } from '../../../../shared/constants/constants';
+import axiosClient from '../../../../shared/api/axiosClient';
+import { API_ROUTES } from '../../../../config/constants';
 
 interface UserEditFormProps {
   scope: 'self' | 'admin';

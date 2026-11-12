@@ -72,13 +72,13 @@ Not in scope: any change to the form itself. This commit is a move and an import
 Docs to update: Tech-Frontend §1 (the layout block lists `UserEditForm.tsx` under `components/ui/`)
 Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
 
-- [ ] `grep -rn "UserEditForm" frontend/src` — record the hit count in the commit message.
-- [ ] Move `components/ui/UserEditForm.tsx` to `features/user/components/admin/UserEditForm.tsx`, beside `UserCreateForm` and `UsersTable`.
-- [ ] Re-point every import, including `src/test/integration/user/UserEditForm.matrix.test.tsx` and `UserEditForm.save.test.tsx`.
-- [ ] Export it from `features/user/index.ts` — `Tech-Frontend.md` §1 says imports go through the barrel, not deep paths.
-- [ ] No reference to the old path remains.
-- [ ] `components/ui/` holds only `Modal`, `Navbar`, `PasswordInput`, `Pagination`, `SearchableCombobox` and `ErrorBoundary` — reusable primitives, as §1 intends.
-- [ ] Named suites green, typecheck clean.
+- [x] `grep -rn "UserEditForm" frontend/src` — record the hit count in the commit message.
+- [x] Move `components/ui/UserEditForm.tsx` to `features/user/components/admin/UserEditForm.tsx`, beside `UserCreateForm` and `UsersTable`.
+- [x] Re-point every import, including `src/test/integration/user/UserEditForm.matrix.test.tsx` and `UserEditForm.save.test.tsx`.
+- [x] Export it from `features/user/index.ts` — `Tech-Frontend.md` §1 says imports go through the barrel, not deep paths.
+- [x] No reference to the old path remains.
+- [x] `components/ui/` holds only `Modal`, `Navbar`, `PasswordInput`, `Pagination`, `SearchableCombobox` and `ErrorBoundary` — reusable primitives, as §1 intends.
+- [x] Named suites green, typecheck clean.
 - Commit: `refactor(frontend): move UserEditForm into features/user/components/admin`
 
 ---

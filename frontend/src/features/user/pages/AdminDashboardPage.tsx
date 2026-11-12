@@ -17,7 +17,7 @@ import type {
 import type { Enrollment, CreateEnrollment } from "../../subjects/models/enrollment";
 import Modal from "../../../components/ui/Modal";
 import UsersTable from "../components/admin/UsersTable";
-import UserEditForm from "../../../components/ui/UserEditForm";
+import UserEditForm from "../components/admin/UserEditForm";
 import UserCreateForm from "../components/admin/UserCreateForm";
 import SubjectsTable from "../components/admin/SubjectsTable";
 import SubjectEditForm from "../components/admin/SubjectEditForm";
