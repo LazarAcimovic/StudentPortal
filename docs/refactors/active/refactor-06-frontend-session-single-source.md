@@ -120,11 +120,11 @@ Not in scope: the interceptor's refresh-failure branch, which must still clear a
 Docs to update: Tech-Frontend §4 (state that clearing the session revokes the refresh row), plus a new `docs/Decisions.md` entry (next free id) if the behaviour on a failed logout needs recording.
 Verify: `npm run test -- auth` from `frontend/`
 
-- [ ] **Depends on refactor-03 R03.8.** Until `POST /Account/Logout` works without a live access token, calling it from `clearAuthSession` fails with `401` on exactly the path that needs it most — the expired-token path. Do not start this subtask before that one has landed.
-- [ ] `clearAuthSession` fires `POST /Account/Logout` on a best-effort basis before clearing: `await` it inside a `try`/`catch` that swallows everything, then clear and redirect regardless.
-- [ ] Guard against recursion: the logout call must not itself trigger the interceptor's clear-and-redirect on a `401`. Add `ACCOUNT_LOGOUT` to the interceptor's `authEndpoint` bypass list beside `ACCOUNT_LOGIN` and `ACCOUNT_REFRESH`.
-- [ ] A test asserts the refresh row is revoked (MSW handler called) and that a failing logout still clears the store and redirects.
-- [ ] Named suite green.
+- [x] **Depends on refactor-03 R03.8.** Until `POST /Account/Logout` works without a live access token, calling it from `clearAuthSession` fails with `401` on exactly the path that needs it most — the expired-token path. Do not start this subtask before that one has landed.
+- [x] `clearAuthSession` fires `POST /Account/Logout` on a best-effort basis before clearing: `await` it inside a `try`/`catch` that swallows everything, then clear and redirect regardless.
+- [x] Guard against recursion: the logout call must not itself trigger the interceptor's clear-and-redirect on a `401`. Add `ACCOUNT_LOGOUT` to the interceptor's `authEndpoint` bypass list beside `ACCOUNT_LOGIN` and `ACCOUNT_REFRESH`.
+- [x] A test asserts the refresh row is revoked (MSW handler called) and that a failing logout still clears the store and redirects.
+- [x] Named suite green.
 - Commit: `feat(frontend): revoke the server session when clearing the client one`
 
 ---

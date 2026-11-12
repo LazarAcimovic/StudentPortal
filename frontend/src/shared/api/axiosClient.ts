@@ -19,7 +19,8 @@ axiosClient.interceptors.response.use(
     const url = originalRequest?.url ?? "";
     const authEndpoint =
       url.includes(API_ROUTES.ACCOUNT_LOGIN) ||
-      url.includes(API_ROUTES.ACCOUNT_REFRESH);
+      url.includes(API_ROUTES.ACCOUNT_REFRESH) ||
+      url.includes(API_ROUTES.ACCOUNT_LOGOUT);
 
       if(authEndpoint) {
         return Promise.reject(error);
