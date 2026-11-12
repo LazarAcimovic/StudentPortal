@@ -85,6 +85,8 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 
 **User response DTO shape — `IsDeleted` is admin-list-only (per D-035):** `GET /api/User` returns `PagedResultDto<AdminUserDto>`; `AdminUserDto` carries `IsDeleted` because the admin Users tab renders an Active/Inactive status badge from it (UI §8.1). Every self-facing user response — `GET /api/Account/Me`, `PUT /api/Account/profile`, and the admin single-user update `PUT /api/User/{id}` — returns `UserDto`, which deliberately **omits** `IsDeleted` so a user's soft-delete state never leaks in a response keyed to that user. The admin edit form reflects the just-saved `isDeleted` from its own form state, not from the update response.
 
+**List endpoints returning student rows — no `Email` (per DB §6.4, D-035):** `GET /professor/subjects/{subjectId}/students` returns `PagedResultDto<ProfessorStudentRowDto>`, which carries `EnrollmentId`, `StudentId`, `FirstName`, `LastName`, `IndexNumber`, `GradeState`, `FinalGrade` and `HasActiveAppeal` — no `Email` field. The underlying `SubjectRepository.GetStudentsBySubjectIdAsync` projects in SQL to `Id`, `FirstName`, `LastName` and `IndexNumber` only; the `UserPassword` hash and `Email` column are never loaded into application memory on list calls.
+
 **EF Core read conventions for escalation paths:** Multi-`Include` escalation queries use `AsSplitQuery()` to avoid a Cartesian result set. `AsNoTracking()` is applied on pure-read paths (list reads, detail reads). Mutate-then-update paths (assign, reassign) must **not** carry `AsNoTracking()`, because EF's change tracker must follow the entity.
 
 ---
@@ -99,6 +101,8 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 - `EscalationController` → `[Authorize(Roles = "Admin")]` on the whole class.
 - `AccountController`: `Login`, `Refresh` and `Logout` are `[AllowAnonymous]`; `Me`, `PUT /profile`, `POST /change-password` are `[Authorize]` (role-agnostic). `Logout` is `[AllowAnonymous]` because it authenticates by the `sp_refresh` cookie alone and returns `204` either way — so it still revokes the session after the 15-minute access token has expired, and cannot be used as an oracle (per D-044).
 - `ProfessorController` → `[Authorize(Roles = "Professor")]` on the whole class; `GET /professor/subjects/{subjectId}/students?page=N&pageSize=N` returns a paged list of enrolled students for the given subject (per D-031, DB §6.4). `IProfessorStudentsService.GetPagedAsync(subjectId, callerProfId, page, pageSize)` performs the ownership check (`Subject.ProfessorId == callerProfId`) before querying.
+- `SubjectController` → `[Authorize]` on the class; `POST`, `PUT`, `DELETE` and `GET /search` → `[Authorize(Roles = "Admin")]`; `GET /api/Subject` and `GET /api/Subject/{id}` → any authenticated user. `GET /api/Subject/professor/{professorId}` and `GET /api/Subject/{subjectId}/students` are **deleted** (per D-045): the first has no SPA caller, the second is superseded by the professor-route paged endpoint (D-031).
+- `EnrollmentController` → `[Authorize]` on the class; `POST` and `DELETE` → `[Authorize(Roles = "Admin")]`; `GET /api/Enrollment` and `GET /api/Enrollment/{id}` → `[Authorize(Roles = "Admin")]` (per D-045) — the admin Enrollments tab is the only caller.
 
 **Layer 2 — service ownership check** reads `currentUserId` from the `ClaimTypes.NameIdentifier` claim and is the authoritative layer: it must hold even if the UI is bypassed.
 

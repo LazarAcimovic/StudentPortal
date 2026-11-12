@@ -94,10 +94,10 @@ Not in scope: `UserDto` itself, which `Me` and the profile endpoints legitimatel
 Docs to update: Tech-Backend §2 (name the DTO each list endpoint returns)
 Verify: `dotnet test backend/StudentPortal.Tests --filter SubjectService`
 
-- [ ] Any list endpoint that survives R04.1 returns `UserSearchResultDto` (`Id`, `FirstName`, `LastName`, `IndexNumber`) rather than `UserDto`.
-- [ ] `SubjectRepository.GetStudentsBySubjectIdAsync` projects in SQL to those columns instead of materialising `User` entities — today it loads whole rows, `UserPassword` hash included, into application memory on every call.
-- [ ] A security test asserts no list response body contains an `email` key, in the shape of the existing `Me_ReturnsCurrentUserShape_WithoutIsDeleted` test that D-035 describes.
-- [ ] Named suite green.
+- [x] Any list endpoint that survives R04.1 returns `UserSearchResultDto` (`Id`, `FirstName`, `LastName`, `IndexNumber`) rather than `UserDto`.
+- [x] `SubjectRepository.GetStudentsBySubjectIdAsync` projects in SQL to those columns instead of materialising `User` entities — today it loads whole rows, `UserPassword` hash included, into application memory on every call.
+- [x] A security test asserts no list response body contains an `email` key, in the shape of the existing `Me_ReturnsCurrentUserShape_WithoutIsDeleted` test that D-035 describes.
+- [x] Named suite green.
 - Commit: `fix(backend): project list endpoints to the documented columns`
 
 ---

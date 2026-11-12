@@ -78,6 +78,17 @@ public class ProfessorStudentsTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task SubjectStudents_ResponseShape_ContainsNoEmailField()
+    {
+        var client = await CreateAuthenticatedClientAsync(ProfLinAlg);
+        var response = await client.GetAsync($"/api/Professor/subjects/{LinearAlgebra}/students");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var json = await response.Content.ReadAsStringAsync();
+        json.Should().NotContain("\"email\"");
+        json.Should().NotContain("\"Email\"");
+    }
+
+    [Fact]
     public async Task SubjectStudents_NoEnrollments_ReturnsTotalCountZero()
     {
         var profId = Guid.NewGuid();

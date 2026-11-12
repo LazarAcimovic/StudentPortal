@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using StudentPortal.Dtos;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
 
@@ -63,11 +64,17 @@ public class SubjectRepository : ISubjectRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<User>> GetStudentsBySubjectIdAsync(Guid subjectId)
+    public async Task<IEnumerable<UserSearchResultDto>> GetStudentsBySubjectIdAsync(Guid subjectId)
     {
         return await _context.Enrollments
-            .Where(e => e.SubjectId == subjectId)
-            .Select(e => e.Student)
+            .Where(e => e.SubjectId == subjectId && !e.IsDeleted)
+            .Select(e => new UserSearchResultDto
+            {
+                Id = e.Student.Id,
+                FirstName = e.Student.FirstName,
+                LastName = e.Student.LastName,
+                IndexNumber = e.Student.IndexNumber,
+            })
             .ToListAsync();
     }
 
