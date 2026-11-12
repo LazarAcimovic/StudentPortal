@@ -14,7 +14,7 @@ import {
   singleSubjectStudentsPage,
 } from '../../helpers/fixtures/professorDashboard';
 import { APP_ROUTES } from '../../../config/constants';
-import SubjectsList from '../../../features/user/components/professor/SubjectsList';
+import { SubjectsList } from '../../../features/user';
 import ErrorBoundary from '../../../components/ui/ErrorBoundary';
 import { resetUserStore } from '../../helpers/renderWithProviders';
 import { makeProfessor } from '../../factories';

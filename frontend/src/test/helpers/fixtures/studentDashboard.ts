@@ -1,7 +1,7 @@
 import type {
   StudentDashboardData,
   StudentDashboardSubject,
-} from '../../../features/user/models/studentDashboard';
+} from '../../../features/user';
 
 export const emptyStudentDashboard: StudentDashboardData = {
   profile: {

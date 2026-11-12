@@ -2,7 +2,7 @@
 // mounts UserEditForm directly to assert the field-visibility matrix from §5.9.
 import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
-import UserEditForm from '../../../features/user/components/admin/UserEditForm';
+import { UserEditForm } from '../../../features/user';
 import { USER_ROLES } from '../../../shared/constants/constants';
 import { renderAt } from '../../helpers/renderWithProviders';
 import type { User as AdminUser } from '../../../shared/models/User';

@@ -9,8 +9,8 @@ import {
 } from '../../helpers/mswHandlers';
 import { APP_ROUTES } from '../../../config/constants';
 import { USER_ROLES } from '../../../shared/constants/constants';
-import * as userServiceModule from '../../../features/user/api/userService';
-import * as subjectServiceModule from '../../../features/subjects/api/subjectService';
+import * as userServiceModule from '../../../features/user';
+import * as subjectServiceModule from '../../../features/subjects';
 
 function makeUser(overrides: {
   id?: string;

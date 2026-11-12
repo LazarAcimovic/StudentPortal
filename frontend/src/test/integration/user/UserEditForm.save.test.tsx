@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { screen, waitFor } from '@testing-library/react';
-import UserEditForm from '../../../features/user/components/admin/UserEditForm';
+import { UserEditForm } from '../../../features/user';
 import { USER_ROLES } from '../../../shared/constants/constants';
 import { server } from '../../server';
 import { renderAt } from '../../helpers/renderWithProviders';

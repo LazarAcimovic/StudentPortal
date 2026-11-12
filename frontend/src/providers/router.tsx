@@ -2,12 +2,14 @@ import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import HomePage from '../pages/HomePage';
-import LoginPage from '../features/auth/pages/LoginPage';
-import AdminDashboardPage from '../features/user/pages/AdminDashboardPage';
-import ProfessorDashboardPage from '../features/user/pages/ProfessorDashboardPage';
-import StudentDashboardPage from '../features/user/pages/StudentDashboardPage';
-import MyProfilePage from '../features/user/pages/MyProfilePage';
-import ChangePasswordPage from '../features/user/pages/ChangePasswordPage';
+import { LoginPage } from '../features/auth';
+import {
+  AdminDashboardPage,
+  ProfessorDashboardPage,
+  StudentDashboardPage,
+  MyProfilePage,
+  ChangePasswordPage,
+} from '../features/user';
 import AuthGuard from './authGuard';
 import RoleGate from '../components/shared/RoleGate';
 import RoleHomeRedirect from './RoleHomeRedirect';

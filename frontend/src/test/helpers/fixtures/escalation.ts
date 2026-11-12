@@ -1,4 +1,4 @@
-import type { EscalatedCase, EligibleProfessor } from '../../../features/escalations/models/escalation';
+import type { EscalatedCase, EligibleProfessor } from '../../../features/escalations';
 
 export const PROF_A_ID = 'prof-aaaa-0000-0000-000000000001';
 export const PROF_B_ID = 'prof-bbbb-0000-0000-000000000002';

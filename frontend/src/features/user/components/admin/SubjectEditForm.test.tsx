@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SubjectEditForm from './SubjectEditForm';
-import type { Subject } from '../../../../features/subjects/models/subject';
+import type { Subject } from '../../../../features/subjects';
 import * as userService from '../../api/userService';
 
 beforeAll(() => {

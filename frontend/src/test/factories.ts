@@ -3,7 +3,7 @@ import type { User } from '../shared/models/User';
 import type {
   StudentDashboardData,
   StudentDashboardSubject,
-} from '../features/user/models/studentDashboard';
+} from '../features/user';
 
 let id = 1;
 const nextId = () => id++;

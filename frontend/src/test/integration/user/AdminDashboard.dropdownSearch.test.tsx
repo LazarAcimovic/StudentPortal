@@ -11,8 +11,8 @@ import {
   subjectSearchHandler,
 } from '../../helpers/mswHandlers';
 import { APP_ROUTES, API_ROUTES } from '../../../config/constants';
-import * as userServiceModule from '../../../features/user/api/userService';
-import * as subjectServiceModule from '../../../features/subjects/api/subjectService';
+import * as userServiceModule from '../../../features/user';
+import * as subjectServiceModule from '../../../features/subjects';
 
 function emptyPaged() {
   return { items: [], totalCount: 0 };

@@ -1,1 +1,10 @@
 export { default as UserEditForm } from './components/admin/UserEditForm';
+export { default as AdminDashboardPage } from './pages/AdminDashboardPage';
+export { default as ProfessorDashboardPage } from './pages/ProfessorDashboardPage';
+export { default as StudentDashboardPage } from './pages/StudentDashboardPage';
+export { default as MyProfilePage } from './pages/MyProfilePage';
+export { default as ChangePasswordPage } from './pages/ChangePasswordPage';
+export { default as SubjectsList } from './components/professor/SubjectsList';
+export * from './api/userService';
+export * from './models/studentDashboard';
+export * from './models/professor/professorDashboard';

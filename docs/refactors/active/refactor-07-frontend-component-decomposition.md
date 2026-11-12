@@ -158,11 +158,11 @@ Not in scope: creating a barrel where a feature has none, or exporting something
 Docs to update: Tech-Frontend §1
 Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
 
-- [ ] `grep -c "from '\.\./features/" frontend/src/providers/router.tsx` — 6 deep imports today, against a documented rule that there should be none.
-- [ ] Sweep the whole tree, not just the router: `grep -rn "from '.*features/[a-z]*/\(pages\|components\|api\|hooks\|models\)/" frontend/src` and record the count before and after.
-- [ ] Each feature's `index.ts` exports what the outside actually imports; nothing new becomes public.
-- [ ] Watch for an import cycle: a barrel that re-exports a page which imports from the same barrel will build but can break test ordering. If one appears, keep the deep import and record why in this box.
-- [ ] Named suites green, typecheck clean, `npm run build` succeeds.
+- [x] `grep -c "from '\.\./features/" frontend/src/providers/router.tsx` — 6 deep imports today, against a documented rule that there should be none.
+- [x] Sweep the whole tree, not just the router: `grep -rn "from '.*features/[a-z]*/\(pages\|components\|api\|hooks\|models\)/" frontend/src` — Before: 24 deep imports across 13 files. After: 0. Updated barrels: `auth/index.ts` (LoginPage), `user/index.ts` (5 pages, SubjectsList, userService, studentDashboard model, professorDashboard model), `subjects/index.ts` (Subject model, subjectService). `escalations/index.ts` already exported its model.
+- [x] Each feature's `index.ts` exports what the outside actually imports; nothing new becomes public.
+- [x] Watch for an import cycle: a barrel that re-exports a page which imports from the same barrel will build but can break test ordering. If one appears, keep the deep import and record why in this box. — No cycles found: pages inside `features/user/` use relative sibling paths, never the barrel. The `import * as X` spy pattern (AdminDashboard tests) still works through the barrel because Vitest's module system preserves live bindings through `export *` re-exports.
+- [x] Named suites green, typecheck clean, `npm run build` succeeds.
 - Commit: `refactor(frontend): import through feature barrels`
 
 ---

@@ -4,7 +4,7 @@ import type {
   ProfessorDashboardData,
   ProfessorStudentRow,
   ProfessorSubject,
-} from '../../../features/user/models/professor/professorDashboard';
+} from '../../../features/user';
 
 export const emptyProfessorDashboard: ProfessorDashboardData = {
   subjects: [],
