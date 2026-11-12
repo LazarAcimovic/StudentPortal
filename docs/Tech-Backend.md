@@ -50,7 +50,7 @@ backend/
   StudentPortal.IntegrationTests/     integration tests (Testcontainers + Respawn + WebApplicationFactory)
 ```
 
-*Layout verified at `33cffa1` (after refactor-02 and refactor-03).*
+*Layout verified at `a086666` (after refactor-04).*
 
 The DbContext class is **`StudentPortalApiContext`** (`Models/Entities/StudentPortalApiContext.cs`). There is no `ApplicationDbContext`; do not create one.
 
