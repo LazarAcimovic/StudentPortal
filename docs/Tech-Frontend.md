@@ -24,7 +24,7 @@
 
 ## 1. Project layout
 
-> **Verified against the working tree at commit `499c52f` (2026-11-12); updated for R07.4 (GradePanel split into GradeFieldSet); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
+> **Verified against the working tree at commit `499c52f` (2026-11-12); updated for R07.4 (GradePanel split into GradeFieldSet) and R07.5 (FormAlert, FormField extracted to components/ui/); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
 
 ```
 frontend/src/
@@ -37,7 +37,8 @@ frontend/src/
     authGuard.tsx               <AuthGuard>
     RoleHomeRedirect.tsx        <RoleGate> fallback: sends a mismatched role to its own dashboard
   components/
-    ui/                         ErrorBoundary.tsx, Modal.tsx, Navbar.tsx, Pagination.tsx,
+    ui/                         ErrorBoundary.tsx, FormAlert.tsx, FormField.tsx,
+                                Modal.tsx, Navbar.tsx, Pagination.tsx,
                                 PasswordInput.tsx, SearchableCombobox.tsx
     shared/                     RoleGate.tsx
   features/

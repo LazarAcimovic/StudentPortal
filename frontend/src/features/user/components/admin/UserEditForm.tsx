@@ -6,6 +6,8 @@ import { USER_ROLES } from '../../../../shared/constants/constants';
 import type { UserRole } from '../../../../shared/constants/constants';
 import axiosClient from '../../../../shared/api/axiosClient';
 import { API_ROUTES } from '../../../../config/constants';
+import FormField from '../../../../components/ui/FormField';
+import FormAlert from '../../../../components/ui/FormAlert';
 
 interface UserEditFormProps {
   scope: 'self' | 'admin';
@@ -167,16 +169,13 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      {apiError && (
-        <div className="alert alert-danger" role="alert">
-          {apiError}
-        </div>
-      )}
+      <FormAlert message={apiError} />
 
-      <div className="mb-3">
-        <label htmlFor="uef-firstName" className="form-label">
-          First Name
-        </label>
+      <FormField
+        id="uef-firstName"
+        label="First Name"
+        error={touched.firstName && errors.firstName ? errors.firstName : undefined}
+      >
         <input
           type="text"
           id="uef-firstName"
@@ -189,15 +188,13 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
           onChange={handleChange}
           onBlur={handleBlur}
         />
-        {touched.firstName && errors.firstName && (
-          <div className="invalid-feedback">{errors.firstName}</div>
-        )}
-      </div>
+      </FormField>
 
-      <div className="mb-3">
-        <label htmlFor="uef-lastName" className="form-label">
-          Last Name
-        </label>
+      <FormField
+        id="uef-lastName"
+        label="Last Name"
+        error={touched.lastName && errors.lastName ? errors.lastName : undefined}
+      >
         <input
           type="text"
           id="uef-lastName"
@@ -210,16 +207,14 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
           onChange={handleChange}
           onBlur={handleBlur}
         />
-        {touched.lastName && errors.lastName && (
-          <div className="invalid-feedback">{errors.lastName}</div>
-        )}
-      </div>
+      </FormField>
 
       {showEmail && (
-        <div className="mb-3">
-          <label htmlFor="uef-email" className="form-label">
-            Email
-          </label>
+        <FormField
+          id="uef-email"
+          label="Email"
+          error={touched.email && errors.email ? errors.email : undefined}
+        >
           <input
             type="email"
             id="uef-email"
@@ -232,17 +227,11 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
             onChange={handleChange}
             onBlur={handleBlur}
           />
-          {touched.email && errors.email && (
-            <div className="invalid-feedback">{errors.email}</div>
-          )}
-        </div>
+        </FormField>
       )}
 
       {showIndexNumber && (
-        <div className="mb-3">
-          <label htmlFor="uef-indexNumber" className="form-label">
-            Index Number
-          </label>
+        <FormField id="uef-indexNumber" label="Index Number">
           <input
             type="text"
             id="uef-indexNumber"
@@ -252,7 +241,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
             value={form.indexNumber}
             onChange={handleChange}
           />
-        </div>
+        </FormField>
       )}
 
       {showUserRole && (

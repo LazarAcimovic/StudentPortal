@@ -10,6 +10,8 @@ import type {
 } from "../../../subjects/api/subjectService";
 import { searchUsers, type UserSearchResult } from "../../api/userService";
 import SearchableCombobox from "../../../../components/ui/SearchableCombobox";
+import FormField from "../../../../components/ui/FormField";
+import FormAlert from "../../../../components/ui/FormAlert";
 
 interface SubjectEditFormProps {
   subject: Subject;
@@ -130,14 +132,9 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
       </div>
       <div className="card-body">
         <form onSubmit={handleSubmit} noValidate>
-          {serverError && (
-            <div className="alert alert-danger">{serverError}</div>
-          )}
+          <FormAlert message={serverError} />
 
-          <div className="mb-3">
-            <label htmlFor="subjectName" className="form-label">
-              Subject Name
-            </label>
+          <FormField id="subjectName" label="Subject Name" error={showError("SubjectName")}>
             <input
               type="text"
               className={`form-control${showError("SubjectName") ? " is-invalid" : ""}`}
@@ -147,15 +144,15 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               onChange={handleChange}
               onBlur={() => handleBlur("SubjectName")}
             />
-            {showError("SubjectName") && (
-              <div className="invalid-feedback">{showError("SubjectName")}</div>
-            )}
-          </div>
+          </FormField>
 
-          <div className="mb-3">
-            <label htmlFor="subjectCode" className="form-label">
-              Subject Code
-            </label>
+          <FormField
+            id="subjectCode"
+            label="Subject Code"
+            error={showError("SubjectCode")}
+            helpText={SUBJECT_CODE_HELP}
+            helpTextId="subjectCodeHelp"
+          >
             <input
               type="text"
               className={`form-control${showError("SubjectCode") ? " is-invalid" : ""}`}
@@ -166,18 +163,9 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               onBlur={() => handleBlur("SubjectCode")}
               aria-describedby="subjectCodeHelp"
             />
-            {showError("SubjectCode") && (
-              <div className="invalid-feedback">{showError("SubjectCode")}</div>
-            )}
-            <div id="subjectCodeHelp" className="form-text">
-              {SUBJECT_CODE_HELP}
-            </div>
-          </div>
+          </FormField>
 
-          <div className="mb-3">
-            <label htmlFor="ects" className="form-label">
-              ECTS
-            </label>
+          <FormField id="ects" label="ECTS" error={showError("ECTS")}>
             <input
               type="number"
               className={`form-control${showError("ECTS") ? " is-invalid" : ""}`}
@@ -187,10 +175,7 @@ const SubjectEditForm: React.FC<SubjectEditFormProps> = ({
               onChange={handleChange}
               onBlur={() => handleBlur("ECTS")}
             />
-            {showError("ECTS") && (
-              <div className="invalid-feedback">{showError("ECTS")}</div>
-            )}
-          </div>
+          </FormField>
 
           <div className="mb-3">
             <label htmlFor="professor" className="form-label">

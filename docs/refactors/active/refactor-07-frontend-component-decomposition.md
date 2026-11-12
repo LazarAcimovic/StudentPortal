@@ -141,12 +141,12 @@ Not in scope: inventing a form abstraction — `Tech-Frontend.md` §2 forbids a 
 Docs to update: Tech-Frontend §5 if the shared shape needs stating
 Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
 
-- [ ] Measure the duplication first and put the number in the commit message: `UserCreateForm` (255), `SubjectCreateForm` (202), `SubjectEditForm` (252) and `UserEditForm` (326) repeat the same touched-state, field-error and server-error markup.
-- [ ] Extract the repeated markup as presentational components (a labelled field with error slot, a form-level alert), not as a hook.
-- [ ] Each form keeps its own `useState`, its own Zod schema in `features/user/utils/`, and the submit flow from §5 unchanged.
-- [ ] The per-field `409` mapping that D-024 requires stays exactly as `userService.addUser` implements it.
-- [ ] `UserCreateForm.test.tsx`, `SubjectCreateForm.test.tsx`, `SubjectEditForm.test.tsx` and the two `UserEditForm` integration tests pass unchanged.
-- [ ] Named suites green, typecheck clean.
+- [x] Measure the duplication first and put the number in the commit message: `UserCreateForm` (255), `SubjectCreateForm` (202), `SubjectEditForm` (252) and `UserEditForm` (326) repeat the same touched-state, field-error and server-error markup.
+- [x] Extract the repeated markup as presentational components (a labelled field with error slot, a form-level alert), not as a hook.
+- [x] Each form keeps its own `useState`, its own Zod schema in `features/user/utils/`, and the submit flow from §5 unchanged.
+- [x] The per-field `409` mapping that D-024 requires stays exactly as `userService.addUser` implements it.
+- [x] `UserCreateForm.test.tsx`, `SubjectCreateForm.test.tsx`, `SubjectEditForm.test.tsx` and the two `UserEditForm` integration tests pass unchanged.
+- [x] Named suites green, typecheck clean.
 - Commit: `refactor(frontend): extract the shared admin form field markup`
 
 ---
