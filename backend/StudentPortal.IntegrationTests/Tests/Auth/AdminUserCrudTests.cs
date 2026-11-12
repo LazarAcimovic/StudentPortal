@@ -195,4 +195,38 @@ public class AdminUserCrudTests : IntegrationTestBase
             MakeDto(SeedUsers.StudentSarah));
         ((int)update.StatusCode).Should().Be(403);
     }
+
+    [Fact]
+    public async Task AdminUpdateUser_DuplicateEmail_Returns409()
+    {
+        // D-046: a duplicate email on the update path is 409, never 500.
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+
+        var response = await client.PutAsJsonAsync($"/api/User/{SeedUsers.StudentSarah.Id}",
+            MakeDto(SeedUsers.StudentSarah, d => d.Email = SeedUsers.StudentDavid.Email));
+
+        ((int)response.StatusCode).Should().Be(409,
+            "updating to an email already owned by another user must yield 409 (D-046)");
+    }
+
+    [Fact]
+    public async Task AdminUpdateUser_ConcurrentDuplicateEmail_NeverReturns500()
+    {
+        // D-046: even when two requests race past the check-then-write gap, the
+        // unique-index catch must translate the violation to 409, never 500.
+        const string raceEmail = "race-target-r04@uni.edu";
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+
+        var t1 = client.PutAsJsonAsync($"/api/User/{SeedUsers.StudentSarah.Id}",
+            MakeDto(SeedUsers.StudentSarah, d => d.Email = raceEmail));
+        var t2 = client.PutAsJsonAsync($"/api/User/{SeedUsers.StudentDavid.Id}",
+            MakeDto(SeedUsers.StudentDavid, d => d.Email = raceEmail));
+
+        var responses = await Task.WhenAll(t1, t2);
+        var codes = responses.Select(r => (int)r.StatusCode).OrderBy(x => x).ToArray();
+
+        codes.Should().NotContain(500, "a unique-index violation must never leak as 500 (D-046)");
+        codes.Should().BeEquivalentTo(new[] { 200, 409 },
+            "one request must win with 200 and the other must lose with 409");
+    }
 }

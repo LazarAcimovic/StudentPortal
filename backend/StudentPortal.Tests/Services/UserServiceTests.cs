@@ -151,6 +151,43 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task UpdateProfileAsync_AdminChangesEmailToTakenByOtherUser_ThrowsConflict()
+    {
+        // D-046: duplicate email on update paths yields 409, never 500.
+        var admin = MakeUser(RoleEnum.Admin, email: "admin@uni.edu");
+        var other = MakeUser(RoleEnum.Student, email: "taken@uni.edu");
+        _userRepo.GetUserByIdForUpdateAsync(admin.Id).Returns(admin);
+        _userRepo.FindByEmailAsync("taken@uni.edu").Returns(other);
+
+        var sut = CreateSut();
+
+        await Assert.ThrowsAsync<EmailAlreadyExistsException>(() =>
+            sut.UpdateProfileAsync(admin.Id, new UpdateProfileDto
+            {
+                FirstName = admin.FirstName, LastName = admin.LastName, Email = "taken@uni.edu",
+            }));
+        await _userRepo.DidNotReceiveWithAnyArgs().UpdateUserAsync(default);
+    }
+
+    [Fact]
+    public async Task UpdateProfileAsync_AdminKeepsOwnCurrentEmail_Succeeds()
+    {
+        // D-046: same-email update is a no-op for the check — no duplicate.
+        var admin = MakeUser(RoleEnum.Admin, email: "admin@uni.edu");
+        _userRepo.GetUserByIdForUpdateAsync(admin.Id).Returns(admin);
+
+        var sut = CreateSut();
+
+        await sut.UpdateProfileAsync(admin.Id, new UpdateProfileDto
+        {
+            FirstName = admin.FirstName, LastName = admin.LastName, Email = "admin@uni.edu",
+        });
+
+        await _userRepo.DidNotReceiveWithAnyArgs().FindByEmailAsync(default);
+        await _userRepo.Received(1).UpdateUserAsync(admin);
+    }
+
+    [Fact]
     public async Task UpdateProfileAsync_UserNotFound_ReturnsNull()
     {
         _userRepo.GetUserByIdForUpdateAsync(Arg.Any<Guid>()).Returns((User)null);
@@ -302,6 +339,48 @@ public class UserServiceTests
         });
 
         Assert.Equal("2027/0042", student.IndexNumber);
+    }
+
+    [Fact]
+    public async Task AdminUpdateUserAsync_UpdateToEmailOwnedByOtherUser_ThrowsConflict()
+    {
+        // D-046: duplicate email on update paths yields 409, never 500.
+        var admin = MakeUser(RoleEnum.Admin);
+        var target = MakeUser(RoleEnum.Student, email: "student@uni.edu");
+        var other = MakeUser(RoleEnum.Student, email: "taken@uni.edu");
+        _userRepo.GetUserByIdForUpdateAsync(target.Id).Returns(target);
+        _userRepo.FindByEmailAsync("taken@uni.edu").Returns(other);
+
+        var sut = CreateSut();
+
+        await Assert.ThrowsAsync<EmailAlreadyExistsException>(() =>
+            sut.AdminUpdateUserAsync(target.Id, admin.Id, new AdminUpdateUserDto
+            {
+                FirstName = target.FirstName, LastName = target.LastName,
+                Email = "taken@uni.edu", UserRole = target.UserRole, IsDeleted = false,
+            }));
+        await _userRepo.DidNotReceiveWithAnyArgs().UpdateUserAsync(default);
+    }
+
+    [Fact]
+    public async Task AdminUpdateUserAsync_UpdateToOwnCurrentEmail_Succeeds()
+    {
+        // D-046: same-email update skips the lookup entirely.
+        var admin = MakeUser(RoleEnum.Admin);
+        var student = MakeUser(RoleEnum.Student, email: "jane@example.com");
+        _userRepo.GetUserByIdForUpdateAsync(student.Id).Returns(student);
+
+        var sut = CreateSut();
+
+        await sut.AdminUpdateUserAsync(student.Id, admin.Id, new AdminUpdateUserDto
+        {
+            FirstName = "Janet", LastName = student.LastName,
+            Email = "jane@example.com", UserRole = student.UserRole,
+            IsDeleted = false, IndexNumber = student.IndexNumber,
+        });
+
+        await _userRepo.DidNotReceiveWithAnyArgs().FindByEmailAsync(default);
+        await _userRepo.Received(1).UpdateUserAsync(student);
     }
 
     [Fact]

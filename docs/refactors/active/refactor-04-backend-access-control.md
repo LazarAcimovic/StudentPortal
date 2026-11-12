@@ -109,11 +109,11 @@ Not in scope: the create path, which already behaves. The non-admin email-change
 Docs to update: PRD §6 and Tech-Backend §5 (extend the duplicate-email rule from create to both update paths)
 Verify: `dotnet test backend/StudentPortal.Tests --filter UserService`
 
-- [ ] **Subtask 0 first:** D-024 covers create only. Extend the rule in `PRD.md` §6 and `Tech-Backend.md` §5 to `PUT /api/User/{id}` and `PUT /api/Account/profile`, in its own `docs:` commit.
-- [ ] `AdminUpdateUserAsync` and `UpdateProfileAsync` look the email up before assigning and throw `ConflictException` when it belongs to a different user id.
-- [ ] Also catch `DbUpdateException` on the unique-index violation and translate it to the same `409`. The check-then-write is a race; the index is the real guarantee, and both paths must produce the same response.
-- [ ] Unit tests: updating to an email owned by someone else gives `409`; updating to your own current email is a no-op success.
-- [ ] An integration test drives the race from two concurrent requests and asserts one `200` and one `409`, never a `500`.
+- [x] **Subtask 0 first:** D-024 covers create only. Extend the rule in `PRD.md` §6 and `Tech-Backend.md` §5 to `PUT /api/User/{id}` and `PUT /api/Account/profile`, in its own `docs:` commit.
+- [x] `AdminUpdateUserAsync` and `UpdateProfileAsync` look the email up before assigning and throw `ConflictException` when it belongs to a different user id.
+- [x] Also catch `DbUpdateException` on the unique-index violation and translate it to the same `409`. The check-then-write is a race; the index is the real guarantee, and both paths must produce the same response.
+- [x] Unit tests: updating to an email owned by someone else gives `409`; updating to your own current email is a no-op success.
+- [x] An integration test drives the race from two concurrent requests and asserts one `200` and one `409`, never a `500`.
 - Commit: `fix(backend): report a duplicate email as 409 on both update paths`
 
 ---

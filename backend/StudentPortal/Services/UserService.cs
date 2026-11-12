@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using StudentPortal.Dtos;
 using StudentPortal.Exceptions;
 using StudentPortal.Handlers;
@@ -71,14 +73,29 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         var user = await _userRepository.GetUserByIdForUpdateAsync(callerId);
         if (user == null) return null;
 
-        if (dto.Email != null && dto.Email != user.Email && user.UserRole != RoleEnum.Admin)
+        if (dto.Email != null && !string.Equals(dto.Email, user.Email, StringComparison.OrdinalIgnoreCase) && user.UserRole != RoleEnum.Admin)
             throw new ForbiddenAccessException("Only admins can change their email.");
+
+        if (dto.Email != null && !string.Equals(dto.Email, user.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            var taken = await _userRepository.FindByEmailAsync(dto.Email);
+            if (taken != null && taken.Id != callerId)
+                throw new EmailAlreadyExistsException("A user with this email already exists.");
+        }
 
         if (dto.FirstName != null) user.FirstName = dto.FirstName;
         if (dto.LastName != null) user.LastName = dto.LastName;
         if (dto.Email != null) user.Email = dto.Email;
 
-        await _userRepository.UpdateUserAsync(user);
+        try
+        {
+            await _userRepository.UpdateUserAsync(user);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == "23505")
+        {
+            throw new EmailAlreadyExistsException("A user with this email already exists.");
+        }
+
         return _mapper.Map<UserDto>(user);
     }
 
@@ -96,6 +113,13 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         if (target.UserRole == RoleEnum.Admin && dto.UserRole != RoleEnum.Admin)
             throw new ForbiddenAccessException("Admin cannot demote another admin.");
 
+        if (!string.Equals(dto.Email, target.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            var taken = await _userRepository.FindByEmailAsync(dto.Email);
+            if (taken != null && taken.Id != targetId)
+                throw new EmailAlreadyExistsException("A user with this email already exists.");
+        }
+
         var roleChanged = dto.UserRole != target.UserRole;
         var softDeleted = dto.IsDeleted && !target.IsDeleted;
 
@@ -110,7 +134,14 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         else
             target.IndexNumber = null;
 
-        await _userRepository.UpdateUserAsync(target);
+        try
+        {
+            await _userRepository.UpdateUserAsync(target);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == "23505")
+        {
+            throw new EmailAlreadyExistsException("A user with this email already exists.");
+        }
 
         // Authority change revokes every refresh row for the target (D-043), so a demoted
         // or disabled user cannot mint fresh access tokens via /Refresh. Only when the
