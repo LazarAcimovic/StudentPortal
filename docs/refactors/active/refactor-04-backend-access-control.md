@@ -177,10 +177,10 @@ Not in scope: changing any effective permission. This is dead-config removal onl
 Docs to update: Tech-Backend §2 if it documents the policies
 Verify: `dotnet test backend/StudentPortal.Tests` and `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] `Program.cs` registers `AdminOnly`, `ProfessorOnly` and `StudentOnly` policies; `grep -rn "AdminOnly\|ProfessorOnly\|StudentOnly" backend/StudentPortal --include=*.cs` shows zero uses outside the registration. Record the count in the commit message.
-- [ ] Either delete the three registrations, or adopt them across the controllers — one or the other, not a mix. `Tech-Backend.md` §3 describes `[Authorize(Roles = …)]` attributes, so deletion is the change that matches the document.
-- [ ] `DB.md` §6.4 says the professor students endpoint "is gated `ProfessorOnly`", naming a policy it does not use. Fix that sentence in the same commit.
-- [ ] Named suites green — no test should change, which is the proof the config was dead.
+- [x] `Program.cs` registers `AdminOnly`, `ProfessorOnly` and `StudentOnly` policies; `grep -rn "AdminOnly\|ProfessorOnly\|StudentOnly" backend/StudentPortal --include=*.cs` shows zero uses outside the registration. Record the count in the commit message.
+- [x] Either delete the three registrations, or adopt them across the controllers — one or the other, not a mix. `Tech-Backend.md` §3 describes `[Authorize(Roles = …)]` attributes, so deletion is the change that matches the document.
+- [x] `DB.md` §6.4 says the professor students endpoint "is gated `ProfessorOnly`", naming a policy it does not use. Fix that sentence in the same commit.
+- [x] Named suites green — no test should change, which is the proof the config was dead.
 - Commit: `refactor(backend): remove the three unused authorization policies`
 
 ---

@@ -197,12 +197,7 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("ProfessorOnly", policy => policy.RequireRole("Professor"));
-    options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
-});
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 

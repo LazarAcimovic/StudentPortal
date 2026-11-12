@@ -439,7 +439,7 @@ WHERE e."SubjectId" = @subjectId
   AND e."IsDeleted" = false;
 ```
 
-The endpoint is gated `ProfessorOnly`. The service verifies that `Subject.ProfessorId == callerProfId` before returning rows (ownership check, per Tech-Backend §3).
+The endpoint is gated `[Authorize(Roles = "Professor")]` on `ProfessorController`. The service verifies that `Subject.ProfessorId == callerProfId` before returning rows (ownership check, per Tech-Backend §3).
 
 ### 6.5 User search and subject search (admin comboboxes, per D-034)
 

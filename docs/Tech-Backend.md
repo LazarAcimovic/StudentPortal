@@ -74,7 +74,7 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 6. `AddControllers()` + `AddFluentValidationAutoValidation()` + `AddValidatorsFromAssemblyContaining<LoginRequestDtoValidator>()`.
 7. `AddEndpointsApiExplorer()` + `AddSwaggerGen(...)` with a Bearer security scheme (kept for Swagger testing even though production uses cookies).
 8. `AddAuthentication(JwtBearerDefaults).AddJwtBearer(...)` — validation parameters pinned per PRD §6, with `OnMessageReceived` configured to read the JWT from the `sp_access` cookie.
-9. `AddAuthorization(...)` with policies `AdminOnly`, `ProfessorOnly`, `StudentOnly`.
+9. `AddAuthorization()` — no named policies; all gating uses `[Authorize(Roles = …)]` attributes directly.
 10. `AddCors(...)` with `WithOrigins(configuredOrigins).AllowAnyHeader().WithMethods(...).AllowCredentials()`.
 
 **Escalations endpoint — server-side pagination (per D-032):** `GET /api/Escalation` accepts `page` (1-based, default 1) and `pageSize` (default 15, allowed values 15 / 20 / 50; any other value is clamped to 15). The controller delegates to `IEscalationService.GetPagedCasesAsync(now, page, pageSize)`, which calls `IGradeRepository.GetPagedWithEscalationDetailsAsync(now, page, pageSize)` → `(IReadOnlyList<Grade> Items, int TotalCount)`. The repository runs the same candidate-grade filter (DB §6.3), issues a `CountAsync` on the base query, then applies `OrderBy(g => g.Id)` / `Skip` / `Take` / includes. Status is computed only for the page's rows. The response envelope carries `items`, `page`, `pageSize`, and `totalCount`.
