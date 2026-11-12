@@ -120,12 +120,12 @@ Not in scope: the `ILIKE` predicate itself, its page sizes and its `Id` tie-brea
 Docs to update: Tech-Backend §2
 Verify: `dotnet test backend/StudentPortal.Tests` and `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] Record the current generated `SELECT` column list for `UserRepository.SearchAsync` in the commit message — it is every `Users` column, including `UserPassword`.
-- [ ] Both search repositories project into the DTO shape inside the `IQueryable`, so the hash never leaves Postgres. `DB.md` §6.5 already defines the column list for all three queries.
-- [ ] Add `AsNoTracking()` to the read-only methods that lack it: `SubjectRepository.GetAllSubjectsAsync` (if R05.2 has not already deleted it), `GetSubjectByIdAsync`, `GetSubjectsByProfessorIdAsync`, `GetStudentsBySubjectIdAsync`, and `AppealRepository.GetByGradeIdAsync`.
-- [ ] Leave tracking on the mutate paths — `GetUserByIdForUpdateAsync`, `GradeRepository.GetByEnrollmentIdAsync`, `EscalationRepository`, `GradeDraftRepository`, `RefreshTokenRepository`. D-032 is explicit that mutate paths omit `AsNoTracking`.
-- [ ] `AsNoTracking` count rises from the baseline 22; record the new number.
-- [ ] Named suites green.
+- [x] Record the current generated `SELECT` column list for `UserRepository.SearchAsync` in the commit message — it is every `Users` column, including `UserPassword`.
+- [x] Both search repositories project into the DTO shape inside the `IQueryable`, so the hash never leaves Postgres. `DB.md` §6.5 already defines the column list for all three queries.
+- [x] Add `AsNoTracking()` to the read-only methods that lack it: `SubjectRepository.GetAllSubjectsAsync` (if R05.2 has not already deleted it), `GetSubjectByIdAsync`, `GetSubjectsByProfessorIdAsync`, `GetStudentsBySubjectIdAsync`, and `AppealRepository.GetByGradeIdAsync`.
+- [x] Leave tracking on the mutate paths — `GetUserByIdForUpdateAsync`, `GradeRepository.GetByEnrollmentIdAsync`, `EscalationRepository`, `GradeDraftRepository`, `RefreshTokenRepository`. D-032 is explicit that mutate paths omit `AsNoTracking`.
+- [x] `AsNoTracking` count rises from the baseline 22; record the new number. New count: 24 across `Repositories/` (R05.2 deleted methods that lacked `AsNoTracking`; R05.4 adds 4 new calls).
+- [x] Named suites green.
 - Commit: `refactor(backend): project search reads and add AsNoTracking to pure reads`
 
 ---

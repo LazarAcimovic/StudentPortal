@@ -17,7 +17,8 @@ public class SubjectRepository : ISubjectRepository
     public async Task<Subject> GetSubjectByIdAsync(Guid id)
     {
         return await _context.Subjects
-                             .Include(s => s.Professor) 
+                             .Include(s => s.Professor)
+                             .AsNoTracking()
                              .FirstOrDefaultAsync(s => s.Id == id);
     }
 
@@ -53,12 +54,14 @@ public class SubjectRepository : ISubjectRepository
         return await _context.Subjects
             .Where(s => s.ProfessorId == professorId)
             .Include(s => s.Professor)
+            .AsNoTracking()
             .ToListAsync();
     }
 
     public async Task<IEnumerable<UserSearchResultDto>> GetStudentsBySubjectIdAsync(Guid subjectId)
     {
         return await _context.Enrollments
+            .AsNoTracking()
             .Where(e => e.SubjectId == subjectId && !e.IsDeleted)
             .Select(e => new UserSearchResultDto
             {
@@ -83,7 +86,7 @@ public class SubjectRepository : ISubjectRepository
         return (items, totalCount);
     }
 
-    public async Task<(IReadOnlyList<Subject> Items, int TotalCount)> SearchAsync(
+    public async Task<(IReadOnlyList<SubjectSearchResultDto> Items, int TotalCount)> SearchAsync(
         string? query, int page, int pageSize)
     {
         var q = _context.Subjects
@@ -99,6 +102,12 @@ public class SubjectRepository : ISubjectRepository
             .OrderBy(s => s.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(s => new SubjectSearchResultDto
+            {
+                Id = s.Id,
+                SubjectName = s.SubjectName,
+                SubjectCode = s.SubjectCode,
+            })
             .ToListAsync();
         return (items, totalCount);
     }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using StudentPortal.Dtos;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
 using StudentPortal.Models.Enums;
@@ -84,7 +85,7 @@ public class UserRepository : IUserRepository
         return (items, totalCount);
     }
 
-    public async Task<(IReadOnlyList<User> Items, int TotalCount)> SearchAsync(
+    public async Task<(IReadOnlyList<UserSearchResultDto> Items, int TotalCount)> SearchAsync(
         RoleEnum role, string? query, int page, int pageSize)
     {
         var q = _context.Users
@@ -107,6 +108,13 @@ public class UserRepository : IUserRepository
             .OrderBy(u => u.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(u => new UserSearchResultDto
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                IndexNumber = role == RoleEnum.Student ? u.IndexNumber : null,
+            })
             .ToListAsync();
         return (items, totalCount);
     }

@@ -26,6 +26,7 @@ public class AppealRepository : IAppealRepository
     public async Task<IEnumerable<Appeal>> GetByGradeIdAsync(Guid gradeId)
     {
         return await _context.Appeals
+            .AsNoTracking()
             .Where(a => a.GradeId == gradeId)
             .OrderBy(a => a.SubmittedAt)
             .ToListAsync();

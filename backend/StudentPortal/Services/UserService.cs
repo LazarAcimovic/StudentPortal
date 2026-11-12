@@ -184,10 +184,10 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
 
     public async Task<PagedResultDto<UserSearchResultDto>> SearchAsync(RoleEnum role, string? query, int page, int pageSize)
     {
-        var (users, totalCount) = await _userRepository.SearchAsync(role, query, page, pageSize);
+        var (items, totalCount) = await _userRepository.SearchAsync(role, query, page, pageSize);
         return new PagedResultDto<UserSearchResultDto>
         {
-            Items = _mapper.Map<IReadOnlyList<UserSearchResultDto>>(users),
+            Items = items,
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize,
