@@ -18,4 +18,8 @@ export const useUserStore = create<UserState>((set) => ({
   setHydrating: (hydrating) => set({ isHydrating: hydrating }),
 }));
 
-registerClearCallback(() => useUserStore.getState().clearCurrentUser());
+const _unregisterClearCallback = registerClearCallback(() => useUserStore.getState().clearCurrentUser());
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(_unregisterClearCallback);
+}

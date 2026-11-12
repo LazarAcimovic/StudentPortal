@@ -6,11 +6,11 @@ export interface ClearAuthSessionOptions {
 }
 
 type ClearCallback = () => void;
-const _clearCallbacks: ClearCallback[] = [];
+const _clearCallbacks = new Set<ClearCallback>();
 
-// Called by the user store at Task 12 to register its clearCurrentUser action.
-export function registerClearCallback(cb: ClearCallback): void {
-  _clearCallbacks.push(cb);
+export function registerClearCallback(cb: ClearCallback): () => void {
+  _clearCallbacks.add(cb);
+  return () => _clearCallbacks.delete(cb);
 }
 
 export async function clearAuthSession(options: ClearAuthSessionOptions = {}): Promise<void> {

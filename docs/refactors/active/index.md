@@ -14,7 +14,7 @@ Progress counts subtasks; a subtask counts as done only when every one of its bo
 |---|---|---|---|---|---|---|
 | 04 | Endpoint authorization and data exposure | 2/8 | R04.3–R04.8 remain | — | — | [refactor-04-backend-access-control.md](refactor-04-backend-access-control.md) |
 | 05 | Data access: query shape, indexes and the crash order | 0/7 | all; capture the baseline plans before R05.1 | — | — | [refactor-05-backend-data-access-scale.md](refactor-05-backend-data-access-scale.md) |
-| 06 | Frontend session: one source for the store and the role map | 3/5 | all; R06.2 is retired (D-039) | — | — | [refactor-06-frontend-session-single-source.md](refactor-06-frontend-session-single-source.md) |
+| 06 | Frontend session: one source for the store and the role map | 4/5 | R06.6 remains | — | — | [refactor-06-frontend-session-single-source.md](refactor-06-frontend-session-single-source.md) |
 | 07 | Frontend component decomposition and placement | 0/7 | all; six oversized files and one misplaced one | — | — | [refactor-07-frontend-component-decomposition.md](refactor-07-frontend-component-decomposition.md) |
 | 08 | ICollection on entity navigation collections | 0/1 | all; three declared types, no behaviour change | — | — | [refactor-08-entity-navigation-collections.md](refactor-08-entity-navigation-collections.md) |
 

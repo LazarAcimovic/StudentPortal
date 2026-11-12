@@ -136,11 +136,11 @@ Not in scope: the login error copy (`UI.md` §5 owns it) and the complexity rule
 Docs to update: Tech-Frontend §5
 Verify: `npm run test -- loginSchema` from `frontend/`
 
-- [ ] **Shared with refactor-03 R03.5** — the `.max(128)` on `loginSchema.password` is one box in two campaigns. Whichever lands first owns it; tick the other as already done and say so in the commit message.
-- [ ] `loginSchema` gains `.max(128)` on `password` and `.max(100)` on `email`, matching `LoginRequestDtoValidator`. Today the client sends an unbounded string to an endpoint that runs 100 000 PBKDF2 iterations over it.
-- [ ] `registerClearCallback` dedupes, or returns an unregister function the store calls on teardown. The array has no removal path today, so each test file and each HMR cycle appends another copy of the same callback.
-- [ ] `lib/navigation.ts`'s fallback sends a non-string `To` to `/` silently. Make it either handle the object form or throw in development, so a mis-typed navigation target is visible.
-- [ ] Named suite green.
+- [x] **Shared with refactor-03 R03.5** — the `.max(128)` on `loginSchema.password` is one box in two campaigns. R03.5 landed first; already done.
+- [x] `loginSchema` gains `.max(128)` on `password` and `.max(100)` on `email`, matching `LoginRequestDtoValidator`. Today the client sends an unbounded string to an endpoint that runs 100 000 PBKDF2 iterations over it.
+- [x] `registerClearCallback` dedupes, or returns an unregister function the store calls on teardown. The array has no removal path today, so each test file and each HMR cycle appends another copy of the same callback.
+- [x] `lib/navigation.ts`'s fallback sends a non-string `To` to `/` silently. Make it either handle the object form or throw in development, so a mis-typed navigation target is visible.
+- [x] Named suite green.
 - Commit: `refactor(frontend): bound the login schema and fix the clear-callback registry`
 
 ---

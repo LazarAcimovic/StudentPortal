@@ -331,6 +331,8 @@ Submit flow: mark all touched → bail if invalid → set `isSubmitting` → ser
 
 A mutation that can fail **per field** — e.g. create-user, where a duplicate email returns `409` — resolves to a structured result (`{ ok: true, … } | { ok: false, fieldErrors?, message? }`) that the form maps onto the offending field (`fieldErrors`) or the top-of-form alert (`message`), instead of a toast. See `features/user/api/userService.ts` (`addUser`).
 
+**Client schemas mirror server validators (D-024).** Input bounds on the client and the server must agree: `loginSchema` mirrors `LoginRequestDtoValidator` (`email` ≤ 100 chars, `password` ≤ 128 chars — no complexity rules on login, which would reveal which candidates are possible). The login form does **not** enforce the 12-char minimum or the character-class rules; it blocks an oversized payload before it reaches the 100 000-iteration PBKDF2 path.
+
 ---
 
 ## 6. Styling
