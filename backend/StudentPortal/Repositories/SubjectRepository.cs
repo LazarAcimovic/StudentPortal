@@ -51,7 +51,7 @@ public class SubjectRepository : ISubjectRepository
         var subjectToDelete = await _context.Subjects.FindAsync(id);
         if (subjectToDelete != null)
         {
-            _context.Subjects.Remove(subjectToDelete);
+            subjectToDelete.IsDeleted = true;
             await _context.SaveChangesAsync();
         }
     }

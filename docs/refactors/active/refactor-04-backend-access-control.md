@@ -143,11 +143,11 @@ Not in scope: enrollments, handled in R04.4. No change to how the read side filt
 Docs to update: Tech-Backend §3, DB §2.1, DB §2.2 (state that `DELETE` sets the flag and never removes the row), plus a new `docs/Decisions.md` entry (next free id).
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter AdminUserCrud`
 
-- [ ] **Subtask 0 first:** no document states what `DELETE /api/User/{id}` or `DELETE /api/Subject/{id}` do. Write it, with the Decisions entry, in its own `docs:` commit.
-- [ ] `UserRepository.DeleteUserAsync` sets `IsDeleted = true` instead of `Remove`. Today a hard delete also cascades the user `RefreshTokens` and is blocked outright by the `RESTRICT` relationships in `DB.md` §3 as soon as the user owns a subject or an enrollment — so the endpoint currently either fails with a leaked FK message or quietly destroys history.
-- [ ] `SubjectRepository.DeleteSubjectAsync` does the same. A subject with enrollments cannot be hard-deleted at all under `DB.md` §3, so this is also a bug fix for an endpoint that returns `500` today.
-- [ ] `DeleteUserAsync` revokes the user refresh rows (shared with refactor-03 R03.7 — do it in one place, not both; whichever campaign lands first owns it and the other tick its box as already done).
-- [ ] Integration tests: deleting a user with enrollments succeeds and the row survives with `IsDeleted = true`; the user can no longer log in; the admin list still shows them as Inactive (D-035).
+- [x] **Subtask 0 first:** no document states what `DELETE /api/User/{id}` or `DELETE /api/Subject/{id}` do. Write it, with the Decisions entry, in its own `docs:` commit.
+- [x] `UserRepository.DeleteUserAsync` sets `IsDeleted = true` instead of `Remove`. Today a hard delete also cascades the user `RefreshTokens` and is blocked outright by the `RESTRICT` relationships in `DB.md` §3 as soon as the user owns a subject or an enrollment — so the endpoint currently either fails with a leaked FK message or quietly destroys history.
+- [x] `SubjectRepository.DeleteSubjectAsync` does the same. A subject with enrollments cannot be hard-deleted at all under `DB.md` §3, so this is also a bug fix for an endpoint that returns `500` today.
+- [x] `DeleteUserAsync` revokes the user refresh rows (shared with refactor-03 R03.7 — do it in one place, not both; whichever campaign lands first owns it and the other tick its box as already done).
+- [x] Integration tests: deleting a user with enrollments succeeds and the row survives with `IsDeleted = true`; the user can no longer log in; the admin list still shows them as Inactive (D-035).
 - Commit: `fix(backend): soft-delete users and subjects instead of removing rows`
 
 ---

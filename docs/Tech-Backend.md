@@ -110,7 +110,8 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 - `AppealService.SubmitAsync(gradeId, callerStudentId)` verifies `enrollment.StudentId == callerStudentId`.
 - `UserService.UpdateProfileAsync(callerId, dto)` — if `callerRole != Admin` and the submitted `Email` differs from the stored row → `ForbiddenAccessException`.
 - `UserService.AdminUpdateUserAsync(targetId, callerId, dto)` — `targetId != callerId` for soft-delete and for role change; `target.UserRole != Admin` for both `UserRole` and `IsDeleted` changes. When `UserRole` or `IsDeleted` **actually** changes (not on every save), it calls `IRefreshTokenRepository.RevokeAllForUserAsync(targetId)` so the affected user cannot refresh their session (per D-043).
-- `UserService.DeleteUserAsync(id)` likewise revokes every refresh row for the deleted user (per D-043).
+- `UserService.DeleteUserAsync(id)` is a soft delete (per D-047): `UserRepository.DeleteUserAsync` sets `IsDeleted = true` on the row instead of removing it. The service also revokes every refresh row for the deleted user (D-043) so their session ends immediately. Hard-deleting is unsafe because `Subjects.ProfessorId → Users.Id` and `Enrollments.StudentId → Users.Id` are `RESTRICT` (DB §3).
+- `SubjectService.DeleteSubjectAsync(id)` is likewise a soft delete (per D-047): `SubjectRepository.DeleteSubjectAsync` sets `IsDeleted = true`. Hard-deleting is unsafe because `Enrollments.SubjectId → Subjects.Id` is `RESTRICT` (DB §3).
 - `UserService.ChangePasswordAsync(callerId, dto)` verifies the current password, then calls `IRefreshTokenRepository.RevokeAllForUserAsync(callerId)`.
 
 Revoking refresh rows closes the 7-day window; the `role` claim in an already-issued access token still survives until `exp` (≤15 min), the accepted residual, because access-token revocation is out of scope (PRD §6, D-043).

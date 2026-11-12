@@ -45,6 +45,8 @@ Users ──< RefreshTokens
 
 **Changes:** Password hashing algorithm stays. The column name `UserPassword` is kept for backwards compat with existing seed data; the entity property may be renamed to `PasswordHash` in the C# model with a `[Column("UserPassword")]` attribute.
 
+**Delete behaviour (per D-047).** `DELETE /api/User/{id}` sets `IsDeleted = true` and never removes the row. The `RESTRICT` relationships on `Subjects.ProfessorId` and `Enrollments.StudentId` make a hard delete unsafe as soon as the user owns any linked row; and even when no linked rows exist, hard-deleting destroys the audit trail. Revoking the user's refresh rows happens in the same call (D-043).
+
 ---
 
 ### 2.2 `Subjects`
@@ -62,6 +64,8 @@ Users ──< RefreshTokens
 **Indexes:** `IX Subjects_ProfessorId (ProfessorId)` (FK index).
 
 **`SubjectCode` (per D-015).** The column is `varchar(50)` so the migration had headroom to back-fill existing rows with `''`, but **the contract is required, 1–20 characters**, enforced by `SubjectCreateDtoValidator` / `SubjectUpdateDtoValidator` and by the admin form's Zod schema. Two subjects sharing a code mean the same course taught by different professors, which is exactly what makes a professor *eligible* for an escalated case (PRD §4.8). A subject with an empty code can never have an eligible substitute professor.
+
+**Delete behaviour (per D-047).** `DELETE /api/Subject/{id}` sets `IsDeleted = true` and never removes the row. The `RESTRICT` relationship on `Enrollments.SubjectId` makes a hard delete impossible as soon as any enrollment exists; a soft delete preserves both the subject record and the enrollment history.
 
 ---
 

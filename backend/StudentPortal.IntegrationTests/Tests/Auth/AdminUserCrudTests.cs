@@ -229,4 +229,69 @@ public class AdminUserCrudTests : IntegrationTestBase
         codes.Should().BeEquivalentTo(new[] { 200, 409 },
             "one request must win with 200 and the other must lose with 409");
     }
+
+    // ── D-047: soft-delete tests ───────────────────────────────────────────
+
+    [Fact]
+    public async Task AdminDeleteUser_WithEnrollments_RowSurvivesAsInactive()
+    {
+        // StudentSarah has three seeded enrollments — a hard delete would hit RESTRICT.
+        var admin = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+
+        var response = await admin.DeleteAsync($"/api/User/{SeedUsers.StudentSarah.Id}");
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "DELETE /api/User/{id} must succeed even when the user owns enrollments (D-047)");
+
+        var isDeleted = await WithDbAsync(db => db.Users
+            .Where(u => u.Id == SeedUsers.StudentSarah.Id)
+            .Select(u => (bool?)u.IsDeleted)
+            .FirstOrDefaultAsync());
+        isDeleted.Should().BeTrue("the row must survive with IsDeleted = true (D-047)");
+    }
+
+    [Fact]
+    public async Task AdminDeleteUser_DeletedUserCannotLogin()
+    {
+        var admin = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+        await admin.DeleteAsync($"/api/User/{SeedUsers.StudentSarah.Id}");
+
+        var anon = CreateAnonymousClient();
+        var loginResponse = await anon.PostAsJsonAsync("/api/Account/Login",
+            new LoginRequestDto { Email = SeedUsers.StudentSarah.Email, Password = SeedUsers.Password });
+
+        loginResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            "a soft-deleted user must not be able to log in");
+    }
+
+    [Fact]
+    public async Task AdminDeleteUser_AppearsInactiveInAdminList()
+    {
+        var admin = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+        await admin.DeleteAsync($"/api/User/{SeedUsers.StudentSarah.Id}");
+
+        var listResponse = await admin.GetAsync("/api/User?page=1&pageSize=50");
+        listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var paged = await listResponse.Content.ReadFromJsonAsync<PagedResultDto<AdminUserDto>>();
+        var sarah = paged!.Items.FirstOrDefault(u => u.Id == SeedUsers.StudentSarah.Id);
+        sarah.Should().NotBeNull("admin list must include soft-deleted users (D-035)");
+        sarah!.IsDeleted.Should().BeTrue("the admin list row must reflect IsDeleted = true (D-035)");
+    }
+
+    [Fact]
+    public async Task AdminDeleteSubject_WithEnrollments_RowSurvivesAsDeleted()
+    {
+        // MathI has seeded enrollments for Sarah — a hard delete would hit RESTRICT.
+        var admin = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+
+        var response = await admin.DeleteAsync($"/api/Subject/{SeedIds.Subjects.MathI}");
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent,
+            "DELETE /api/Subject/{id} must succeed even when the subject has enrollments (D-047)");
+
+        var isDeleted = await WithDbAsync(db => db.Subjects
+            .Where(s => s.Id == SeedIds.Subjects.MathI)
+            .Select(s => (bool?)s.IsDeleted)
+            .FirstOrDefaultAsync());
+        isDeleted.Should().BeTrue("the row must survive with IsDeleted = true (D-047)");
+    }
 }
