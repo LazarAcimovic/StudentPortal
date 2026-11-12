@@ -212,6 +212,10 @@ public partial class StudentPortalApiContext : DbContext
         {
             entity.HasKey(e => e.Id);
 
+            // DB §6.3: eligible-professor lookup filters on SubjectCode equality;
+            // a btree index serves an equality predicate, unlike the ILIKE searches.
+            entity.HasIndex(e => e.SubjectCode).HasDatabaseName("IX_Subjects_SubjectCode");
+
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.SubjectName).HasMaxLength(100);

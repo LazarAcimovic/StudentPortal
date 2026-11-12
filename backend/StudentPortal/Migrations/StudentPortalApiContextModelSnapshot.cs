@@ -343,6 +343,9 @@ namespace StudentPortal.Migrations
 
                     b.HasIndex("ProfessorId");
 
+                    b.HasIndex("SubjectCode")
+                        .HasDatabaseName("IX_Subjects_SubjectCode");
+
                     b.ToTable("Subjects");
                 });
 

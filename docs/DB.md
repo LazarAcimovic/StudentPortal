@@ -61,7 +61,7 @@ Users ──< RefreshTokens
 | `IsDeleted`   | `boolean`      | NO   | `false`              |                                            |
 | `CreatedAt`   | `timestamptz`  | YES  | `CURRENT_TIMESTAMP`  |                                            |
 
-**Indexes:** `IX Subjects_ProfessorId (ProfessorId)` (FK index).
+**Indexes:** `IX Subjects_ProfessorId (ProfessorId)` (FK index), `IX Subjects_SubjectCode (SubjectCode)` (eligible-professor lookup, DB §6.3).
 
 **`SubjectCode` (per D-015).** The column is `varchar(50)` so the migration had headroom to back-fill existing rows with `''`, but **the contract is required, 1–20 characters**, enforced by `SubjectCreateDtoValidator` / `SubjectUpdateDtoValidator` and by the admin form's Zod schema. Two subjects sharing a code mean the same course taught by different professors, which is exactly what makes a professor *eligible* for an escalated case (PRD §4.8). A subject with an empty code can never have an eligible substitute professor.
 
@@ -312,6 +312,7 @@ Migration names are the stable identifiers — not task numbers, which change as
 | 6 | `AddEscalationWorkflow` | Adds `Grades.AssignedProfessorId`, creates `Escalations` (§2.8) and `EscalationAssignments` (§2.9) with their indexes and FKs. |
 | 7 | `AddRefreshTokenHashUniqueIndex` | Unique index `IX_RefreshTokens_TokenHash` on `RefreshTokens.TokenHash` (§2.7). |
 | 8 | `CaseInsensitiveEmail` | Enables the `citext` extension and converts `Users.Email` to `citext`, making the unique index and all lookups case-insensitive (§2.1, D-042). |
+| 9 | `AddSubjectCodeIndex` | Non-unique btree index `IX_Subjects_SubjectCode` on `Subjects.SubjectCode` (§2.2) for the eligible-professor lookup (§6.3). |
 
 Each migration is one commit. The agent generates it with `dotnet ef migrations add <Name>` and commits the files; the human runs `dotnet ef database update`. Append new rows to the end of this table in the same commit as the migration.
 

@@ -39,11 +39,12 @@ Capture rows 1–4 against `Migrations/seed-dev-pagination.sql` layered on `seed
 | Measure | Before | After (fill in at the end) |
 |---|---|---|
 | `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | |
-| `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | |
+| `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | 191 passed, 0 failed |
 | `GET /api/Professor/me/dashboard` — SQL statements issued | record (expect 4) | |
 | `GET /api/Professor/me/dashboard` — rows returned by the enrollment query | record (expect enrollments × appeals) | |
 | `GET /api/Escalation?page=1` — `EXPLAIN ANALYZE` plan | record (expect a seq scan on `Grades` and `Appeals`) | |
 | `GET /api/User/search?role=Student&query=a` — columns in the generated `SELECT` | record (expect every `Users` column) | |
+| eligible-professor query (`DB.md` §6.3) — `EXPLAIN ANALYZE` plan | Seq Scan on `Subjects` (no index on `SubjectCode`) | Index Scan using `IX_Subjects_SubjectCode` (btree, equality predicate) |
 | repository / service methods with no production caller | 9 | |
 | `AsNoTracking` calls across `Repositories/` | 22 | |
 
@@ -154,12 +155,12 @@ Not in scope: the search indexes, excluded above.
 Docs to update: DB §2.2 (add the index to the Indexes line), DB §5 (append the migration row)
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter EscalationCandidateFilter`
 
-- [ ] Record the `EXPLAIN ANALYZE` plan for the `DB.md` §6.3 eligible-professor query before the change.
-- [ ] `dotnet ef migrations add AddSubjectCodeIndex` creating a non-unique btree index on `Subjects.SubjectCode`. It is an equality predicate, so unlike the `ILIKE` searches a plain btree index serves it — which is why this one is in scope and those are not.
-- [ ] `Down` drops it.
-- [ ] Append the row to the `DB.md` §5 table and the index to §2.2, in the same commit.
-- [ ] An integration test asserts the index exists after `Migrate()`.
-- [ ] Record the new plan in the Baseline table.
+- [x] Record the `EXPLAIN ANALYZE` plan for the `DB.md` §6.3 eligible-professor query before the change.
+- [x] `dotnet ef migrations add AddSubjectCodeIndex` creating a non-unique btree index on `Subjects.SubjectCode`. It is an equality predicate, so unlike the `ILIKE` searches a plain btree index serves it — which is why this one is in scope and those are not.
+- [x] `Down` drops it.
+- [x] Append the row to the `DB.md` §5 table and the index to §2.2, in the same commit.
+- [x] An integration test asserts the index exists after `Migrate()`.
+- [x] Record the new plan in the Baseline table.
 - Commit: `feat(db): index Subjects.SubjectCode for the eligible-professor lookup`
 
 ---
