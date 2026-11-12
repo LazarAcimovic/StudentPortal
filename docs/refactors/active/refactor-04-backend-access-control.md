@@ -192,9 +192,9 @@ Not in scope: code.
 Docs to update: Tech-Backend §3, PRD §6, DB §6.4
 Verify: `node scripts/check-docs.mjs`
 
-- [ ] `Tech-Backend.md` §3 layer 1 lists **every** controller, including `SubjectController` and `EnrollmentController`, which it omits today.
-- [ ] Each row names the attribute and, where one exists, the service-level ownership check.
-- [ ] `PRD.md` §6 carries the role rule for every endpoint group, so a future agent does not have to read the attributes to find out who may call what.
-- [ ] Any section that exceeded ~150 lines is split rather than grown (AGENTS §7).
-- [ ] `node scripts/check-docs.mjs` passes.
+- [x] `Tech-Backend.md` §3 layer 1 lists **every** controller, including `SubjectController` and `EnrollmentController`, which it omits today.
+- [x] Each row names the attribute and, where one exists, the service-level ownership check.
+- [x] `PRD.md` §6 carries the role rule for every endpoint group, so a future agent does not have to read the attributes to find out who may call what.
+- [x] Any section that exceeded ~150 lines is split rather than grown (AGENTS §7).
+- [x] `node scripts/check-docs.mjs` passes.
 - Commit: `docs: complete the endpoint authorization matrix`
