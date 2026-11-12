@@ -43,6 +43,8 @@ public class AppealRepository : IAppealRepository
             .Where(a => a.Status == AppealStatus.Pending &&
                         a.Grade.Enrollment.Subject.ProfessorId == professorId)
             .OrderBy(a => a.SubmittedAt)
+            .AsSplitQuery()
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -74,6 +76,7 @@ public class AppealRepository : IAppealRepository
                          (a.Status == AppealStatus.Denied &&
                           a.ReviewedAt != null && a.ReviewedAt > undoCutoff)))
             .OrderBy(a => a.SubmittedAt)
+            .AsSplitQuery()
             .AsNoTracking()
             .ToListAsync();
     }

@@ -68,13 +68,13 @@ Not in scope: changing the payload. `Tech-Frontend.md` §1.1 documents the three
 Docs to update: Tech-Backend §2
 Verify: `dotnet test backend/StudentPortal.Tests` and `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] Record the generated SQL and row count for `GetEnrollmentsForProfessorDashboardAsync` before the change, in the commit message.
-- [ ] Add `AsSplitQuery()` to it. It has five `Include`/`ThenInclude` levels and no split, which is the exact Cartesian shape D-032 names.
-- [ ] Do the same for `AppealRepository.GetAppealsByProfessorIdForDashboardAsync` (two three-level `Include` chains) and `GetPendingByProfessorIdAsync`.
-- [ ] `GetPendingByProfessorIdAsync` also gains `AsNoTracking()` — it is a pure read and `AppealRepository` has exactly one `AsNoTracking` call across the file.
-- [ ] `ProfessorDashboardService` keeps its four calls and its C# grouping. Collapsing them is a bigger change; this subtask fixes the row multiplication only, and the measurement in the Baseline table says whether a second pass is needed.
-- [ ] `ProfessorDashboardTests` and `ProfessorDashboard.binding` integration tests green, proving the payload is unchanged.
-- [ ] Named suites green.
+- [x] Record the generated SQL and row count for `GetEnrollmentsForProfessorDashboardAsync` before the change, in the commit message.
+- [x] Add `AsSplitQuery()` to it. It has five `Include`/`ThenInclude` levels and no split, which is the exact Cartesian shape D-032 names.
+- [x] Do the same for `AppealRepository.GetAppealsByProfessorIdForDashboardAsync` (two three-level `Include` chains) and `GetPendingByProfessorIdAsync`.
+- [x] `GetPendingByProfessorIdAsync` also gains `AsNoTracking()` — it is a pure read and `AppealRepository` has exactly one `AsNoTracking` call across the file.
+- [x] `ProfessorDashboardService` keeps its four calls and its C# grouping. Collapsing them is a bigger change; this subtask fixes the row multiplication only, and the measurement in the Baseline table says whether a second pass is needed.
+- [x] `ProfessorDashboardTests` and `ProfessorDashboard.binding` integration tests green, proving the payload is unchanged.
+- [x] Named suites green.
 - Commit: `refactor(backend): split the professor dashboard include graph`
 
 ---

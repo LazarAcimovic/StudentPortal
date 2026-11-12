@@ -99,6 +99,7 @@ public class EnrollmentRepository : IEnrollmentRepository
             .Include(e => e.Grade)
                 .ThenInclude(g => g!.Appeals)
             .Include(e => e.GradeDraft)
+            .AsSplitQuery()
             .AsNoTracking()
             .OrderBy(e => e.Subject.SubjectName)
                 .ThenBy(e => e.Student.LastName)
