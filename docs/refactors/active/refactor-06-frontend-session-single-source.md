@@ -152,9 +152,9 @@ Not in scope: code.
 Docs to update: Tech-Frontend §1, Tech-Frontend §2, Tech-Frontend §4
 Verify: `node scripts/check-docs.mjs`
 
-- [ ] Layout block regenerated from a real directory listing of `frontend/src/`.
-- [ ] The `verified at` marker is updated — it currently reads commit `85f802b` (2026-10-29), from refactor-01.
-- [ ] `Tech-Frontend.md` §1 notes that `features/auth/api/authService.ts` exports `login`, `logout` and `me`; the block claims a `refresh` export that the file does not have (the interceptor calls the endpoint directly).
-- [ ] `Tech-Frontend.md` §2's selector rule carries the measurement from this campaign, so the next agent can see it was enforced rather than merely stated.
-- [ ] `node scripts/check-docs.mjs` passes.
+- [x] Layout block regenerated from a real directory listing of `frontend/src/`.
+- [x] The `verified at` marker is updated — it currently reads commit `85f802b` (2026-10-29), from refactor-01.
+- [x] `Tech-Frontend.md` §1 notes that `features/auth/api/authService.ts` exports `login`, `logout` and `me`; the block claims a `refresh` export that the file does not have (the interceptor calls the endpoint directly).
+- [x] `Tech-Frontend.md` §2's selector rule carries the measurement from this campaign, so the next agent can see it was enforced rather than merely stated.
+- [x] `node scripts/check-docs.mjs` passes.
 - Commit: `docs(tech): refresh the frontend layout block after the session campaign`

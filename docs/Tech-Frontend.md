@@ -24,7 +24,7 @@
 
 ## 1. Project layout
 
-> **Verified against the working tree at commit `85f802b` (2026-10-29); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
+> **Verified against the working tree at commit `efbe27b` (2026-11-12); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
 
 ```
 frontend/src/
@@ -37,11 +37,12 @@ frontend/src/
     authGuard.tsx               <AuthGuard>
     RoleHomeRedirect.tsx        <RoleGate> fallback: sends a mismatched role to its own dashboard
   components/
-    ui/                         Modal.tsx, Navbar.tsx, PasswordInput.tsx, UserEditForm.tsx
+    ui/                         ErrorBoundary.tsx, Modal.tsx, Navbar.tsx, Pagination.tsx,
+                                PasswordInput.tsx, SearchableCombobox.tsx, UserEditForm.tsx
     shared/                     RoleGate.tsx
   features/
     auth/
-      api/authService.ts        login, logout, me, refresh (refresh called by the interceptor)
+      api/authService.ts        login, logout, me
       constants/constants.ts
       models/schemas/loginSchema.ts
       pages/LoginPage.tsx
@@ -67,12 +68,15 @@ frontend/src/
       models/professor/         professorDashboard.ts, gradePanel.ts
       pages/                    StudentDashboardPage, ProfessorDashboardPage,
                                 AdminDashboardPage, MyProfilePage, ChangePasswordPage
-      utils/                    dateUtils.ts, profileSchemas.ts, gradeUtils.ts, subjectSchemas.ts
+      utils/                    dateUtils.ts, enrollmentSchemas.ts, gradeUtils.ts,
+                                profileSchemas.ts, subjectSchemas.ts, userSchemas.ts
       index.ts
     grades/
       api/gradeService.ts       POST /api/Grade/confirm, /reconfirm-exam, /student-confirm
       api/gradeDraftService.ts  GET+PUT /api/GradeDraft/{enrollmentId}
+      api/professorStudentsService.ts  GET /api/Professor/me/subjects/{id}/students (paged)
       hooks/useProfessorDashboard.ts      Pattern A — GET /api/Professor/me/dashboard
+      hooks/useProfessorStudents.ts       Pattern B — GET /api/Professor/me/subjects/{id}/students (server-side paged)
       models/                   grade.ts, gradeDraft.ts, professorDashboard.ts,
                                 confirmGradeModal.ts
       constants/constants.ts
@@ -101,7 +105,7 @@ frontend/src/
     api/axiosClient.ts          singleton with withCredentials + silent refresh
     api/index.ts                barrel
     constants/                  constants.ts, icons.tsx
-    models/                     User.ts, ChangePasswordFormState.ts
+    models/                     User.ts, ChangePasswordFormState.ts, pagedResult.ts
   store/
     user/useUserStore.ts        currentUser, isHydrating, setters
   test/                         see §7
@@ -137,7 +141,7 @@ So the Appeals section renders from `payload.appeals`, the Assigned Cases sectio
 - Pages hold state; presentational pieces take data via props.
 - Composition via `children` / `<Outlet/>`.
 - `useState`, `useEffect`, `useCallback` (only where a stable identity is required for a dependency), `useMemo` (only where profiling shows a real need), `useRef` sparingly (mount guards).
-- Zustand slice-selectors: `useUserStore(s => s.currentUser)` — never whole-store destructuring.
+- Zustand slice-selectors: `useUserStore(s => s.currentUser)` — never whole-store destructuring. (Enforced in refactor-06: 8 violations converted; 0 whole-store calls remain.)
 - **Data-fetching custom hooks are the first-class pattern for every network read**: one hook per fetch, in the owning feature's `hooks/` folder, named `use<Noun>` (plural for a collection), calling a service function from that feature's `api/` folder. See §3 for the two canonical templates.
 - `AbortSignal` plumbed hook → service → axios on every fetch.
 - **Effect dependencies must be primitives or memoised values.** A `useEffect` must never list an array or object prop as a dependency when a parent produces that value inline or via `?? []` — a new reference is created on every render, making the effect run on every render (runaway loop). Depend on a primitive (an id, a count/length) or a `useMemo`-stabilised value instead (per D-033).
