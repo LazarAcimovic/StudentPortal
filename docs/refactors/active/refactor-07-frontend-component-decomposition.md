@@ -108,11 +108,11 @@ Not in scope: which tabs exist, the tab copy, and the active-tab behaviour. `UI.
 Docs to update: Tech-Frontend §1
 Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
 
-- [ ] Record the starting 381 lines and the final count.
-- [ ] Each tab body becomes its own component under `features/user/components/admin/`, taking its own props. The page keeps the active-tab state and nothing else.
-- [ ] Per-tab fetching moves into the owning tab component or an existing hook, so switching tabs does not re-run every tab's effects.
-- [ ] `src/test/integration/user/AdminDashboard.pagination.test.tsx` and `AdminDashboard.dropdownSearch.test.tsx` pass unchanged.
-- [ ] Named suites green, typecheck clean.
+- [x] Record the starting 381 lines and the final count. (381 → 81 lines)
+- [x] Each tab body becomes its own component under `features/user/components/admin/`, taking its own props. The page keeps the active-tab state and nothing else. (UsersTabPanel, SubjectsTabPanel, EnrollmentsTabPanel created; all four panels kept mounted via d-none so effects never re-run on tab switch)
+- [x] Per-tab fetching moves into the owning tab component or an existing hook, so switching tabs does not re-run every tab's effects.
+- [x] `src/test/integration/user/AdminDashboard.pagination.test.tsx` and `AdminDashboard.dropdownSearch.test.tsx` pass unchanged.
+- [x] Named suites green, typecheck clean. (380 passed in 56 files, tsc clean)
 - Commit: `refactor(frontend): reduce AdminDashboardPage to a tab host`
 
 ---

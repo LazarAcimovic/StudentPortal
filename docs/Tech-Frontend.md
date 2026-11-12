@@ -24,7 +24,7 @@
 
 ## 1. Project layout
 
-> **Verified against the working tree at commit `efbe27b` (2026-11-12); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
+> **Verified against the working tree at commit `efbe27b` (2026-11-12); updated for R07.3 (AdminDashboardPage split into tab panels); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
 
 ```
 frontend/src/
@@ -51,6 +51,7 @@ frontend/src/
       api/userService.ts        CRUD on /api/User (admin side)
       api/profileService.ts     getMe, updateProfile, changePassword
       components/admin/         UsersTable, UserCreateForm, UserEditForm,
+                                UsersTabPanel, SubjectsTabPanel, EnrollmentsTabPanel,
                                 SubjectsTable, SubjectCreateForm, SubjectEditForm,
                                 EnrollmentsTable, EnrollmentCreateForm,
                                 EscalationsTab, EscalationsTable, AssignModal
