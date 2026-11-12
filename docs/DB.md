@@ -360,6 +360,8 @@ A matching grade with no `Escalations` row is `NeedsAssignment`. With a row and 
 
 A partial index on `Grades` (`WHERE "FinalizedAt" IS NULL`) may reduce the candidate scan as data grows. Do not add it speculatively; add it only after `EXPLAIN ANALYZE` on production-sized data confirms it is needed.
 
+**Non-sargable date predicates.** Scenarios A and B evaluate `a.ReviewedAt.Value.AddDays(7) < now` and `a.SubmittedAt.AddDays(7) < now` — the interval is added to the **column** side, so the predicate is non-sargable: a btree index on `ReviewedAt` or `SubmittedAt` cannot help it. To make them sargable, compare the column to a precomputed threshold (`column < now.AddDays(-7)` → `"ReviewedAt" < @threshold`). Do not rewrite without `EXPLAIN ANALYZE` on production-sized data; on seed-sized data the seq scan is undetectable.
+
 Eligible professors for a case:
 
 ```sql

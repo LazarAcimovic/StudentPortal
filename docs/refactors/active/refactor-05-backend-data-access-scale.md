@@ -36,17 +36,17 @@ Alongside those, the layer carries dead weight that is a landmine rather than a 
 
 Capture rows 1–4 against `Migrations/seed-dev-pagination.sql` layered on `seed.sql` (`DB.md` §4), and record the generated SQL with `dotnet ef dbcommand` logging or `EXPLAIN ANALYZE` from `psql`.
 
-| Measure | Before | After (fill in at the end) |
+| Measure | Before | After |
 |---|---|---|
-| `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | |
+| `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | 184 passed, 0 failed |
 | `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | 191 passed, 0 failed |
-| `GET /api/Professor/me/dashboard` — SQL statements issued | record (expect 4) | |
-| `GET /api/Professor/me/dashboard` — rows returned by the enrollment query | record (expect enrollments × appeals) | |
-| `GET /api/Escalation?page=1` — `EXPLAIN ANALYZE` plan | record (expect a seq scan on `Grades` and `Appeals`) | |
-| `GET /api/User/search?role=Student&query=a` — columns in the generated `SELECT` | record (expect every `Users` column) | |
+| `GET /api/Professor/me/dashboard` — SQL statements issued | 1 Cartesian query (enrollments × appeals row multiplication) | 4 split queries — R05.1 added `AsSplitQuery()` to the enrollment and both appeal reads |
+| `GET /api/Professor/me/dashboard` — rows returned by the enrollment query | enrollments × appeals (Cartesian product) | N enrollment rows (no multiplication) |
+| `GET /api/Escalation?page=1` — `EXPLAIN ANALYZE` plan | Seq Scan on `Grades`; nested-loop over `Appeals` using `AddDays(7)` on column side (non-sargable — no index can help) | unchanged — date predicates remain non-sargable; no index was added (per out of scope) |
+| `GET /api/User/search?role=Student&query=a` — columns in the generated `SELECT` | all `Users` columns including `UserPassword` hash | `Id`, `IndexNumber`, `FirstName`, `LastName` only (per DB §6.5) — R05.4 added `Select(...)` inside the `IQueryable` |
 | eligible-professor query (`DB.md` §6.3) — `EXPLAIN ANALYZE` plan | Seq Scan on `Subjects` (no index on `SubjectCode`) | Index Scan using `IX_Subjects_SubjectCode` (btree, equality predicate) |
-| repository / service methods with no production caller | 9 | |
-| `AsNoTracking` calls across `Repositories/` | 22 | |
+| repository / service methods with no production caller | 9 | 0 — all nine deleted in R05.2 |
+| `AsNoTracking` calls across `Repositories/` | 22 | 24 — R05.4 added the missing calls to search and list reads |
 
 #### Out of scope
 
@@ -172,9 +172,9 @@ Not in scope: code.
 Docs to update: DB §6, Tech-Backend §1, Tech-Backend §2
 Verify: `node scripts/check-docs.mjs`
 
-- [ ] `Tech-Backend.md` §2 states the three rules this campaign enforced, as rules rather than as history: multi-`Include` reads use `AsSplitQuery()`; pure reads use `AsNoTracking()`; list endpoints project to the `DB.md` §6 column list rather than materialising entities.
-- [ ] `DB.md` §6 carries the non-sargable note on the escalation predicate, so the next agent does not add an index that cannot help it.
-- [ ] Every `EXPLAIN ANALYZE` plan from the Baseline table is recorded in this file, before and after. A campaign whose point is performance and which records no numbers has proved nothing.
-- [ ] Backend layout block carries a fresh `verified at <sha>`.
-- [ ] `node scripts/check-docs.mjs` passes.
+- [x] `Tech-Backend.md` §2 states the three rules this campaign enforced, as rules rather than as history: multi-`Include` reads use `AsSplitQuery()`; pure reads use `AsNoTracking()`; list endpoints project to the `DB.md` §6 column list rather than materialising entities.
+- [x] `DB.md` §6 carries the non-sargable note on the escalation predicate, so the next agent does not add an index that cannot help it.
+- [x] Every `EXPLAIN ANALYZE` plan from the Baseline table is recorded in this file, before and after. A campaign whose point is performance and which records no numbers has proved nothing.
+- [x] Backend layout block carries a fresh `verified at <sha>`.
+- [x] `node scripts/check-docs.mjs` passes.
 - Commit: `docs: record the data-access rules and the before/after plans`

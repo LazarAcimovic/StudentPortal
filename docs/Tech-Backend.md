@@ -50,7 +50,7 @@ backend/
   StudentPortal.IntegrationTests/     integration tests (Testcontainers + Respawn + WebApplicationFactory)
 ```
 
-*Layout verified at `a086666` (after refactor-04).*
+*Layout verified at `982b74a` (after refactor-05).*
 
 The DbContext class is **`StudentPortalApiContext`** (`Models/Entities/StudentPortalApiContext.cs`). There is no `ApplicationDbContext`; do not create one.
 
@@ -87,7 +87,11 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 
 **List endpoints returning student rows — no `Email` (per DB §6.4, D-035):** `GET /professor/subjects/{subjectId}/students` returns `PagedResultDto<ProfessorStudentRowDto>`, which carries `EnrollmentId`, `StudentId`, `FirstName`, `LastName`, `IndexNumber`, `GradeState`, `FinalGrade` and `HasActiveAppeal` — no `Email` field. The underlying `SubjectRepository.GetStudentsBySubjectIdAsync` projects in SQL to `Id`, `FirstName`, `LastName` and `IndexNumber` only; the `UserPassword` hash and `Email` column are never loaded into application memory on list calls.
 
-**EF Core read conventions:** Multi-`Include` escalation queries use `AsSplitQuery()` to avoid a Cartesian result set. `AsNoTracking()` is applied on all pure-read paths — list reads, detail reads, search reads, and `AppealRepository.GetByGradeIdAsync` (24 calls across `Repositories/` as of refactor-05 R05.4). Mutate-then-update paths (`GetUserByIdForUpdateAsync`, `GradeRepository.GetByEnrollmentIdAsync`, `EscalationRepository`, `GradeDraftRepository`, `RefreshTokenRepository`) must **not** carry `AsNoTracking()`, because EF's change tracker must follow the entity (per D-032).
+**EF Core read conventions (per D-032):** Three rules apply across `Repositories/` and are not negotiable:
+
+- **Multi-`Include` reads use `AsSplitQuery()`.** Any query with two or more `Include`/`ThenInclude` levels must carry `AsSplitQuery()` to avoid a Cartesian result set. The dashboard and escalation reads all carry it.
+- **Pure reads use `AsNoTracking()`.** Every read that does not mutate the entity — list reads, detail reads, search reads, and `AppealRepository.GetByGradeIdAsync` — carries `AsNoTracking()` (24 call sites as of refactor-05 R05.4). Mutate-then-update paths (`GetUserByIdForUpdateAsync`, `GradeRepository.GetByEnrollmentIdAsync`, `EscalationRepository`, `GradeDraftRepository`, `RefreshTokenRepository`) must **not** carry it; EF's change tracker must follow the entity.
+- **List endpoints project to the `DB.md` §6 column list.** `Select(...)` is applied inside the `IQueryable` — before `ToListAsync` — so only the documented columns travel over the wire. The `UserPassword` hash and all non-displayed columns are never loaded into application memory on list calls.
 
 ---
 
