@@ -59,19 +59,5 @@ namespace StudentPortal.Controllers
             }
         }
 
-  
-
-        // DELETE: api/enrollment/{id}
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEnrollment(Guid id)
-        {
-            var success = await _enrollmentService.DeleteEnrollmentAsync(id);
-            if (!success)
-            {
-                return NotFound($"Enrollment with ID {id} not found or deletion failed.");
-            }
-            return NoContent();
-        }
     }
 }

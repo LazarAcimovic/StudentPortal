@@ -68,19 +68,6 @@ public class EnrollmentRepository : IEnrollmentRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteEnrollmentAsync(Guid id)
-    {
-        var enrollmentToDelete = await _context.Enrollments.FindAsync(id);
-
-        if (enrollmentToDelete!= null)
-        {
-            _context.Enrollments.Remove(enrollmentToDelete);
-            await _context.SaveChangesAsync();
-        }
-   
-        
-    }
-
     public async Task<IEnumerable<Enrollment>> GetStudentEnrollmentsWithDetailsAsync(Guid studentId)
     {
         return await _context.Enrollments

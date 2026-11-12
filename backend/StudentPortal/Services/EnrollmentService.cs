@@ -61,15 +61,6 @@ public class EnrollmentService : IEnrollmentService
         return _mapper.Map<EnrollmentDto>(createdEnrollment);
     }
 
-    public async Task<bool> DeleteEnrollmentAsync(Guid enrollmentId)
-    {
-        var enrollmentToDelete = await _enrollmentRepository.GetEnrollmentByIdAsync(enrollmentId);
-        if (enrollmentToDelete == null) return false;
-
-        await _enrollmentRepository.DeleteEnrollmentAsync(enrollmentId);
-        return true;
-    }
-
     public async Task<PagedResultDto<EnrollmentDto>> GetPagedAsync(int page, int pageSize)
     {
         var (enrollments, totalCount) = await _enrollmentRepository.GetPagedAsync(page, pageSize);

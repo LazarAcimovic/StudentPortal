@@ -7,6 +7,5 @@ public interface IEnrollmentService
     Task<IEnumerable<EnrollmentDto>> GetAllEnrollmentsAsync();
     Task<EnrollmentDto> GetEnrollmentByIdAsync(Guid studentId);
     Task<EnrollmentDto> AddEnrollmentAsync(EnrollmentCreateDto enrollmentDto);
-    Task<bool> DeleteEnrollmentAsync(Guid enrollmentId);
     Task<PagedResultDto<EnrollmentDto>> GetPagedAsync(int page, int pageSize);
 }

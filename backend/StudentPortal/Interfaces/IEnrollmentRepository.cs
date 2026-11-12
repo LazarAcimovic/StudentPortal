@@ -8,7 +8,6 @@ public interface IEnrollmentRepository
     Task<Enrollment> GetEnrollmentByIdAsync(Guid id);
     Task<Enrollment> AddEnrollmentAsync(Enrollment enrollment);
     Task UpdateEnrollmentAsync(Enrollment enrollment);
-    Task DeleteEnrollmentAsync(Guid id);
 
     Task<Enrollment> GetByIdAsync(Guid id);
 

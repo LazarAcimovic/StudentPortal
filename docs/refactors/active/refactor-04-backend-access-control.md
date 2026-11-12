@@ -125,11 +125,13 @@ Not in scope: the create path and its three validation rules, which D-027 fixes 
 Docs to update: Tech-Backend §3, UI §8.5 if it still describes a delete control
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter Enrollment`
 
-- [ ] Record the blast radius in the commit message: `Grades.EnrollmentId` is `CASCADE` (DB §3), so `DELETE /api/Enrollment/{id}` destroys the grade, its drafts, its appeals and its escalation history for that enrollment — with no soft-delete and no audit row.
-- [ ] Remove `DELETE /api/Enrollment/{id}` from `EnrollmentController`, and `DeleteEnrollmentAsync` from `IEnrollmentService` and `IEnrollmentRepository`.
-- [ ] `grep -rn "ENROLLMENT" frontend/src --include=*.ts --include=*.tsx` first: D-027 says the SPA delete was a local-only stub, so nothing should call it. If something does, stop and report rather than breaking the SPA.
-- [ ] An integration test asserts `DELETE /api/Enrollment/{id}` now returns `405`.
-- [ ] Named suite green, plus `npm run e2e` from `e2e/` — removing a route is the cross-stack case in AGENTS §9.1.
+- [x] Record the blast radius in the commit message: `Grades.EnrollmentId` is `CASCADE` (DB §3), so `DELETE /api/Enrollment/{id}` destroys the grade, its drafts, its appeals and its escalation history for that enrollment — with no soft-delete and no audit row.
+- [x] Remove `DELETE /api/Enrollment/{id}` from `EnrollmentController`, and `DeleteEnrollmentAsync` from `IEnrollmentService` and `IEnrollmentRepository`.
+- [x] `grep -rn "ENROLLMENT" frontend/src --include=*.ts --include=*.tsx` first: D-027 says the SPA delete was a local-only stub, so nothing should call it. If something does, stop and report rather than breaking the SPA.
+- [x] An integration test asserts `DELETE /api/Enrollment/{id}` now returns `405`.
+- [x] Named suite green, plus `npm run e2e` from `e2e/` — removing a route is the cross-stack case in AGENTS §9.1.
+  - Integration suite: 14 passed, 0 failed (includes new `EnrollmentDeleteTests.Delete_Enrollment_Returns405`).
+  - e2e: 16 passed, 1 pre-existing failure — `admin creates a subject with a Subject Code and it persists` calls `selectOption` on the custom professor combobox (not a `<select>`); unrelated to enrollment delete. No enrollment-delete test exists in the e2e suite. The grep confirmed the SPA had no caller.
 - Commit: `fix(backend): remove the enrollment delete endpoint per D-027`
 
 ---
