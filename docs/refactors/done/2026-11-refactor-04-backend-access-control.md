@@ -27,15 +27,15 @@ Three further exposures:
 
 #### Baseline — captured before step one
 
-| Measure | Before | After (fill in at the end) |
+| Measure | Before | After |
 |---|---|---|
-| `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | |
-| `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | |
-| endpoints reachable by any authenticated role regardless of need | 6 | |
-| endpoints returning `Email` to a non-admin, non-self caller | 1 | |
-| write paths assigning `Email` with no uniqueness check | 2 | |
-| repository methods hard-deleting a soft-deletable entity | 3 | |
-| request-bound DTOs with no `AbstractValidator<T>` | 6 | |
+| `dotnet test backend/StudentPortal.Tests` | 173 passed, 0 failed | **184 passed**, 0 failed |
+| `dotnet test backend/StudentPortal.IntegrationTests` | 190 passed, 0 failed — 24 s (green since task 22e.1; see the index) | **224 passed**, 0 failed — 28 s |
+| endpoints reachable by any authenticated role regardless of need | 6 | 2 (both intentional per D-045 — `GET /api/Subject` and `GET /api/Subject/{id}`) |
+| endpoints returning `Email` to a non-admin, non-self caller | 1 | 0 |
+| write paths assigning `Email` with no uniqueness check | 2 | 0 |
+| repository methods hard-deleting a soft-deletable entity | 3 | 0 |
+| request-bound DTOs with no `AbstractValidator<T>` | 6 | 0 |
 
 #### Out of scope
 
