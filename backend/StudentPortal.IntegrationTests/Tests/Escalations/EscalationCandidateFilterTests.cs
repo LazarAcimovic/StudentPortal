@@ -4,7 +4,7 @@ using StudentPortal.IntegrationTests.Infrastructure;
 namespace StudentPortal.IntegrationTests.Tests.Escalations;
 
 /// <summary>
-/// Proves that GetAllWithEscalationDetailsAsync loads only candidate grades (DB §6.3):
+/// Proves that GetPagedWithEscalationDetailsAsync loads only candidate grades (DB §6.3):
 /// — a finalized grade with no escalation row is excluded;
 /// — a grade whose accepted appeal is still within the 7-day re-grade window is excluded;
 /// — a grade that meets Scenario A (accepted appeal past 7 days) is included as a control.

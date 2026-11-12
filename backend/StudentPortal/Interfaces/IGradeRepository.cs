@@ -9,7 +9,6 @@ public interface IGradeRepository
     Task<Grade> AddGradeAsync(Grade grade);
     Task UpdateGradeAsync(Grade grade);
     Task<bool> DeleteGradeAsync(Guid id);
-    Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync(DateTime now);
     Task<(IReadOnlyList<Grade> Items, int TotalCount)> GetPagedWithEscalationDetailsAsync(DateTime now, int page, int pageSize);
     Task<Grade?> GetByIdWithEscalationDetailsAsync(Guid id);
     Task<IEnumerable<Grade>> GetAssignedCasesAsync(Guid professorId);

@@ -74,43 +74,46 @@ public class EscalationServiceTests
     // ─── Scenario A — accepted but not re-graded ──────────────────────────
 
     [Fact]
-    public async Task GetAllCasesAsync_ScenarioA_AtExactlyDeadline_NotEscalated()
+    public async Task GetPagedCasesAsync_ScenarioA_AtExactlyDeadline_NotEscalated()
     {
         // ReviewedAt + 7d == now  →  boundary condition is < now (exclusive)  →  no trigger
         var appeal = MakeAcceptedAppeal(T0.AddDays(-7));
         var grade = MakeGrade(appeals: new List<Appeal> { appeal });
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
-        var cases = (await sut.GetAllCasesAsync(T0)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(T0, 1, 50)).Items;
 
         Assert.Empty(cases);
     }
 
     [Fact]
-    public async Task GetAllCasesAsync_ScenarioA_OneDayBefore_NotEscalated()
+    public async Task GetPagedCasesAsync_ScenarioA_OneDayBefore_NotEscalated()
     {
         // ReviewedAt + 6d < now (6 days old accept, only 6d since review)
         var appeal = MakeAcceptedAppeal(T0.AddDays(-6));
         var grade = MakeGrade(appeals: new List<Appeal> { appeal });
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
-        var cases = (await sut.GetAllCasesAsync(T0)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(T0, 1, 50)).Items;
 
         Assert.Empty(cases);
     }
 
     [Fact]
-    public async Task GetAllCasesAsync_ScenarioA_OneSecondPastDeadline_Escalated()
+    public async Task GetPagedCasesAsync_ScenarioA_OneSecondPastDeadline_Escalated()
     {
         var appeal = MakeAcceptedAppeal(T0.AddDays(-7));
         var grade = MakeGrade(appeals: new List<Appeal> { appeal });
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
         var now = T0.AddSeconds(1);
-        var cases = (await sut.GetAllCasesAsync(now)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(now, 1, 50)).Items;
 
         Assert.Single(cases);
         Assert.Equal(EscalationReason.AcceptedUnresolved.ToString(), cases[0].Reason);
@@ -120,45 +123,48 @@ public class EscalationServiceTests
     // ─── Scenario B — chain exhausted ─────────────────────────────────────
 
     [Fact]
-    public async Task GetAllCasesAsync_ScenarioB_OneOverdueAppeal_NotEscalated()
+    public async Task GetPagedCasesAsync_ScenarioB_OneOverdueAppeal_NotEscalated()
     {
         // PRD §4.8: a single overdue appeal does not escalate
         var appeal = MakePendingAppeal(T0.AddDays(-8));
         var grade = MakeGrade(appeals: new List<Appeal> { appeal });
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
-        var cases = (await sut.GetAllCasesAsync(T0)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(T0, 1, 50)).Items;
 
         Assert.Empty(cases);
     }
 
     [Fact]
-    public async Task GetAllCasesAsync_ScenarioB_SecondAppealAtExactDeadline_NotEscalated()
+    public async Task GetPagedCasesAsync_ScenarioB_SecondAppealAtExactDeadline_NotEscalated()
     {
         // second SubmittedAt + 7d == T0  →  not strictly past  →  no trigger
         var a1 = MakePendingAppeal(T0.AddDays(-8));
         var a2 = MakePendingAppeal(T0.AddDays(-7));
         var grade = MakeGrade(appeals: new List<Appeal> { a1, a2 });
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
-        var cases = (await sut.GetAllCasesAsync(T0)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(T0, 1, 50)).Items;
 
         Assert.Empty(cases);
     }
 
     [Fact]
-    public async Task GetAllCasesAsync_ScenarioB_TwoOverdueAppeals_Escalated()
+    public async Task GetPagedCasesAsync_ScenarioB_TwoOverdueAppeals_Escalated()
     {
         var a1 = MakePendingAppeal(T0.AddDays(-8));
         var a2 = MakePendingAppeal(T0.AddDays(-7));
         var grade = MakeGrade(appeals: new List<Appeal> { a1, a2 });
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
         var now = T0.AddSeconds(1);
-        var cases = (await sut.GetAllCasesAsync(now)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(now, 1, 50)).Items;
 
         Assert.Single(cases);
         Assert.Equal(EscalationReason.ChainExhausted.ToString(), cases[0].Reason);
@@ -168,21 +174,22 @@ public class EscalationServiceTests
     // ─── Four status derivations ──────────────────────────────────────────
 
     [Fact]
-    public async Task GetAllCasesAsync_EscalationStatus_NeedsAssignment_WhenNoRecord()
+    public async Task GetPagedCasesAsync_EscalationStatus_NeedsAssignment_WhenNoRecord()
     {
         var a1 = MakePendingAppeal(T0.AddDays(-8));
         var a2 = MakePendingAppeal(T0.AddDays(-8));
         var grade = MakeGrade(appeals: new List<Appeal> { a1, a2 });
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
-        var cases = (await sut.GetAllCasesAsync(T0.AddSeconds(1))).ToList();
+        var cases = (await sut.GetPagedCasesAsync(T0.AddSeconds(1), 1, 50)).Items;
 
         Assert.Equal("NeedsAssignment", cases[0].EscalationStatus);
     }
 
     [Fact]
-    public async Task GetAllCasesAsync_EscalationStatus_Assigned_WhenInsideWindow()
+    public async Task GetPagedCasesAsync_EscalationStatus_Assigned_WhenInsideWindow()
     {
         var assignment = new EscalationAssignment
         {
@@ -199,16 +206,17 @@ public class EscalationServiceTests
             Assignments = new List<EscalationAssignment> { assignment }
         };
         var grade = MakeGrade(escalation: escalation);
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
-        var cases = (await sut.GetAllCasesAsync(T0)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(T0, 1, 50)).Items;
 
         Assert.Equal("Assigned", cases[0].EscalationStatus);
     }
 
     [Fact]
-    public async Task GetAllCasesAsync_EscalationStatus_NeedsReassignment_WhenWindowExpired()
+    public async Task GetPagedCasesAsync_EscalationStatus_NeedsReassignment_WhenWindowExpired()
     {
         var assignment = new EscalationAssignment
         {
@@ -225,16 +233,17 @@ public class EscalationServiceTests
             Assignments = new List<EscalationAssignment> { assignment }
         };
         var grade = MakeGrade(escalation: escalation);
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
-        var cases = (await sut.GetAllCasesAsync(T0)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(T0, 1, 50)).Items;
 
         Assert.Equal("NeedsReassignment", cases[0].EscalationStatus);
     }
 
     [Fact]
-    public async Task GetAllCasesAsync_EscalationStatus_Resolved_WhenResolvedAtSet()
+    public async Task GetPagedCasesAsync_EscalationStatus_Resolved_WhenResolvedAtSet()
     {
         var assignment = new EscalationAssignment
         {
@@ -251,10 +260,11 @@ public class EscalationServiceTests
             Assignments = new List<EscalationAssignment> { assignment }
         };
         var grade = MakeGrade(escalation: escalation);
-        _gradeRepo.GetAllWithEscalationDetailsAsync(Arg.Any<DateTime>()).Returns(new List<Grade> { grade });
+        _gradeRepo.GetPagedWithEscalationDetailsAsync(Arg.Any<DateTime>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(((IReadOnlyList<Grade>)new List<Grade> { grade }, 1));
 
         var sut = CreateSut();
-        var cases = (await sut.GetAllCasesAsync(T0)).ToList();
+        var cases = (await sut.GetPagedCasesAsync(T0, 1, 50)).Items;
 
         Assert.Equal("Resolved", cases[0].EscalationStatus);
         Assert.NotNull(cases[0].ResolvedAt);

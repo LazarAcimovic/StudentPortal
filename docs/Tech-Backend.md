@@ -127,7 +127,7 @@ The overdue guard (`appeal.SubmittedAt.AddDays(7) < now`) in `AcceptAsync` / `De
 
 **Escalation service surface** (`IEscalationService`):
 
-- `GetAllCasesAsync(now)` → `EscalatedCaseDto[]` across four derived statuses: `NeedsAssignment`, `Assigned`, `NeedsReassignment`, `Resolved` (PRD §4.8).
+- `GetPagedCasesAsync(now, page, pageSize)` → `PagedResultDto<EscalatedCaseDto>` across four derived statuses: `NeedsAssignment`, `Assigned`, `NeedsReassignment`, `Resolved` (PRD §4.8). Backed by `IGradeRepository.GetPagedWithEscalationDetailsAsync`.
 - `GetEligibleProfessorsAsync(gradeId)` → non-deleted professors teaching a `Subject` with the same `SubjectCode`, excluding the original professor and every professor in the escalation's assignment history (PRD §4.8, per D-023). Backed by `IUserRepository.GetProfessorsBySubjectCodeAsync(subjectCode, excludeIds)` where `excludeIds` is built from `Grade.AssignedProfessorId` (original professor) plus all `EscalationAssignment.AssignedProfessorId` values for the open escalation.
 - `AssignProfessorAsync` / `ReassignProfessorAsync` — write `Escalations` + `EscalationAssignments` rows and keep `Grade.AssignedProfessorId` in sync with the active assignment (`SupersededAt IS NULL`).
 - `CloseIfEscalatedAsync(gradeId, now)` — stamps `Escalation.ResolvedAt`. Called from the two finalization paths only: `GradeService.ReconfirmExamAsync` and `AppealService.DenyAsync`.

@@ -67,45 +67,6 @@ public class GradeRepository : IGradeRepository
         return false;
     }
 
-    public async Task<IEnumerable<Grade>> GetAllWithEscalationDetailsAsync(DateTime now)
-    {
-        // Candidate grades only (DB §6.3): grades that already have an Escalations row
-        // (including resolved, kept for history), OR grades where FinalizedAt IS NULL
-        // and at least one escalation trigger condition is met (Scenario A or B).
-        // Note: a partial index on Grades WHERE FinalizedAt IS NULL is deferred until
-        // EXPLAIN ANALYZE on production-sized data confirms it is needed.
-        return await _context.Grades
-            .AsSplitQuery()
-            .AsNoTracking()
-            .Where(g =>
-                g.Escalation != null
-                || (g.FinalizedAt == null
-                    && g.Appeals.Any(a =>
-                        a.Status == AppealStatus.Accepted
-                        && a.ReviewedAt.HasValue
-                        && a.ReviewedAt.Value.AddDays(7) < now))
-                || (g.FinalizedAt == null
-                    && g.Appeals.Count(a =>
-                        a.Status == AppealStatus.Pending
-                        && a.SubmittedAt.AddDays(7) < now) >= 2))
-            .Include(g => g.Enrollment)
-                .ThenInclude(e => e.Student)
-            .Include(g => g.Enrollment)
-                .ThenInclude(e => e.Subject)
-                    .ThenInclude(s => s.Professor)
-            .Include(g => g.Appeals)
-            .Include(g => g.Escalation)
-                .ThenInclude(e => e.Assignments)
-                    .ThenInclude(a => a.AssignedProfessor)
-            .Include(g => g.Escalation)
-                .ThenInclude(e => e.Assignments)
-                    .ThenInclude(a => a.AssignedByAdmin)
-            .OrderBy(g => g.Enrollment.Student.LastName)
-            .ThenBy(g => g.Enrollment.Student.FirstName)
-            .ThenBy(g => g.Id)
-            .ToListAsync();
-    }
-
     public async Task<(IReadOnlyList<Grade> Items, int TotalCount)> GetPagedWithEscalationDetailsAsync(
         DateTime now, int page, int pageSize)
     {

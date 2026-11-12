@@ -103,12 +103,12 @@ Not in scope: the paging contract itself (page 1-based, size 15/20/50) and the f
 Docs to update: Tech-Backend §3 (the escalation service surface still lists `GetAllCasesAsync`)
 Verify: `dotnet test backend/StudentPortal.Tests` and `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] Record that `EscalationController` calls only `GetPagedCasesAsync`, while `GetAllCasesAsync` and `GetAllWithEscalationDetailsAsync` survive solely because ten unit tests in `EscalationServiceTests` target them.
-- [ ] Retarget those ten tests to `GetPagedCasesAsync(now, 1, 50)`. Coverage must be identical — same scenarios, same assertions on the same derived statuses — because a `Refactor` writes no new test and loses none (AGENTS §9).
-- [ ] Delete `GetAllCasesAsync` from `IEscalationService` and `EscalationService`, and `GetAllWithEscalationDetailsAsync` from `IGradeRepository` and `GradeRepository`.
-- [ ] `EscalationCandidateFilterTests` asserts the candidate filter against the method name in its header comment; retarget it the same way.
-- [ ] `Tech-Backend.md` §3 stops listing a method that no longer exists.
-- [ ] Named suites green, with the same total count as the baseline.
+- [x] Record that `EscalationController` calls only `GetPagedCasesAsync`, while `GetAllCasesAsync` and `GetAllWithEscalationDetailsAsync` survive solely because ten unit tests in `EscalationServiceTests` target them.
+- [x] Retarget those ten tests to `GetPagedCasesAsync(now, 1, 50)`. Coverage must be identical — same scenarios, same assertions on the same derived statuses — because a `Refactor` writes no new test and loses none (AGENTS §9).
+- [x] Delete `GetAllCasesAsync` from `IEscalationService` and `EscalationService`, and `GetAllWithEscalationDetailsAsync` from `IGradeRepository` and `GradeRepository`.
+- [x] `EscalationCandidateFilterTests` asserts the candidate filter against the method name in its header comment; retarget it the same way.
+- [x] `Tech-Backend.md` §3 stops listing a method that no longer exists.
+- [x] Named suites green, with the same total count as the baseline.
 - Commit: `refactor(backend): retire the unpaginated escalation case path`
 
 ---

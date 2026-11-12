@@ -25,21 +25,6 @@ public class EscalationService : IEscalationService
         _assignmentRepository = assignmentRepository;
     }
 
-    public async Task<IEnumerable<EscalatedCaseDto>> GetAllCasesAsync(DateTime now)
-    {
-        var grades = await _gradeRepository.GetAllWithEscalationDetailsAsync(now);
-        var result = new List<EscalatedCaseDto>();
-
-        foreach (var grade in grades)
-        {
-            var dto = BuildCaseDto(grade, now);
-            if (dto != null)
-                result.Add(dto);
-        }
-
-        return result;
-    }
-
     public async Task<PagedResultDto<EscalatedCaseDto>> GetPagedCasesAsync(DateTime now, int page, int pageSize)
     {
         var (grades, totalCount) = await _gradeRepository.GetPagedWithEscalationDetailsAsync(now, page, pageSize);
