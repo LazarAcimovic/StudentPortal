@@ -12,7 +12,7 @@ Progress counts subtasks; a subtask counts as done only when every one of its bo
 
 | Campaign | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 07 | Frontend component decomposition and placement | 6/7 | R07.7 remains | — | — | [refactor-07-frontend-component-decomposition.md](refactor-07-frontend-component-decomposition.md) |
+| 07 | Frontend component decomposition and placement | 7/7 | — | — | — | [refactor-07-frontend-component-decomposition.md](refactor-07-frontend-component-decomposition.md) |
 | 08 | ICollection on entity navigation collections | 0/1 | all; three declared types, no behaviour change | — | — | [refactor-08-entity-navigation-collections.md](refactor-08-entity-navigation-collections.md) |
 
 ## Suite baseline — the numbers every campaign measures against

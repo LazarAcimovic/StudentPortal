@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getAllUsers, addUser, deleteUser } from "../../api/userService";
 import type { AddUserResult } from "../../api/userService";
 import type { User, CreateUser } from "../../../../shared/models/User";
+import type { UserRole } from "../../../../shared/constants/constants";
 import Modal from "../../../../components/ui/Modal";
 import UsersTable from "./UsersTable";
 import UserEditForm from "./UserEditForm";
@@ -13,7 +14,7 @@ const DEFAULT_PAGE_SIZE = 15;
 
 type Props = {
   currentUserId: string;
-  callerRole: string;
+  callerRole: UserRole;
 };
 
 const UsersTabPanel: React.FC<Props> = ({ currentUserId, callerRole }) => {

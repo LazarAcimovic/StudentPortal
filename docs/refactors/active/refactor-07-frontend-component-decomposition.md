@@ -27,16 +27,16 @@ The measurable problem is not the line count on its own — it is that `componen
 
 | Measure | Before | After (fill in at the end) |
 |---|---|---|
-| `npm run test` from `frontend/` | 56 files, 382 tests passed | |
-| `npx tsc --noEmit` from `frontend/` | clean | |
-| `npm run build` from `frontend/` | succeeds — 268 modules, 629.58 kB JS (190.98 kB gzip), 245.50 kB CSS, 12.2s | |
-| `npm run lint` from `frontend/` | **2 errors, 2 warnings** — not clean (see Out of scope) | |
-| `EscalationsTab.tsx` | 460 lines | |
-| `AdminDashboardPage.tsx` | 381 lines | |
-| `GradePanel.tsx` | 351 lines | |
-| `UserEditForm.tsx` | 326 lines, in `components/ui/` | |
-| non-test lines under `frontend/src/` | 8 498 | |
-| files in `components/ui/` that are not reusable primitives | 1 | |
+| `npm run test` from `frontend/` | 56 files, 382 tests passed | 56 files, 380 tests passed |
+| `npx tsc --noEmit` from `frontend/` | clean | clean (tsc -p tsconfig.app.json also clean after R07.7 type fix) |
+| `npm run build` from `frontend/` | succeeds — 268 modules, 629.58 kB JS (190.98 kB gzip), 245.50 kB CSS, 12.2s | succeeds |
+| `npm run lint` from `frontend/` | **2 errors, 2 warnings** — not clean (see Out of scope) | **2 errors, 2 warnings** — unchanged |
+| `EscalationsTab.tsx` | 460 lines | 71 lines |
+| `AdminDashboardPage.tsx` | 381 lines | 81 lines |
+| `GradePanel.tsx` | 351 lines | 331 lines |
+| `UserEditForm.tsx` | 326 lines, in `components/ui/` | 315 lines, in `features/user/components/admin/` |
+| non-test lines under `frontend/src/` | 8 498 | 7 621 |
+| files in `components/ui/` that are not reusable primitives | 1 | 0 |
 
 #### Out of scope
 
@@ -174,9 +174,9 @@ Not in scope: code.
 Docs to update: Tech-Frontend §1, Tech-Frontend §2
 Verify: `node scripts/check-docs.mjs`
 
-- [ ] Layout block regenerated from a real directory listing of `frontend/src/`.
-- [ ] `verified at <sha>` updated. If refactor-06 R06.6 already refreshed it, this subtask re-verifies rather than re-writes, and says so.
-- [ ] Every file this campaign created or moved appears at its real path, and no path in the block is missing from disk — `scripts/check-docs.mjs` checks exactly that.
-- [ ] Any `##` section that passed ~150 lines is split (AGENTS §7).
-- [ ] `node scripts/check-docs.mjs` passes.
+- [x] Layout block regenerated from a real directory listing of `frontend/src/`.
+- [x] `verified at <sha>` updated. If refactor-06 R06.6 already refreshed it, this subtask re-verifies rather than re-writes, and says so.
+- [x] Every file this campaign created or moved appears at its real path, and no path in the block is missing from disk — `scripts/check-docs.mjs` checks exactly that.
+- [x] Any `##` section that passed ~150 lines is split (AGENTS §7).
+- [x] `node scripts/check-docs.mjs` passes.
 - Commit: `docs(tech): refresh the frontend layout block after the decomposition campaign`
