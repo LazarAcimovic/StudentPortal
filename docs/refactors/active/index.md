@@ -12,7 +12,6 @@ Progress counts subtasks; a subtask counts as done only when every one of its bo
 
 | Campaign | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 07 | Frontend component decomposition and placement | 7/7 | — | — | — | [refactor-07-frontend-component-decomposition.md](refactor-07-frontend-component-decomposition.md) |
 | 08 | ICollection on entity navigation collections | 0/1 | all; three declared types, no behaviour change | — | — | [refactor-08-entity-navigation-collections.md](refactor-08-entity-navigation-collections.md) |
 
 ## Suite baseline — the numbers every campaign measures against
@@ -38,11 +37,9 @@ So three of the four gates are green and lint is not. A campaign is checked agai
 
 ## Order of work
 
-**02, 03 and 06 are archived.** Their changes are live; 04 and 05 may start any time.
+**02, 03, 06 and 07 are archived.** Their changes are live; 04 and 05 may start any time.
 
 04 and 05 are independent of each other but both touch `backend/StudentPortal/`. Run them one at a time — two campaigns editing the same repositories will collide.
-
-**07 is frontend-only and independent of every backend campaign**, so it can run in parallel with a backend one.
 
 **08 stands alone** — one subtask, three declared types, no dependency in either direction. Take it whenever a short slot is free.
 
