@@ -11,8 +11,7 @@ public interface ISubjectService
     Task<SubjectDto> UpdateSubjectAsync(Guid id, SubjectUpdateDto subjectDto);
     Task<bool> DeleteSubjectAsync(Guid id);
 
-    Task<IEnumerable<SubjectDto>> GetSubjectsByProfessorIdAsync(Guid professorId);
-    Task<IEnumerable<UserDto>> GetStudentsBySubjectIdAsync(Guid subjectId);
+
     Task<PagedResultDto<SubjectDto>> GetPagedAsync(int page, int pageSize);
     Task<PagedResultDto<SubjectSearchResultDto>> SearchAsync(string? query, int page, int pageSize);
 }

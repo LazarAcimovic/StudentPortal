@@ -66,4 +66,56 @@ public class RoleMatrixTests : IntegrationTestBase
 
         ((int)response.StatusCode).Should().Be(403);
     }
+
+    // Enrollment list — Admin-only per the access-control matrix
+
+    [Fact]
+    public async Task Student_GetEnrollments_Returns403()
+    {
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.StudentSarah);
+        var response = await client.GetAsync("/api/Enrollment");
+        ((int)response.StatusCode).Should().Be(403);
+    }
+
+    [Fact]
+    public async Task Professor_GetEnrollments_Returns403()
+    {
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.ProfessorSmith);
+        var response = await client.GetAsync("/api/Enrollment");
+        ((int)response.StatusCode).Should().Be(403);
+    }
+
+    [Fact]
+    public async Task Student_GetEnrollmentById_Returns403()
+    {
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.StudentSarah);
+        var response = await client.GetAsync($"/api/Enrollment/{Guid.NewGuid()}");
+        ((int)response.StatusCode).Should().Be(403);
+    }
+
+    [Fact]
+    public async Task Professor_GetEnrollmentById_Returns403()
+    {
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.ProfessorSmith);
+        var response = await client.GetAsync($"/api/Enrollment/{Guid.NewGuid()}");
+        ((int)response.StatusCode).Should().Be(403);
+    }
+
+    // Deleted routes — recorded as removed in the access-control matrix
+
+    [Fact]
+    public async Task GetSubjectsByProfessorId_DeletedRoute_Returns404()
+    {
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.StudentSarah);
+        var response = await client.GetAsync($"/api/Subject/professor/{SeedUsers.ProfessorSmith.Id}");
+        ((int)response.StatusCode).Should().BeOneOf(404, 405);
+    }
+
+    [Fact]
+    public async Task GetStudentsBySubjectId_DeletedRoute_Returns404()
+    {
+        var client = await CreateAuthenticatedClientAsync(SeedUsers.StudentSarah);
+        var response = await client.GetAsync($"/api/Subject/{Guid.NewGuid()}/students");
+        ((int)response.StatusCode).Should().BeOneOf(404, 405);
+    }
 }

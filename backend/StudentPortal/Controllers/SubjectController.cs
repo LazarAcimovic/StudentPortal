@@ -54,31 +54,6 @@ namespace StudentPortal.Controllers
             return Ok(subject);
         }
 
-        // GET: api/subject/professor/{professorId}
-        [HttpGet("professor/{professorId}")]
-        public async Task<ActionResult<IEnumerable<SubjectDto>>> GetSubjectsByProfessorId(Guid professorId)
-        {
-            var subjects = await _subjectService.GetSubjectsByProfessorIdAsync(professorId);
-            if (subjects == null || !subjects.Any())
-            {
-                return NotFound("No subjects found for this professor.");
-            }
-            return Ok(subjects);
-        }
-        
-        // GET: api/subject/{subjectId}/students
-        [HttpGet("{subjectId}/students")]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetStudentsBySubjectId(Guid subjectId)
-        {
-            var students = await _subjectService.GetStudentsBySubjectIdAsync(subjectId);
-            if (students == null || !students.Any())
-            {
-                return NotFound("No students enrolled in this subject.");
-            }
-            return Ok(students);
-        }
-
-
 
         // POST: api/subject
         [Authorize(Roles = "Admin")]

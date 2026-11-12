@@ -12,7 +12,7 @@ Progress counts subtasks; a subtask counts as done only when every one of its bo
 
 | Campaign | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 04 | Endpoint authorization and data exposure | 0/8 | all; R04.1 and R04.2 close the student-email exposure | — | — | [refactor-04-backend-access-control.md](refactor-04-backend-access-control.md) |
+| 04 | Endpoint authorization and data exposure | 1/8 | all; R04.1 and R04.2 close the student-email exposure | — | — | [refactor-04-backend-access-control.md](refactor-04-backend-access-control.md) |
 | 05 | Data access: query shape, indexes and the crash order | 0/7 | all; capture the baseline plans before R05.1 | — | — | [refactor-05-backend-data-access-scale.md](refactor-05-backend-data-access-scale.md) |
 | 06 | Frontend session: one source for the store and the role map | 2/5 | all; R06.2 is retired (D-039), R06.4 waits on R03.8 (now archived) | — | — | [refactor-06-frontend-session-single-source.md](refactor-06-frontend-session-single-source.md) |
 | 07 | Frontend component decomposition and placement | 0/7 | all; six oversized files and one misplaced one | — | — | [refactor-07-frontend-component-decomposition.md](refactor-07-frontend-component-decomposition.md) |

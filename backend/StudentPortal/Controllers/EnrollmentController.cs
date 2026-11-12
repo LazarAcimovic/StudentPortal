@@ -19,6 +19,7 @@ namespace StudentPortal.Controllers
         }
 
         // GET: api/enrollment
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<PagedResultDto<EnrollmentDto>>> GetAllEnrollments(
             [FromQuery] int page = 1,
@@ -30,6 +31,7 @@ namespace StudentPortal.Controllers
         }
 
         // GET: api/enrollment/{id}
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<EnrollmentDto>> GetEnrollmentById(Guid id)
         {

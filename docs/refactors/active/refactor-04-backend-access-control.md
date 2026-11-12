@@ -57,11 +57,11 @@ Not in scope: changing any response shape (R04.2), or the already-correct `GET /
 Docs to update: PRD §6 and Tech-Backend §3 (both are silent on `SubjectController` and `EnrollmentController`), plus a new `docs/Decisions.md` entry (next free id) recording who may read each of the six endpoints and why.
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter RoleMatrix`
 
-- [ ] **Subtask 0 first:** decide the matrix and write it into `PRD.md` §6 and `Tech-Backend.md` §3, with the Decisions entry, in its own `docs:` commit. Work from the call sites: `grep -rn "API_ROUTES.SUBJECT\|API_ROUTES.ENROLLMENT" frontend/src` shows which role actually needs each read.
-- [ ] The matrix must state explicitly that `GET /api/Subject/professor/{professorId}` was **removed**, not gated, so a later reader does not restore it as an ungated route or wonder which role it belonged to. An endpoint absent from the matrix reads as an oversight; an endpoint recorded as deleted reads as a decision.
-- [ ] `GET /api/Enrollment` and `GET /api/Enrollment/{id}` become `[Authorize(Roles = "Admin")]` — the admin Enrollments tab is their only caller.
-- [ ] `GET /api/Subject/{subjectId}/students` becomes Admin-only, or is deleted in favour of the paged professor endpoint if nothing calls it. Prefer deletion: `DB.md` §6.4 already defines the supported shape.
-- [ ] **`GET /api/Subject/professor/{professorId}` is DELETED, not gated.** The route has no caller: there is no `API_ROUTES` entry for it, `grep -rn` across `frontend/src` returns nothing, and no integration or e2e test exercises it. Gating a dead route keeps the maintenance cost without the benefit.
+- [x] **Subtask 0 first:** decide the matrix and write it into `PRD.md` §6 and `Tech-Backend.md` §3, with the Decisions entry, in its own `docs:` commit. Work from the call sites: `grep -rn "API_ROUTES.SUBJECT\|API_ROUTES.ENROLLMENT" frontend/src` shows which role actually needs each read.
+- [x] The matrix must state explicitly that `GET /api/Subject/professor/{professorId}` was **removed**, not gated, so a later reader does not restore it as an ungated route or wonder which role it belonged to. An endpoint absent from the matrix reads as an oversight; an endpoint recorded as deleted reads as a decision.
+- [x] `GET /api/Enrollment` and `GET /api/Enrollment/{id}` become `[Authorize(Roles = "Admin")]` — the admin Enrollments tab is their only caller.
+- [x] `GET /api/Subject/{subjectId}/students` becomes Admin-only, or is deleted in favour of the paged professor endpoint if nothing calls it. Prefer deletion: `DB.md` §6.4 already defines the supported shape.
+- [x] **`GET /api/Subject/professor/{professorId}` is DELETED, not gated.** The route has no caller: there is no `API_ROUTES` entry for it, `grep -rn` across `frontend/src` returns nothing, and no integration or e2e test exercises it. Gating a dead route keeps the maintenance cost without the benefit.
 
   Delete exactly these three, and nothing else:
 
@@ -80,9 +80,9 @@ Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter RoleMatrix`
   | `ProfessorDashboardServiceTests.cs:51` | that test stubs the **repository** method | stays as it is |
 
   The service and the repository methods share a name. The service one goes, the repository one stays — deleting the repository method breaks the professor dashboard. **refactor-05 R05.4 also names `GetSubjectsByProfessorIdAsync`, for an `AsNoTracking()` addition: that is the repository method, the one kept here.** The two campaigns do not conflict.
-- [ ] Extend `RoleMatrixTests` with one case per endpoint per role, asserting `403` for the roles the new matrix excludes, and `404`/`405` for the deleted route.
-- [ ] No e2e run is needed for this deletion, unlike R04.4 — the route has no frontend caller, so nothing crosses the stack (AGENTS §9.1).
-- [ ] Named suite green.
+- [x] Extend `RoleMatrixTests` with one case per endpoint per role, asserting `403` for the roles the new matrix excludes, and `404`/`405` for the deleted route.
+- [x] No e2e run is needed for this deletion, unlike R04.4 — the route has no frontend caller, so nothing crosses the stack (AGENTS §9.1).
+- [x] Named suite green.
 - Commit: `fix(backend): role-gate the subject and enrollment read endpoints`
 
 ---

@@ -82,17 +82,6 @@ public class SubjectService : ISubjectService
         return true;
     }
 
-    public async Task<IEnumerable<SubjectDto>> GetSubjectsByProfessorIdAsync(Guid professorId)
-    {
-        var subjects = await _subjectRepository.GetSubjectsByProfessorIdAsync(professorId);
-        return _mapper.Map<IEnumerable<SubjectDto>>(subjects);
-    }
-
-    public async Task<IEnumerable<UserDto>> GetStudentsBySubjectIdAsync(Guid subjectId)
-    {
-        var students = await _subjectRepository.GetStudentsBySubjectIdAsync(subjectId);
-        return _mapper.Map<IEnumerable<UserDto>>(students);
-    }
 
     public async Task<PagedResultDto<SubjectDto>> GetPagedAsync(int page, int pageSize)
     {
