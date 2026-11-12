@@ -12,7 +12,6 @@ Progress counts subtasks; a subtask counts as done only when every one of its bo
 
 | Campaign | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 08 | ICollection on entity navigation collections | 1/1 | — | — | — | [refactor-08-entity-navigation-collections.md](refactor-08-entity-navigation-collections.md) |
 
 ## Suite baseline — the numbers every campaign measures against
 
