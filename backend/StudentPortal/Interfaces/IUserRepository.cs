@@ -5,7 +5,6 @@ namespace StudentPortal.Interfaces
 {
     public interface IUserRepository
     {
-        Task<IEnumerable<User>> GetAllUsersAsync();
         Task<User> GetUserByIdAsync(Guid id);
         Task<User> GetUserByIdForUpdateAsync(Guid id);
         Task<User> FindByEmailAsync(string email);

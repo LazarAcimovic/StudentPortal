@@ -6,9 +6,7 @@ namespace StudentPortal.Interfaces;
 
 public interface IUserService
 {
-    Task<IEnumerable<UserDto>> GetAllUsersAsync();
     Task<UserDto> GetUserByIdAsync(Guid id);
-    Task<UserDto> FindByEmailAsync(string email);
     Task<UserDto> AddUserAsync(AdminCreateUserDto userDto);
     Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dto);
 

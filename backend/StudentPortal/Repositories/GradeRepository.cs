@@ -2,7 +2,6 @@
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
 using StudentPortal.Models.Enums;
-using System.Diagnostics;
 
 namespace StudentPortal.Repositories;
 
@@ -15,16 +14,6 @@ public class GradeRepository : IGradeRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Grade>> GetAllGradesAsync()
-    {
-        return await _context.Grades
-                               .Include(g => g.Enrollment)
-                               .ThenInclude(e => e.Student)
-                               .Include(g => g.Enrollment)
-                               .ThenInclude(e => e.Subject)
-                               .ToListAsync();
-    }
-
     public async Task<Grade> GetGradeByIdAsync(Guid id)
     {
         return await _context.Grades.AsNoTracking()
@@ -33,26 +22,6 @@ public class GradeRepository : IGradeRepository
                                .Include(g => g.Enrollment)
                                .ThenInclude(e => e.Subject)
                              .FirstOrDefaultAsync(g => g.Id == id);
-    }
-
-    public async Task<IEnumerable<Grade>> GetGradeByStudentIdAsync(Guid studentId)
-    {
-        return await _context.Grades
-                             .Include(g => g.Enrollment)
-                             .ThenInclude(e => e.Student)
-                             .Where(g => g.Enrollment.StudentId == studentId)
-                             .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Grade>> GetGradesByStudentAndSubjectAsync(Guid studentId, Guid subjectId)
-    {
-        return await _context.Grades
-                             .Include(g => g.Enrollment)
-                             .ThenInclude(e => e.Student)
-                             .Include(g => g.Enrollment)
-                             .ThenInclude(e => e.Subject)
-                             .Where(g => g.Enrollment.StudentId == studentId && g.Enrollment.SubjectId == subjectId && !g.IsDeleted)
-                             .ToListAsync();
     }
 
     public async Task<Grade?> GetByEnrollmentIdAsync(Guid enrollmentId)
@@ -83,19 +52,6 @@ public class GradeRepository : IGradeRepository
     {
         _context.Grades.Update(grade);
         await _context.SaveChangesAsync();
-    }
-
-    public async Task<Grade> ConfirmGradeAsync(Guid id)
-    {
-        var gradeToConfirm = await _context.Grades.FindAsync(id);
-        if (gradeToConfirm != null)
-        {
-            gradeToConfirm.ConfirmedAt = DateTime.UtcNow;
-            _context.Grades.Update(gradeToConfirm);
-            await _context.SaveChangesAsync();
-            return gradeToConfirm;
-        }
-        return null;
     }
 
     public async Task<bool> DeleteGradeAsync(Guid id)

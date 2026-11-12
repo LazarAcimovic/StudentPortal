@@ -26,12 +26,6 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
-    {
-        var users = await _userRepository.GetAllUsersAsync();
-        return _mapper.Map<IEnumerable<UserDto>>(users);
-    }
-
     public async Task<UserDto> GetUserByIdAsync(Guid id)
     {
         var user = await _userRepository.GetUserByIdAsync(id);
@@ -39,12 +33,6 @@ public class UserService : IUserService
         {
             return null;
         }
-        return _mapper.Map<UserDto>(user);
-    }
-
-    public async Task<UserDto> FindByEmailAsync(string email)
-    {
-        var user = await _userRepository.FindByEmailAsync(email);
         return _mapper.Map<UserDto>(user);
     }
 

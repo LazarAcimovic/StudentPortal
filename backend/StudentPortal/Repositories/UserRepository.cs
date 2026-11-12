@@ -14,11 +14,6 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<User>> GetAllUsersAsync()
-    {
-        return await _context.Users.AsNoTracking().ToListAsync();
-    }
-
     public async Task<User> GetUserByIdAsync(Guid id)
     {
         return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);

@@ -86,12 +86,12 @@ Not in scope: any method with a caller, however awkward. Confirm each deletion w
 Docs to update: Tech-Backend §1 if an interface disappears entirely
 Verify: `dotnet test backend/StudentPortal.Tests` and `dotnet test backend/StudentPortal.IntegrationTests`
 
-- [ ] One grep per method, hits recorded in the commit message. A method whose only callers are its own interface and its own tests counts as uncalled.
-- [ ] Delete `GetAllUsersAsync`, `GetAllEnrollmentsAsync`, `GetAllSubjectsAsync`, `GetAllGradesAsync`, `GetGradeByStudentIdAsync`, `GetGradesByStudentAndSubjectAsync`, `ConfirmGradeAsync(Guid)` and `IUserService.FindByEmailAsync`, from both the interface and the implementation.
-- [ ] Each of the first four loads a whole table with no paging; leaving them in the interface is an invitation for the next agent to call one.
-- [ ] `ConfirmGradeAsync(Guid)` is also the last `DateTime.UtcNow` on a **product-rule** timestamp in the tree — `ConfirmedAt` drives the 7-day window. Deleting it closes that without touching the accepted infrastructure deviations in `Tech-Backend.md` §6.
-- [ ] `EnrollmentRepository.AddEnrollmentAsync` drops its first statement, `_context.Users.Any(x => x.Id == enrollment.StudentId && !x.IsDeleted);` — a synchronous query whose result is discarded, so it blocks the request thread to compute nothing. `EnrollmentService` already performs this check properly.
-- [ ] Named suites green. Any test that fails is a test of dead code; delete it with its subject and say so in the commit message.
+- [x] One grep per method, hits recorded in the commit message. A method whose only callers are its own interface and its own tests counts as uncalled.
+- [x] Delete `GetAllUsersAsync`, `GetAllEnrollmentsAsync`, `GetAllSubjectsAsync`, `GetAllGradesAsync`, `GetGradeByStudentIdAsync`, `GetGradesByStudentAndSubjectAsync`, `ConfirmGradeAsync(Guid)` and `IUserService.FindByEmailAsync`, from both the interface and the implementation.
+- [x] Each of the first four loads a whole table with no paging; leaving them in the interface is an invitation for the next agent to call one.
+- [x] `ConfirmGradeAsync(Guid)` is also the last `DateTime.UtcNow` on a **product-rule** timestamp in the tree — `ConfirmedAt` drives the 7-day window. Deleting it closes that without touching the accepted infrastructure deviations in `Tech-Backend.md` §6.
+- [x] `EnrollmentRepository.AddEnrollmentAsync` drops its first statement, `_context.Users.Any(x => x.Id == enrollment.StudentId && !x.IsDeleted);` — a synchronous query whose result is discarded, so it blocks the request thread to compute nothing. `EnrollmentService` already performs this check properly.
+- [x] Named suites green. Any test that fails is a test of dead code; delete it with its subject and say so in the commit message.
 - Commit: `refactor(backend): delete the uncalled repository and service methods`
 
 ---

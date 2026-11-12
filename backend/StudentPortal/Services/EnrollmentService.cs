@@ -21,12 +21,6 @@ public class EnrollmentService : IEnrollmentService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<EnrollmentDto>> GetAllEnrollmentsAsync()
-    {
-        var enrollments = await _enrollmentRepository.GetAllEnrollmentsAsync();
-        return _mapper.Map<IEnumerable<EnrollmentDto>>(enrollments);
-    }
-
     public async Task<EnrollmentDto> GetEnrollmentByIdAsync(Guid studentId)
     {
         var enrollments = await _enrollmentRepository.GetEnrollmentByIdAsync(studentId);

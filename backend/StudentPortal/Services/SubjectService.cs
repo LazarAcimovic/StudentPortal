@@ -18,12 +18,6 @@ public class SubjectService : ISubjectService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<SubjectDto>> GetAllSubjectsAsync()
-    {
-        var subjects = await _subjectRepository.GetAllSubjectsAsync();
-        return _mapper.Map<IEnumerable<SubjectDto>>(subjects);
-    }
-
     public async Task<SubjectDto> GetSubjectByIdAsync(Guid id)
     {
         var subject = await _subjectRepository.GetSubjectByIdAsync(id);

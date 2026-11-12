@@ -13,15 +13,6 @@ public class EnrollmentRepository : IEnrollmentRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Enrollment>> GetAllEnrollmentsAsync()
-    {
-        return await _context.Enrollments
-                             .AsNoTracking()
-                             .Include(e => e.Student)  
-                             .Include(e => e.Subject)  
-                             .ToListAsync();
-    }
-
     public async Task<Enrollment> GetEnrollmentByIdAsync(Guid id)
     {
         return await _context.Enrollments
@@ -48,8 +39,6 @@ public class EnrollmentRepository : IEnrollmentRepository
 
     public async Task<Enrollment> AddEnrollmentAsync(Enrollment enrollment)
     {
-        _context.Users.Any(x => x.Id == enrollment.StudentId && !x.IsDeleted);
-
         await _context.Enrollments.AddAsync(enrollment);
         await _context.SaveChangesAsync();
 

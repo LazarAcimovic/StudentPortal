@@ -4,7 +4,6 @@ namespace StudentPortal.Interfaces;
 
 public interface IEnrollmentRepository
 {
-    Task<IEnumerable<Enrollment>> GetAllEnrollmentsAsync();
     Task<Enrollment> GetEnrollmentByIdAsync(Guid id);
     Task<Enrollment> AddEnrollmentAsync(Enrollment enrollment);
     Task UpdateEnrollmentAsync(Enrollment enrollment);

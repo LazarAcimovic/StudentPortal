@@ -4,7 +4,6 @@ namespace StudentPortal.Interfaces;
 
 public interface IEnrollmentService
 {
-    Task<IEnumerable<EnrollmentDto>> GetAllEnrollmentsAsync();
     Task<EnrollmentDto> GetEnrollmentByIdAsync(Guid studentId);
     Task<EnrollmentDto> AddEnrollmentAsync(EnrollmentCreateDto enrollmentDto);
     Task<PagedResultDto<EnrollmentDto>> GetPagedAsync(int page, int pageSize);
