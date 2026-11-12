@@ -12,11 +12,9 @@ Progress counts subtasks; a subtask counts as done only when every one of its bo
 
 | Campaign | Title | Progress | What's left | Depends on | Blocks | File |
 |---|---|---|---|---|---|---|
-| 02 | Backend error contract and observability | 6/6 | all subtasks done — ready to archive | — | 03, 04 | [refactor-02-backend-error-contract.md](refactor-02-backend-error-contract.md) |
-| 03 | Authentication system hardening | 9/9 | all subtasks done — ready to archive | 02 | — | [refactor-03-backend-auth-hardening.md](refactor-03-backend-auth-hardening.md) |
-| 04 | Endpoint authorization and data exposure | 0/8 | all; R04.1 and R04.2 close the student-email exposure | 02 | — | [refactor-04-backend-access-control.md](refactor-04-backend-access-control.md) |
+| 04 | Endpoint authorization and data exposure | 0/8 | all; R04.1 and R04.2 close the student-email exposure | — | — | [refactor-04-backend-access-control.md](refactor-04-backend-access-control.md) |
 | 05 | Data access: query shape, indexes and the crash order | 0/7 | all; capture the baseline plans before R05.1 | — | — | [refactor-05-backend-data-access-scale.md](refactor-05-backend-data-access-scale.md) |
-| 06 | Frontend session: one source for the store and the role map | 2/5 | all; R06.2 is retired (D-039), R06.4 waits on refactor-03 R03.8 | — | — | [refactor-06-frontend-session-single-source.md](refactor-06-frontend-session-single-source.md) |
+| 06 | Frontend session: one source for the store and the role map | 2/5 | all; R06.2 is retired (D-039), R06.4 waits on R03.8 (now archived) | — | — | [refactor-06-frontend-session-single-source.md](refactor-06-frontend-session-single-source.md) |
 | 07 | Frontend component decomposition and placement | 0/7 | all; six oversized files and one misplaced one | — | — | [refactor-07-frontend-component-decomposition.md](refactor-07-frontend-component-decomposition.md) |
 | 08 | ICollection on entity navigation collections | 0/1 | all; three declared types, no behaviour change | — | — | [refactor-08-entity-navigation-collections.md](refactor-08-entity-navigation-collections.md) |
 
@@ -43,9 +41,9 @@ So three of the four gates are green and lint is not. A campaign is checked agai
 
 ## Order of work
 
-**02 first.** Campaigns 03 and 04 throw the typed exceptions it introduces and rely on its middleware to map them, so starting either one first means writing `catch` blocks that 02 then deletes.
+**02 and 03 are archived.** Their typed exceptions and middleware are live; 04 and 05 may start any time.
 
-After that, 03, 04 and 05 are independent of each other but all touch `backend/StudentPortal/`. Run them one at a time — two campaigns editing the same repositories will collide. 05 has no dependency on 02 and can go first if the data-access measurements are the more urgent question.
+04 and 05 are independent of each other but both touch `backend/StudentPortal/`. Run them one at a time — two campaigns editing the same repositories will collide.
 
 **06 and 07 are frontend-only and independent of every backend campaign**, so either can run in parallel with a backend one. They are not independent of each other in one respect: 06 converts store reads in `App.tsx`, the providers and `Navbar`, and 07 splits pages and feature components. Those file sets do not overlap today — keep it that way, and if a split would touch a file 06 owns, let 06 land first.
 
@@ -53,7 +51,7 @@ After that, 03, 04 and 05 are independent of each other but all touch `backend/S
 
 **Campaign 06 has no R06.2.** The number is retired, not pending: the subtask it held was withdrawn as wrong, because the `_retry: true` bypass in `App.tsx` it proposed to remove is a deliberate fix rather than duplication (D-039). The reason, and the only conditions under which the dedup could ever be attempted, are recorded in that campaign's Out of scope section. Do not re-add it, and do not renumber R06.3–R06.6 to close the gap — the gap is the record.
 
-**Four subtasks are blocked on a document, not on code.** R02.4, R03.4, R03.6, R03.7, R03.8, R04.1, R04.3 and R04.5 each introduce a rule that no authoritative document states yet. Every one of them opens with a "Subtask 0 first" box: write the rule into `PRD.md` / `DB.md` / `Tech-Backend.md`, append the `docs/Decisions.md` entry, commit that alone, and only then write code (AGENTS §0, D-010).
+**Two subtasks are blocked on a document, not on code.** R04.1, R04.3 and R04.5 each introduce a rule that no authoritative document states yet. Each opens with a "Subtask 0 first" box: write the rule into `PRD.md` / `DB.md` / `Tech-Backend.md`, append the `docs/Decisions.md` entry, commit that alone, and only then write code (AGENTS §0, D-010).
 
 Campaigns have their own number sequence (`refactor-01`, `refactor-02`, …), independent of task numbers. New campaigns follow [`../TEMPLATE.md`](../TEMPLATE.md).
 
