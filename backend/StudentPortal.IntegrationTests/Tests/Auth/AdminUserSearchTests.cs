@@ -203,6 +203,35 @@ public class AdminUserSearchTests : IntegrationTestBase
         paged!.PageSize.Should().Be(15);
     }
 
+    // ── LIKE-pattern escaping ──────────────────────────────────────────────
+
+    [Fact]
+    public async Task Search_UnderscoreQuery_MatchesOnlyLiteralUnderscore()
+    {
+        // '_' is a single-char wildcard in SQL LIKE/ILIKE. After escaping it
+        // must match only rows with a literal underscore — none in seed data.
+        var admin = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+        var response = await admin.GetAsync("/api/User/search?role=Student&query=_&pageSize=50");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var paged = await response.Content.ReadFromJsonAsync<PagedResultDto<UserSearchResultDto>>();
+        paged!.TotalCount.Should().Be(0, "no seeded student name or index contains a literal underscore");
+    }
+
+    [Fact]
+    public async Task Search_WildcardOnlyQuery_ReturnsZeroResults()
+    {
+        // '%' is a multi-char wildcard. Without escaping '%%%%' would scan the
+        // whole table and match every row. After escaping it matches a literal
+        // '%' — none in seed data.
+        var admin = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
+        var response = await admin.GetAsync("/api/User/search?role=Student&query=%%%%&pageSize=50");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var paged = await response.Content.ReadFromJsonAsync<PagedResultDto<UserSearchResultDto>>();
+        paged!.TotalCount.Should().Be(0, "no seeded student name contains a literal percent sign");
+    }
+
     // ── Deterministic order ────────────────────────────────────────────────
 
     [Fact]

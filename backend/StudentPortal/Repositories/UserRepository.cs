@@ -85,6 +85,15 @@ public class UserRepository : IUserRepository
         return (items, totalCount);
     }
 
+    private const int MaxSearchQueryLength = 100;
+
+    // EF.Functions.ILike sends the pattern as a bound parameter, so there is no
+    // SQL injection risk here. The escaping below addresses LIKE-pattern injection:
+    // unescaped % and _ reach Postgres as wildcards and % … % on a large table
+    // causes a full scan that no btree index can serve (DB §6.5, D-034).
+    private static string EscapePattern(string s) =>
+        s.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
+
     public async Task<(IReadOnlyList<UserSearchResultDto> Items, int TotalCount)> SearchAsync(
         RoleEnum role, string? query, int page, int pageSize)
     {
@@ -94,13 +103,16 @@ public class UserRepository : IUserRepository
 
         if (!string.IsNullOrEmpty(query))
         {
+            var capped = query.Length > MaxSearchQueryLength ? query[..MaxSearchQueryLength] : query;
+            var pattern = $"%{EscapePattern(capped)}%";
+
             if (role == RoleEnum.Professor)
-                q = q.Where(u => EF.Functions.ILike(u.FirstName, $"%{query}%")
-                              || EF.Functions.ILike(u.LastName, $"%{query}%"));
+                q = q.Where(u => EF.Functions.ILike(u.FirstName, pattern, @"\")
+                              || EF.Functions.ILike(u.LastName, pattern, @"\"));
             else
-                q = q.Where(u => EF.Functions.ILike(u.IndexNumber, $"%{query}%")
-                              || EF.Functions.ILike(u.FirstName, $"%{query}%")
-                              || EF.Functions.ILike(u.LastName, $"%{query}%"));
+                q = q.Where(u => EF.Functions.ILike(u.IndexNumber, pattern, @"\")
+                              || EF.Functions.ILike(u.FirstName, pattern, @"\")
+                              || EF.Functions.ILike(u.LastName, pattern, @"\"));
         }
 
         var totalCount = await q.CountAsync();

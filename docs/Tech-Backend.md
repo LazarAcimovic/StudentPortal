@@ -168,6 +168,7 @@ Each validator covers non-null / non-empty, length bounds, email format (`EmailA
 - `StudentConfirmGradeDto`: `EnrollmentId` not empty.
 - `AssignProfessorDto`: `GradeId` and `AssignedProfessorId` not empty.
 - `ReassignProfessorDto`: `GradeId` and `NewProfessorId` not empty.
+- **Search `query` parameter** (`GET /api/User/search`, `GET /api/Subject/search`): no DTO, no FluentValidation. Length is capped at **100 characters** and LIKE wildcards (`\`, `%`, `_`) are escaped in the repository before the `ILIKE` pattern is built (R05.5; see DB §6.5).
 
 ---
 

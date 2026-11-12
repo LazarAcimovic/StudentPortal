@@ -86,6 +86,11 @@ public class SubjectRepository : ISubjectRepository
         return (items, totalCount);
     }
 
+    private const int MaxSearchQueryLength = 100;
+
+    private static string EscapePattern(string s) =>
+        s.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
+
     public async Task<(IReadOnlyList<SubjectSearchResultDto> Items, int TotalCount)> SearchAsync(
         string? query, int page, int pageSize)
     {
@@ -94,8 +99,12 @@ public class SubjectRepository : ISubjectRepository
             .Where(s => !s.IsDeleted);
 
         if (!string.IsNullOrEmpty(query))
-            q = q.Where(s => EF.Functions.ILike(s.SubjectName, $"%{query}%")
-                          || EF.Functions.ILike(s.SubjectCode, $"%{query}%"));
+        {
+            var capped = query.Length > MaxSearchQueryLength ? query[..MaxSearchQueryLength] : query;
+            var pattern = $"%{EscapePattern(capped)}%";
+            q = q.Where(s => EF.Functions.ILike(s.SubjectName, pattern, @"\")
+                          || EF.Functions.ILike(s.SubjectCode, pattern, @"\"));
+        }
 
         var totalCount = await q.CountAsync();
         var items = await q

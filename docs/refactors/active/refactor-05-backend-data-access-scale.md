@@ -137,12 +137,12 @@ Not in scope: switching away from `ILIKE`, or adding an index. Both are D-034 de
 Docs to update: DB §6.5 (state that the pattern is escaped), Tech-Backend §5
 Verify: `dotnet test backend/StudentPortal.IntegrationTests --filter AdminUserSearch`
 
-- [ ] This is not SQL injection. `EF.Functions.ILike(u.FirstName, $"%{query}%")` sends the pattern as a bound parameter — the audit found no raw SQL anywhere in `backend/StudentPortal/` except `TestModeEndpoints` replaying the static `seed.sql` file. Say that in the commit message so the next reader does not re-derive it.
-- [ ] It is **LIKE-pattern injection**: `%` and `_` in `query` reach Postgres as wildcards. `_` makes the match wider than the caller asked for; a query of `%%%%%%%%` forces a pathological pattern match across the whole table on an endpoint with no rate limit in front of it.
-- [ ] Escape `\`, `%` and `_` in `query` before interpolating, and pass the escape character through.
-- [ ] Also bound the query length. There is no cap today, so an arbitrarily long pattern is accepted.
-- [ ] Integration tests: searching for a literal `_` matches only rows containing `_`; a wildcard-only query returns the same page as an empty query rather than a full scan.
-- [ ] Named suite green.
+- [x] This is not SQL injection. `EF.Functions.ILike(u.FirstName, $"%{query}%")` sends the pattern as a bound parameter — the audit found no raw SQL anywhere in `backend/StudentPortal/` except `TestModeEndpoints` replaying the static `seed.sql` file. Say that in the commit message so the next reader does not re-derive it.
+- [x] It is **LIKE-pattern injection**: `%` and `_` in `query` reach Postgres as wildcards. `_` makes the match wider than the caller asked for; a query of `%%%%%%%%` forces a pathological pattern match across the whole table on an endpoint with no rate limit in front of it.
+- [x] Escape `\`, `%` and `_` in `query` before interpolating, and pass the escape character through.
+- [x] Also bound the query length. There is no cap today, so an arbitrarily long pattern is accepted.
+- [x] Integration tests: searching for a literal `_` matches only rows containing `_`; a wildcard-only query returns the same page as an empty query rather than a full scan.
+- [x] Named suite green.
 - Commit: `fix(backend): escape wildcards in the admin search pattern`
 
 ---

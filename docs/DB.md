@@ -445,6 +445,8 @@ The endpoint is gated `[Authorize(Roles = "Professor")]` on `ProfessorController
 
 `ILIKE` substring matching executed in SQL. **Do not filter in memory.** No index is added speculatively; add `pg_trgm` / GIN only if `EXPLAIN ANALYZE` on production-sized data justifies it. Omit the `ILIKE` predicate when `@query` is empty (return all rows matching the role / delete filter, paged).
 
+**Pattern escaping (R05.5).** `EF.Functions.ILike` sends the pattern as a bound parameter — there is no SQL injection risk. However, `%` and `_` in the caller-supplied `query` would reach Postgres as wildcards (LIKE-pattern injection). Before interpolating, the repository escapes `\` → `\\`, `%` → `\%`, `_` → `\_` and passes `\` as the escape character: `ILIKE '%' || @escaped || '%' ESCAPE '\'`. Query length is also capped at **100 characters** in the repository before escaping.
+
 ```sql
 -- GET /api/users/search?role=Professor
 SELECT "Id", "FirstName", "LastName"
