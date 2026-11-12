@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { FormValues, GradePanelProps } from '../../models/professor/gradePanel';
 import { EMPTY_FORM, FIELDS } from '../../constants/professor/constants';
+import GradeFieldSet from './GradeFieldSet';
 import { parseField, validateField, computeFinalGrade } from '../../utils/gradeUtils';
 import { getDraft, saveDraft } from '../../../grades/api/gradeDraftService';
 import { professorConfirmGrade, professorReconfirmExam, getGradeByEnrollment, type GradeDto } from '../../../grades/api/gradeService';
@@ -282,28 +283,7 @@ const GradePanel: React.FC<GradePanelProps> = ({ selectedStudentRow, onGradeChan
             <>
               {error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
 
-              <div className="mb-3">
-                {FIELDS.map(field => (
-                  <div className="mb-2" key={field.key}>
-                    <label className="form-label small mb-1">
-                      {field.label}{' '}
-                      <span className="text-muted">(max {field.max})</span>
-                    </label>
-                    <input
-                      type="number"
-                      className={`form-control form-control-sm${fieldErrors[field.key] ? ' is-invalid' : ''}`}
-                      min={0}
-                      max={field.max}
-                      step={0.5}
-                      value={form[field.key]}
-                      onChange={e => handleChange(field.key, e.target.value)}
-                    />
-                    {fieldErrors[field.key] && (
-                      <div className="invalid-feedback">{fieldErrors[field.key]}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <GradeFieldSet values={form} errors={fieldErrors} onChange={handleChange} />
 
               {allFilled && sum != null && finalGrade != null && (
                 <div className="alert alert-info py-2 mb-3">

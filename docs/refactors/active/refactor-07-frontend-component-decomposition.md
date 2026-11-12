@@ -124,12 +124,12 @@ Not in scope: the point-field bounds, the half-step rule, the final-grade mappin
 Docs to update: Tech-Frontend §1
 Verify: `npm run test` and `npx tsc --noEmit`, both from `frontend/`
 
-- [ ] Record the starting 351 lines and the final count.
-- [ ] The five point inputs become one presentational field-set component taking values, errors and change handlers as props.
-- [ ] `GradePanel` keeps the draft state, the save-draft and confirm mutations, and the Zod validation, delegating all markup.
-- [ ] `gradeUtils.ts` stays the single home for the point-sum and final-grade helpers; no duplicate arithmetic lands in the new component.
-- [ ] `src/test/integration/grades/ProfessorDashboard.test.tsx` and `gradeUtils.test.ts` pass unchanged.
-- [ ] Named suites green, typecheck clean.
+- [x] Record the starting 351 lines and the final count. GradePanel: 351 → 331 lines; GradeFieldSet: 36 lines.
+- [x] The five point inputs become one presentational field-set component taking values, errors and change handlers as props.
+- [x] `GradePanel` keeps the draft state, the save-draft and confirm mutations, and the Zod validation, delegating all markup.
+- [x] `gradeUtils.ts` stays the single home for the point-sum and final-grade helpers; no duplicate arithmetic lands in the new component.
+- [x] `src/test/integration/grades/ProfessorDashboard.test.tsx` and `gradeUtils.test.ts` pass unchanged.
+- [x] Named suites green, typecheck clean.
 - Commit: `refactor(frontend): separate GradePanel state from its field markup`
 
 ---

@@ -24,7 +24,7 @@
 
 ## 1. Project layout
 
-> **Verified against the working tree at commit `efbe27b` (2026-11-12); updated for R07.3 (AdminDashboardPage split into tab panels); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
+> **Verified against the working tree at commit `cb2fefd` (2026-11-12); updated for R07.4 (GradePanel split into GradeFieldSet); legacy `src/models/`, `src/services/data/`, page folders and empty `components/common/` removed in refactor-01.** Before creating a file at any path below, confirm the parent directory still exists (Glob or `ls`). If it does not, fix this section in the same commit as your change (AGENTS §7).
 
 ```
 frontend/src/
@@ -55,7 +55,7 @@ frontend/src/
                                 SubjectsTable, SubjectCreateForm, SubjectEditForm,
                                 EnrollmentsTable, EnrollmentCreateForm,
                                 EscalationsTab, EscalationsTable, AssignModal
-      components/professor/     SubjectsList, StudentsList, GradePanel,
+      components/professor/     SubjectsList, StudentsList, GradePanel, GradeFieldSet,
                                 AppealsSection, ViewAppealModal,
                                 AssignedCasesSection, AssignedCaseItem,
                                 AppealHistory, ResolveModal,
