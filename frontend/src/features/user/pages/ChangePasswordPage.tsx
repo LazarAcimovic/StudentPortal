@@ -134,7 +134,7 @@ const ChangePasswordPage: React.FC = () => {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Object.keys(validate(form)).length > 0}
           >
             {isSubmitting ? (
               <>
