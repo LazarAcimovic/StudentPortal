@@ -41,13 +41,17 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSave, onCancel }) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const parseResult = createUserSchema.safeParse(values);
-  const fieldErrors = parseResult.success
+  const fieldErrors: Record<string, string> = parseResult.success
     ? {}
-    : parseResult.error.flatten().fieldErrors;
+    : Object.fromEntries(
+        parseResult.error.issues
+          .filter((i) => i.path.length > 0)
+          .map((i) => [i.path[0], i.message])
+      );
 
   // Zod (client) wins when present; otherwise fall back to a server-side message.
   const errorFor = (field: keyof CreateUser): string | undefined =>
-    fieldErrors[field]?.[0] ?? serverFieldErrors[field];
+    fieldErrors[field] ?? serverFieldErrors[field];
 
   const showError = (field: keyof CreateUser): string | undefined =>
     touched[field] ? errorFor(field) : undefined;
