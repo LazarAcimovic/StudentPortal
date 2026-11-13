@@ -38,8 +38,6 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
   // Field visibility — PRD §5.9 matrix
   // Email: always in admin scope; in self scope only when caller is Admin
   const showEmail = scope === 'admin' || callerRole === USER_ROLES.Admin;
-  // IndexNumber: admin editing a Student only
-  const showIndexNumber = scope === 'admin' && user.userRole === USER_ROLES.Student;
   // Role + Inactive: admin editing anyone who is NOT another Admin
   const showUserRole = scope === 'admin' && user.userRole !== USER_ROLES.Admin;
   const showIsDeleted = scope === 'admin' && user.userRole !== USER_ROLES.Admin;
@@ -52,6 +50,9 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
     userRole: user.userRole,
     isDeleted: user.isDeleted,
   });
+  // IndexNumber: admin editing a Student only — uses form.userRole so it reacts to role changes
+  const showIndexNumber = scope === 'admin' && form.userRole === USER_ROLES.Student;
+
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
