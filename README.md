@@ -413,7 +413,11 @@ Known gaps, stated rather than hidden: the admin **Escalations** tab is not buil
 
 The recording below is of the **original 2025 build**, before the agentic-engineering pass — the five-field grading model, the appeal flow and the escalation workflow described above all postdate it:
 
-https://github.com/user-attachments/assets/2c9b963a-cb31-46c0-9f42-b8efd9efffa9
+
+
+https://github.com/user-attachments/assets/dbf4fb14-026a-4dda-b44b-dac6d9b3d4d0
+
+
 
 ---
 
