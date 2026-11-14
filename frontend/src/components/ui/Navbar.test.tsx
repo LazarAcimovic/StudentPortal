@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../../test/helpers/renderWithProviders';
 import { makeAdmin, makeStudent } from '../../test/factories';
@@ -15,8 +15,21 @@ vi.mock('../../lib/auth', () => ({
 }));
 
 const toastSuccess = vi.fn();
+const toastError = vi.fn();
 vi.mock('react-toastify', () => ({
-  toast: { success: (...a: unknown[]) => toastSuccess(...a) },
+  toast: {
+    success: (...a: unknown[]) => toastSuccess(...a),
+    error: (...a: unknown[]) => toastError(...a),
+  },
+}));
+
+// The navbar hosts <ResetDemoButton>, which probes GET /api/Demo/status on mount.
+// Component tests mock the service module (Tech-Frontend §7); the button's own
+// behaviour is covered in ResetDemoButton.test.tsx.
+const getDemoStatusMock = vi.fn();
+vi.mock('../../features/demo/api/demoService', () => ({
+  getDemoStatus: (...a: unknown[]) => getDemoStatusMock(...a),
+  resetDemoData: vi.fn(),
 }));
 
 import Navbar from './Navbar';
@@ -25,6 +38,10 @@ beforeEach(() => {
   logoutMock.mockReset();
   clearAuthSessionMock.mockReset();
   toastSuccess.mockReset();
+  toastError.mockReset();
+  // Default: not a demo deployment, so the button stays hidden.
+  getDemoStatusMock.mockReset();
+  getDemoStatusMock.mockRejectedValue({ response: { status: 404 } });
 });
 
 describe('Navbar — logged-out state', () => {
@@ -52,6 +69,21 @@ describe('Navbar — logged-in state', () => {
   it('never renders a Students link anywhere', () => {
     renderWithProviders(<Navbar />, { user: makeAdmin() });
     expect(screen.queryByRole('link', { name: /students/i })).not.toBeInTheDocument();
+  });
+
+  it('never renders a Reset demo button on a normal deployment (UI §3)', async () => {
+    renderWithProviders(<Navbar />, { user: makeAdmin() });
+    await waitFor(() => expect(getDemoStatusMock).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: /reset demo/i })).not.toBeInTheDocument();
+  });
+
+  it('renders the Reset demo button on a demo deployment (UI §3, per D-049)', async () => {
+    getDemoStatusMock.mockReset();
+    getDemoStatusMock.mockResolvedValue(undefined);
+
+    renderWithProviders(<Navbar />, { user: makeAdmin() });
+
+    expect(await screen.findByRole('button', { name: /^reset demo$/i })).toBeInTheDocument();
   });
 
   it('Logout calls authService.logout then clearAuthSession with redirectToLogin', async () => {

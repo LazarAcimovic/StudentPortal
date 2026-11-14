@@ -44,4 +44,8 @@ export const API_ROUTES = {
   ESCALATION_ELIGIBLE_PROFESSORS: '/Escalation/eligible-professors',
   ESCALATION_ASSIGN: '/Escalation/assign',
   ESCALATION_REASSIGN: '/Escalation/reassign',
+  // Demo deployment only. Both answer 404 everywhere else, and the SPA reads that
+  // 404 as "not a demo deployment" and hides the navbar button (per D-049).
+  DEMO_STATUS: '/Demo/status',
+  DEMO_RESET: '/Demo/reset',
 } as const;

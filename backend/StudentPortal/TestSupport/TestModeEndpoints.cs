@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using StudentPortal.Demo;
 using StudentPortal.Models.Entities;
 
 namespace StudentPortal.TestSupport;
@@ -56,12 +57,20 @@ public static class TestModeEndpoints
             Encoding.UTF8.GetBytes(provided), Encoding.UTF8.GetBytes(expected));
 }
 
-/// <summary>Locates and replays <c>Migrations/seed.sql</c> at runtime for test-mode provisioning.</summary>
+/// <summary>
+/// Replays <c>Migrations/seed.sql</c> at runtime for test-mode provisioning.
+///
+/// Runs the base seed and <b>nothing else</b>, on purpose. The demo reset
+/// (<see cref="StudentPortal.Demo.DemoResetService"/>) layers the two <c>seed-dev-*.sql</c>
+/// fixtures on top, and those must never reach a test run: <c>seed-dev-pagination.sql</c> takes
+/// the active-student count from 10 to 30, which <c>AdminUserSearchTests</c> asserts against
+/// (per D-049, D-022). Only path resolution is shared, via <see cref="SeedScriptLocator"/>.
+/// </summary>
 public static class TestSeed
 {
     public static async Task RunAsync(StudentPortalApiContext db)
     {
-        var sql = await File.ReadAllTextAsync(ResolveSeedPath());
+        var sql = await File.ReadAllTextAsync(SeedScriptLocator.Resolve(SeedScriptLocator.BaseSeed));
         var conn = db.Database.GetDbConnection();
         var openedHere = false;
         if (conn.State != ConnectionState.Open)
@@ -81,24 +90,4 @@ public static class TestSeed
         }
     }
 
-    private static string ResolveSeedPath()
-    {
-        // The csproj copies seed.sql next to the assembly, so prefer the output copy.
-        var direct = Path.Combine(AppContext.BaseDirectory, "Migrations", "seed.sql");
-        if (File.Exists(direct)) return direct;
-
-        // Fallback: walk up the source tree (handy when run straight from the project dir).
-        var dir = AppContext.BaseDirectory;
-        for (var i = 0; i < 12 && dir is not null; i++)
-        {
-            var candidate = Path.Combine(dir, "StudentPortal", "Migrations", "seed.sql");
-            if (File.Exists(candidate)) return candidate;
-            var parent = Directory.GetParent(dir);
-            if (parent is null) break;
-            dir = parent.FullName;
-        }
-
-        throw new FileNotFoundException(
-            "Could not locate Migrations/seed.sql for test-mode reset.");
-    }
 }

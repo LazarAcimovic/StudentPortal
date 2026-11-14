@@ -37,6 +37,13 @@ export const handlers = [
       userRole: 2,
     })
   ),
+
+  // Default: NOT a demo deployment, so the navbar's Reset demo button stays hidden —
+  // the same 404 a normal deployment returns, since the routes are not mapped there
+  // (per D-049). A test that wants the button overrides this with server.use().
+  http.get(`/api${API_ROUTES.DEMO_STATUS}`, () =>
+    new HttpResponse(null, { status: 404 })
+  ),
 ];
 
 export const server = setupServer(...handlers);

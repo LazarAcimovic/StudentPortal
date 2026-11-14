@@ -20,8 +20,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Copied beside the assembly so test-mode reset (e2e) can replay it at runtime. -->
+    <!-- Copied beside the assembly so the SQL fixtures can be replayed at runtime:
+         seed.sql by test-mode reset (e2e), and all three by demo reset (D-049).
+         A published deployment ships ONLY these copies — SeedScriptLocator's source-tree
+         fallback does not exist there, so a missing rule here breaks the demo server at boot. -->
     <None Update="Migrations\seed.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\seed-dev-escalations.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\seed-dev-pagination.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

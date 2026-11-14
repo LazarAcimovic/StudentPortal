@@ -4,6 +4,7 @@ import { useUserStore } from "../../store/user/useUserStore";
 import { APP_ROUTES, DASHBOARD_BY_ROLE } from "../../config/constants";
 import { logout } from "../../features/auth/api/authService";
 import { clearAuthSession } from "../../lib/auth";
+import ResetDemoButton from "./ResetDemoButton";
 
 const Navbar: React.FC = () => {
   const currentUser = useUserStore((s) => s.currentUser);
@@ -61,7 +62,9 @@ const Navbar: React.FC = () => {
                 </>
               )}
             </ul>
-            <ul className="navbar-nav">
+            <ul className="navbar-nav align-items-lg-center">
+              {/* Renders itself only on a demo deployment; null everywhere else (UI §3). */}
+              <ResetDemoButton />
               {currentUser ? (
                 <li className="nav-item dropdown">
                   <button

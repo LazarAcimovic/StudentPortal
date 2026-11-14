@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
 using StudentPortal.Configuration;
+using StudentPortal.Demo;
 using StudentPortal.Handlers;
 using StudentPortal.Interfaces;
 using StudentPortal.Models.Entities;
@@ -94,6 +95,22 @@ if (testModeActive)
 else
 {
     builder.Services.AddSingleton(TimeProvider.System);
+}
+
+// ─── Demo mode ────────────────────────────────────────────────────────────
+// The portfolio demo deployment carries a "Reset demo" button that replays the three SQL
+// fixtures on request. A single flag gates it: left false (the appsettings.json default) the
+// routes are never mapped, so every other deployment answers 404 — the SPA reads that 404 as
+// "not a demo deployment" and hides the button (per D-049, Tech-Backend §6).
+//
+// One flag, not test mode's four layers, because the surfaces differ in kind: /api/__test__/*
+// hands out clock control and runs under a CI secret, while this one only replays the fixtures
+// that are the demo's entire content. The boot-time warning below is the compensating control.
+var demoModeActive = builder.Configuration.GetValue<bool>("DemoMode:Enabled");
+
+if (demoModeActive)
+{
+    builder.Services.AddScoped<DemoResetService>();
 }
 
 // Registracija AutoMappera
@@ -227,6 +244,22 @@ if (testModeActive)
     // Mapped only when the three boot-time guard layers hold; the fourth (secret header)
     // is enforced inside. Absent any layer the routes never exist → 404 (task 22d.2).
     app.MapTestModeEndpoints(builder.Configuration["TestMode:Secret"]);
+}
+
+if (demoModeActive)
+{
+    // Fail fast, at boot, if a fixture is missing from the published output. SeedScriptLocator
+    // falls back to walking the source tree, which hides a missing csproj copy rule on a dev
+    // machine; without this check the gap would only surface on a visitor's first click, as a
+    // 500 from a deployment that looked healthy (per D-049).
+    SeedScriptLocator.VerifyAll(SeedScriptLocator.DemoScripts);
+
+    app.Logger.LogWarning(
+        "DEMO MODE IS ACTIVE. POST /api/Demo/reset is anonymous and will replay the seed " +
+        "fixtures, discarding all data and signing every user out. Never enable DemoMode on a " +
+        "deployment that holds real data.");
+
+    app.MapDemoEndpoints();
 }
 
 app.Run();
