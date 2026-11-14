@@ -5,6 +5,7 @@ import PasswordInput from "../../../../components/ui/PasswordInput";
 import FormField from "../../../../components/ui/FormField";
 import FormAlert from "../../../../components/ui/FormAlert";
 import { createUserSchema } from "../../utils/userSchemas";
+import { zodFieldErrors } from "../../../../lib/zodFieldErrors";
 import type { AddUserResult, AddUserFieldErrors } from "../../api/userService";
 
 interface UserCreateFormProps {
@@ -41,13 +42,10 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSave, onCancel }) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const parseResult = createUserSchema.safeParse(values);
+  // First broken rule per field, not the last — see zodFieldErrors (per D-050).
   const fieldErrors: Record<string, string> = parseResult.success
     ? {}
-    : Object.fromEntries(
-        parseResult.error.issues
-          .filter((i) => i.path.length > 0)
-          .map((i) => [i.path[0], i.message])
-      );
+    : zodFieldErrors(parseResult.error);
 
   // Zod (client) wins when present; otherwise fall back to a server-side message.
   const errorFor = (field: keyof CreateUser): string | undefined =>

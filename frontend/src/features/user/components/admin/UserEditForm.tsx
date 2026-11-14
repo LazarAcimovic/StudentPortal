@@ -8,6 +8,7 @@ import axiosClient from '../../../../shared/api/axiosClient';
 import { API_ROUTES } from '../../../../config/constants';
 import FormField from '../../../../components/ui/FormField';
 import FormAlert from '../../../../components/ui/FormAlert';
+import { zodFieldErrors } from '../../../../lib/zodFieldErrors';
 
 interface UserEditFormProps {
   scope: 'self' | 'admin';
@@ -69,9 +70,8 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
     }
     const result = z.object(shape).safeParse(values);
     if (result.success) return {};
-    return Object.fromEntries(
-      result.error.issues.map((issue) => [issue.path[0] as string, issue.message])
-    );
+    // First broken rule per field, not the last — see zodFieldErrors (per D-050).
+    return zodFieldErrors(result.error);
   };
 
   const handleChange = (

@@ -55,7 +55,13 @@ test.describe('admin', () => {
     await adminPage.getByLabel('Subject Name').fill('E2E Elective');
     await adminPage.getByLabel('Subject Code').fill('E2E-001');
     await adminPage.getByLabel('ECTS').fill('6');
-    await adminPage.getByLabel('Professor').selectOption({ label: 'John Smith' });
+    // Professor is a <SearchableCombobox> — a text input plus a list of <button>
+    // results — not a <select>, so selectOption does not apply (per D-034).
+    // Focus opens the list, typing filters it, clicking the result picks it.
+    const professor = adminPage.getByLabel('Professor');
+    await professor.click();
+    await professor.fill('Smith');
+    await adminPage.getByRole('button', { name: 'John Smith' }).click();
     await adminPage.getByRole('button', { name: 'Create', exact: true }).click();
 
     // It persists (rendered in both the desktop table and the mobile card).

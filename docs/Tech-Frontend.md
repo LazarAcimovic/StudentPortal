@@ -333,6 +333,8 @@ const fieldErrors = validation.success ? {} : (validation.error.flatten().fieldE
 // show errors only when touched[field] is true
 ```
 
+**One message per field: the first broken rule (per D-050).** Zod reports *every* rule a field breaks, in declaration order. A form that shows a single message per field calls the shared helper `lib/zodFieldErrors.ts`, which keeps the **first** issue per path — `UserCreateForm`, `UserEditForm` and `ChangePasswordPage` all do. Never rebuild that map with `Object.fromEntries(issues.map(...))`: it keeps the **last** value for a repeated key, so the least relevant rule wins and an empty email is reported as malformed rather than missing. Schemas are therefore written cheapest-rule-first (`.min(1)` before `.email()`, length before character classes), because that order is now the user-facing priority. `loginSchema` uses `error.flatten().fieldErrors` instead, which yields arrays per field and so never had the problem.
+
 Submit flow: mark all touched → bail if invalid → set `isSubmitting` → service call → `setServerError` on failure → navigate or toast on success.
 
 A mutation that can fail **per field** — e.g. create-user, where a duplicate email returns `409` — resolves to a structured result (`{ ok: true, … } | { ok: false, fieldErrors?, message? }`) that the form maps onto the offending field (`fieldErrors`) or the top-of-form alert (`message`), instead of a toast. See `features/user/api/userService.ts` (`addUser`).

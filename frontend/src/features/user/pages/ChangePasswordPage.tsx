@@ -8,6 +8,7 @@ import { APP_ROUTES } from '../../../config/constants';
 import { CHANGE_PASSWORD_INITIAL_FORM } from '../../../shared/constants/constants';
 import type { ChangePasswordFormState } from '../../../shared/models/ChangePasswordFormState';
 import PasswordInput from '../../../components/ui/PasswordInput';
+import { zodFieldErrors } from '../../../lib/zodFieldErrors';
 
 const ChangePasswordPage: React.FC = () => {
   const [form, setForm] = useState<ChangePasswordFormState>(CHANGE_PASSWORD_INITIAL_FORM);
@@ -19,9 +20,8 @@ const ChangePasswordPage: React.FC = () => {
   const validate = (values: ChangePasswordFormState): Record<string, string> => {
     const result = changePasswordSchema.safeParse(values);
     if (result.success) return {};
-    return Object.fromEntries(
-      result.error.issues.map((issue) => [issue.path[0] as string, issue.message])
-    );
+    // First broken rule per field, not the last — see zodFieldErrors (per D-050).
+    return zodFieldErrors(result.error);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
