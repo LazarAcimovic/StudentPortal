@@ -180,7 +180,8 @@ The "Under admin review" badge is the escalation status (PRD §4.8) and the sing
 - Styles for active link: Bootstrap's default `.nav-link.active` works; override to a slightly brighter underline if needed via one line of inline CSS in `Navbar.css`.
 - No "Students" link.
 - Right side when logged out: a single "Login" button (`btn btn-outline-light`).
-- Right side when logged in: greeting (`Hello, <firstName>`) + `Logout` button.
+- Right side when logged in: greeting (`Welcome, <firstName>`) + `Logout` button.
+- **`<ResetDemoButton>` sits first in the right-hand list, before the greeting or the Login button** — demo deployments only (PRD §7.1, per D-049). It renders its own `<li>` and returns `null` unless `GET /api/Demo/status` answers 200, so on a normal deployment the navbar is exactly as described above. Pressing it opens a `<Modal>` (§11.1) that states the data will be discarded and the visitor signed out; confirming replays the fixtures and then signs the clicker out to `/login`. Copy in §13, sizing in §12.4.
 
 ---
 
@@ -740,6 +741,7 @@ Test the following widths in Chrome devtools:
 ### 12.4 Spacing
 
 - Minimum tap target 44×44 px: all buttons use `btn-sm` on compact rows but with `py-2 px-3` so they stay ≥ 44 px tall.
+- **Navbar "Reset demo" button** (§3, demo deployments only): `btn btn-outline-light btn-sm py-2 px-3` for the 44 px target. It lives inside `.navbar-collapse`, so below `lg` it moves into the toggler menu instead of crowding the brand row; `mb-2 mb-lg-0 me-lg-2` on its `<li>` spaces it in both orientations.
 - Minimum gutter 16 px: use `container` (which has 12 px gutter at `sm`, 16 px above `sm`) and avoid flush-left content on `xs` by applying `px-3` on the outermost container.
 
 ---
@@ -755,6 +757,7 @@ Test the following widths in Chrome devtools:
 - Relative times ("2 days ago") come from a `relativeTime` export in the same `dateUtils.ts` — no `date-fns`, no `dayjs` (Tech.md §1). **The helper does not exist yet**, so the relative times required by §7.4 and §8.6 currently render as absolute dates; building it is task 25.4.
 - **Pagination total label:** `"Total: {N}"` — rendered as plain text above the Bootstrap pagination control (per D-031).
 - **Pagination page-size selector:** label text `"Rows per page:"` followed by the `<select>` element (per D-031).
+- **Demo reset** (§3, demo deployments only, per D-049): button `"Reset demo"`; modal title `"Reset demo data?"`; confirm button `"Reset demo data"`, becoming `"Resetting…"` while the request is in flight; cancel button `"Cancel"`. Toasts: `toast.success('Demo data reset')`, `toast.error('A reset is already running')` on a `409`, `toast.error('Could not reset demo data')` on anything else.
 
 ---
 

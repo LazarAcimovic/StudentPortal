@@ -39,7 +39,8 @@ frontend/src/
   components/
     ui/                         ErrorBoundary.tsx, FormAlert.tsx, FormField.tsx,
                                 Modal.tsx, Navbar.tsx, Pagination.tsx,
-                                PasswordInput.tsx, SearchableCombobox.tsx
+                                PasswordInput.tsx, ResetDemoButton.tsx,
+                                SearchableCombobox.tsx
     shared/                     RoleGate.tsx
   features/
     auth/
@@ -48,6 +49,8 @@ frontend/src/
       models/schemas/loginSchema.ts
       pages/LoginPage.tsx
       index.ts
+    demo/
+      api/demoService.ts        getDemoStatus, resetDemoData — demo deployments only (PRD §7.1)
     user/                       ← dashboards, profile, and every admin/professor/student component
       api/userService.ts        CRUD on /api/User (admin side)
       api/profileService.ts     getMe, updateProfile, changePassword

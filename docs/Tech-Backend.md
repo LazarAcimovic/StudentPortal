@@ -43,14 +43,16 @@ backend/
     Profiles/                         AutoMapper profiles
     Exceptions/                       typed business exceptions (NotFound / Forbidden / Validation / Conflict)
     Handlers/                         GlobalExceptionHandler · PasswordHashHandler · PagingHelper · ControllerCallerExtensions
+    Demo/                             SeedScriptLocator · DemoResetService · /api/Demo endpoints (demo deployments only, one-flag guard — §6)
     TestSupport/                      ControllableTimeProvider + /api/__test__ endpoints (e2e only, four-layer guard — §6)
-    Migrations/                       EF migrations + model snapshot + seed.sql
+    Migrations/                       EF migrations + model snapshot + seed.sql, seed-dev-escalations.sql, seed-dev-pagination.sql
+                                      (all three copied to the output dir by the csproj — SeedScriptLocator reads them at runtime)
     Properties/launchSettings.json    dev launch URLs
   StudentPortal.Tests/                unit tests (xUnit + NSubstitute + FluentAssertions)
   StudentPortal.IntegrationTests/     integration tests (Testcontainers + Respawn + WebApplicationFactory)
 ```
 
-*Layout verified at `982b74a` (after refactor-05).*
+*Layout verified at `982b74a` (after refactor-05); `Demo/` added for the demo-reset surface (per D-049).*
 
 The DbContext class is **`StudentPortalApiContext`** (`Models/Entities/StudentPortalApiContext.cs`). There is no `ApplicationDbContext`; do not create one.
 
@@ -207,6 +209,18 @@ Two known deviations, both tracked as open subtasks rather than silently tolerat
 - `AuthService` and `TokenService` still call `DateTime.UtcNow` for refresh-token expiry and JWT `Expires`. These are infrastructure lifetimes rather than product rules, so no test depends on moving them, but new code must not copy the pattern.
 
 **Test-mode clock and `/api/__test__/*` (e2e only).** The Playwright suite (task 22d) needs to freeze and advance "now" against a running server, which the integration-test `FakeTimeProvider` swap (§7) cannot do because it lives in the test host. So `Program.cs` registers `TestSupport/ControllableTimeProvider` (a mutable `TimeProvider` that can be advanced and re-anchored in either direction) in place of `TimeProvider.System`, and mounts two minimal-API endpoints — `POST /api/__test__/advance-clock?seconds=N` and `POST /api/__test__/reset` (truncate + re-seed via `seed.sql`, then re-anchor the clock). Both the swap and the endpoints activate only when a **four-layer guard** holds, all at once: (1) `ASPNETCORE_ENVIRONMENT == e2e`, (2) the `TestMode:Enabled` flag is on, (3) the connection string's database equals `TestMode:DatabaseName`, and (4) the request carries the matching `TestMode:Secret` as an `X-Test-Secret` header. Layers 1–3 are evaluated at boot — if any is missing the clock stays `TimeProvider.System` and the endpoints are never mapped; layer 4 is a per-request check that returns `404` on a miss so the surface can't be probed. Under Development and Production nothing mounts (asserted by `StudentPortal.IntegrationTests` `--filter TestMode`, including a `404`-under-Production test). This never alters the production auth pipeline (PRD §6).
+
+---
+
+### 6.1 Demo mode
+
+A second, unrelated gated surface, for the portfolio deployment only (PRD §7.1, per D-049). Do not confuse it with test mode above: they share no configuration and neither can reach the other.
+
+- **Guard:** one flag, `DemoMode:Enabled`, shipped `false` in `appsettings.json`. True ⇒ `Program.cs` registers `DemoResetService` and maps `/api/Demo/*`; false ⇒ the routes are never mapped and answer `404`. The SPA probes `GET /api/Demo/status` once and reads that `404` as "hide the button", so the backend is the only source of truth.
+- **Why one layer and not test mode's four:** the surfaces differ in kind. `/api/__test__/*` hands out clock control and runs under a CI secret; `/api/Demo/reset` only replays the fixtures that *are* the demo's content. The compensating control is a `LogWarning` at boot whenever demo mode is active.
+- **Fail fast at boot.** `SeedScriptLocator.VerifyAll` runs at startup when the flag is on, so a fixture missing from the published output (a forgotten csproj copy rule) kills the server immediately instead of surfacing as a `500` on a visitor's first click. This matters because `SeedScriptLocator.Resolve` falls back to walking the source tree, which exists on a dev machine and never in a published deployment.
+- **Serialisation.** `DemoResetService` holds a `static SemaphoreSlim(1,1)`; a reset arriving while another is in flight returns `409` rather than queueing. Not a Postgres advisory lock: there is one writer process, and `pg_advisory_xact_lock` would be released after the first fixture's `COMMIT` and leave the other two unguarded (per D-049).
+- **Path resolution is the only thing shared with test mode.** `TestSeed.RunAsync` replays `seed.sql` alone; `DemoResetService` replays all three of `SeedScriptLocator.DemoScripts`. Merging the two would push the dev fixtures into every test run and break the suites that count 10 students (per D-022).
 
 ---
 

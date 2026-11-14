@@ -383,6 +383,7 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 - **Subject and enrollment read authorization (per D-045).** `GET /api/Subject` and `GET /api/Subject/{id}` are `[Authorize]` (any authenticated user). `GET /api/Enrollment` and `GET /api/Enrollment/{id}` are `[Authorize(Roles = "Admin")]` — the admin Enrollments tab is their only caller. `GET /api/Subject/{subjectId}/students` is **deleted** — the professor-route paged endpoint (`GET /professor/subjects/{subjectId}/students`, DB §6.4) is the supported equivalent and already has the correct ownership check (D-031). `GET /api/Subject/professor/{professorId}` is **deleted, not gated** — the route has no SPA caller and no `API_ROUTES` entry; recording it here as deleted (rather than absent) prevents a future reader from restoring it as an ungated route.
 - **User read endpoints** (`GET /api/User`, `GET /api/User/{id}`) are `[Authorize]` (any authenticated role). The SPA only surfaces them on admin screens, but the server gate is role-agnostic. Create, update, and delete operations on users require the Admin role.
 - **ProfessorController** (`GET /professor/subjects/{subjectId}/students`) requires the Professor role. The service additionally verifies `Subject.ProfessorId == callerId`; a professor whose id does not match the subject's assigned professor receives `403` (per D-031, DB §6.4).
+- **The demo-reset surface is anonymous and gated by a single flag (per D-049).** `GET /api/Demo/status` and `POST /api/Demo/reset` require no authentication, because the portfolio demo hands its credentials out publicly and a visitor must be able to recover a broken database before signing in. They are mapped **only** when `DemoMode:Enabled` is true, which `appsettings.json` ships as `false`; on any other deployment the routes do not exist and return `404`. The flag is the whole gate — deliberately not test mode's four layers (§7.1). Demo mode never mounts `/api/__test__/*` and cannot reach the e2e clock.
 
 ---
 
@@ -408,6 +409,16 @@ A re-runnable `seed.sql` populates the database with:
 **No row in `seed.sql` is time-sensitive (per D-022).** The seed replays before every integration test, so a backdated timestamp there would leak an overdue or escalated case into every test run. States that depend on elapsed time — overdue appeals, escalation Scenarios A and B, the 24-hour undo window — are produced per test by the backdating helpers described in `Tech-Backend.md` §7, and for manual (in-browser) testing by the dev-only `Migrations/seed-dev-escalations.sql`, which layers those states on top of `seed.sql` (DB §4).
 
 The old seed (from the pre-5-field schema) is replaced wholesale.
+
+### 7.1 Demo-mode reset
+
+The portfolio deployment publishes its credentials, so any visitor can change anything — including locking everyone out by changing a published password, which §6 makes global because a password change revokes every refresh row. The answer is a **"Reset demo" button in the navbar** (UI §3), not a scheduled job (per D-049).
+
+- **What it replays**, in this order: `seed.sql`, then `seed-dev-escalations.sql`, then `seed-dev-pagination.sql`. The base seed wipes every table children-first; the two dev fixtures then layer their rows on top, which is what makes the Escalations tab and the paged lists non-empty for a visitor. Active students therefore number **35** on a demo deployment — 10 from `seed.sql`, 5 that `seed-dev-escalations.sql` brings for its demo cases, 20 from `seed-dev-pagination.sql` — not the 10 a test run sees.
+- **Who may press it:** anyone, signed in or not (§6).
+- **It signs everyone out.** `seed.sql` deletes `Users`, so `RefreshTokens` cascades away and every session dies, the clicker's included. This is stated in the confirm dialog before the reset runs, and the SPA then signs the clicker out deliberately rather than letting a stray `401` surface later.
+- **Concurrent presses do not collide.** One reset runs at a time; a press arriving while another is in flight is rejected with `409` rather than queued, because both presses ask for the identical end state (per D-049).
+- **The e2e reset is a different thing** and replays `seed.sql` alone. The dev fixtures must never reach a test run — `seed-dev-pagination.sql` alone would break every assertion that counts 10 students (per D-022).
 
 ---
 
