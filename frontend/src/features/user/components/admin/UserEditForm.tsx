@@ -24,7 +24,6 @@ interface FormState {
   lastName: string;
   email: string;
   indexNumber: string;
-  userRole: UserRole;
   isDeleted: boolean;
 }
 
@@ -40,8 +39,8 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
   const showEmail = scope === 'admin' || callerRole === USER_ROLES.Admin;
   // IndexNumber: admin editing a Student only
   const showIndexNumber = scope === 'admin' && user.userRole === USER_ROLES.Student;
-  // Role + Inactive: admin editing anyone who is NOT another Admin
-  const showUserRole = scope === 'admin' && user.userRole !== USER_ROLES.Admin;
+  // Inactive: admin editing anyone who is NOT another Admin. A user's role is fixed
+  // at creation and is no longer editable from this form (removed per D-048).
   const showIsDeleted = scope === 'admin' && user.userRole !== USER_ROLES.Admin;
 
   const [form, setForm] = useState<FormState>({
@@ -49,7 +48,6 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
     lastName: user.lastName,
     email: user.email,
     indexNumber: user.indexNumber ?? '',
-    userRole: user.userRole,
     isDeleted: user.isDeleted,
   });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -81,11 +79,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
   ) => {
     const { name, value, type } = e.target;
     const newValue =
-      type === 'checkbox'
-        ? (e.target as HTMLInputElement).checked
-        : name === 'userRole'
-        ? (Number(value) as UserRole)
-        : value;
+      type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
 
     const newForm = { ...form, [name]: newValue };
     setForm(newForm);
@@ -143,7 +137,6 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
           Email: form.email,
         };
         if (showIndexNumber) payload.IndexNumber = form.indexNumber;
-        if (showUserRole) payload.UserRole = form.userRole;
         if (showIsDeleted) payload.IsDeleted = form.isDeleted;
 
         await axiosClient.put(`${API_ROUTES.USER}/${user.id}`, payload);
@@ -156,7 +149,6 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
           lastName: form.lastName,
           email: form.email,
           ...(showIndexNumber && { indexNumber: form.indexNumber }),
-          ...(showUserRole && { userRole: form.userRole }),
           ...(showIsDeleted && { isDeleted: form.isDeleted }),
         });
       }
@@ -242,24 +234,6 @@ const UserEditForm: React.FC<UserEditFormProps> = ({
             onChange={handleChange}
           />
         </FormField>
-      )}
-
-      {showUserRole && (
-        <div className="mb-3">
-          <label htmlFor="uef-userRole" className="form-label">
-            Role
-          </label>
-          <select
-            id="uef-userRole"
-            name="userRole"
-            className="form-select"
-            value={form.userRole}
-            onChange={handleChange}
-          >
-            <option value={USER_ROLES.Student}>Student</option>
-            <option value={USER_ROLES.Professor}>Professor</option>
-          </select>
-        </div>
       )}
 
       {showIsDeleted && (

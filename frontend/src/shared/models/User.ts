@@ -20,11 +20,12 @@ export interface CreateUser {
   UserRole: UserRole;
 }
 
+// Role is intentionally absent: a user's role is fixed at creation and cannot be
+// changed through the admin edit flow (deferred to a later MVP, per D-048).
 export interface UpdateUser {
   Id: string;
   FirstName: string;
   LastName: string;
-  UserRole: UserRole;
   Email: string;
   IsDeleted: boolean;
   IndexNumber?: string;

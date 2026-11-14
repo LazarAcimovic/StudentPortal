@@ -52,7 +52,7 @@ describe('<UserEditForm> visibility matrix (§5.9)', () => {
     expect(screen.queryByLabelText(/inactive/i)).toBeNull();
   });
 
-  it('admin → Student → First/Last/Email/IndexNumber/Role/Inactive all visible', () => {
+  it('admin → Student → First/Last/Email/IndexNumber/Inactive visible; Role never rendered (D-048)', () => {
     renderAt(
       <UserEditForm
         scope="admin"
@@ -65,11 +65,11 @@ describe('<UserEditForm> visibility matrix (§5.9)', () => {
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/index number/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^role$/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^role$/i)).toBeNull();
     expect(screen.getByLabelText(/inactive/i)).toBeInTheDocument();
   });
 
-  it('admin → Professor → Email/Role/Inactive visible; IndexNumber hidden', () => {
+  it('admin → Professor → Email/Inactive visible; IndexNumber and Role hidden (D-048)', () => {
     renderAt(
       <UserEditForm
         scope="admin"
@@ -80,7 +80,7 @@ describe('<UserEditForm> visibility matrix (§5.9)', () => {
     );
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/index number/i)).toBeNull();
-    expect(screen.getByLabelText(/^role$/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^role$/i)).toBeNull();
     expect(screen.getByLabelText(/inactive/i)).toBeInTheDocument();
   });
 

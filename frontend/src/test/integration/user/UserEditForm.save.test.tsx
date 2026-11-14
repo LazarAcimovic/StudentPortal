@@ -70,7 +70,7 @@ describe('<UserEditForm> save semantics (§5.9)', () => {
     expect(receivedBody).toMatchObject({ Email: 'addy@min.io' });
   });
 
-  it('admin scope → PUT /User/:id payload includes admin-only fields', async () => {
+  it('admin scope → PUT /User/:id payload includes admin-only fields but never UserRole (D-048)', async () => {
     let receivedBody: Record<string, unknown> | null = null;
     server.use(
       http.put('/api/User/:id', async ({ request }) => {
@@ -91,7 +91,7 @@ describe('<UserEditForm> save semantics (§5.9)', () => {
     await user.click(screen.getByRole('button', { name: /save changes/i }));
     await waitFor(() => expect(receivedBody).not.toBeNull());
     expect(receivedBody).toMatchObject({ IndexNumber: 'E2/2021', IsDeleted: false });
-    expect(receivedBody).toHaveProperty('UserRole');
+    expect(receivedBody).not.toHaveProperty('UserRole');
   });
 
   it('when the server returns 403 then the form shows an inline API error and stays open', async () => {

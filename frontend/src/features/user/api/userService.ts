@@ -83,7 +83,6 @@ export const updateUser = async (
       FirstName: updatedUser.FirstName,
       LastName: updatedUser.LastName,
       Email: updatedUser.Email,
-      UserRole: updatedUser.UserRole,
       IsDeleted: updatedUser.IsDeleted,
     };
     const response = await apiClient.put<User>(

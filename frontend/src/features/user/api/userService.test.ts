@@ -180,7 +180,6 @@ describe('userService.updateUser', () => {
       FirstName: 'Ana2',
       LastName: 'Anić',
       Email: 'ana@example.com',
-      UserRole: USER_ROLES.Student,
       IsDeleted: false,
     });
 
@@ -190,7 +189,6 @@ describe('userService.updateUser', () => {
       FirstName: 'Ana2',
       LastName: 'Anić',
       Email: 'ana@example.com',
-      UserRole: USER_ROLES.Student,
       IsDeleted: false,
     });
     expect(result?.firstName).toBe('Ana2');
@@ -210,7 +208,6 @@ describe('userService.updateUser', () => {
       FirstName: 'Ana',
       LastName: 'Anić',
       Email: 'ana@example.com',
-      UserRole: USER_ROLES.Student,
       IsDeleted: true,
     });
 
@@ -218,7 +215,7 @@ describe('userService.updateUser', () => {
     expect(result?.isDeleted).toBe(true);
   });
 
-  it('returns null when admin lacks permission (403, e.g. attempted self-demote)', async () => {
+  it('returns null when admin lacks permission (403, e.g. attempted self-soft-delete)', async () => {
     server.use(
       http.put(apiUrl(`${API_ROUTES.USER}/1`), () => new HttpResponse(null, { status: 403 }))
     );
@@ -228,7 +225,6 @@ describe('userService.updateUser', () => {
       FirstName: 'Admin',
       LastName: 'Adminović',
       Email: 'admin@example.com',
-      UserRole: USER_ROLES.Student,
       IsDeleted: false,
     });
 
@@ -246,7 +242,6 @@ describe('userService.updateUser', () => {
       FirstName: 'X',
       LastName: 'Y',
       Email: 'x@y.com',
-      UserRole: USER_ROLES.Student,
       IsDeleted: false,
     });
 
