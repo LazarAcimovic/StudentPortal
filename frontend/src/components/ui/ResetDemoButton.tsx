@@ -71,6 +71,7 @@ export default function ResetDemoButton() {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="Reset demo data?"
+        blurBackdrop
         footer={
           <>
             <button
