@@ -86,6 +86,16 @@ public class SubjectRepository : ISubjectRepository
         return (items, totalCount);
     }
 
+    public async Task<bool> ExistsWithNameAsync(string name, Guid? excludeId = null)
+    {
+        var q = _context.Subjects
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted && EF.Functions.ILike(s.SubjectName, name));
+        if (excludeId.HasValue)
+            q = q.Where(s => s.Id != excludeId.Value);
+        return await q.AnyAsync();
+    }
+
     private const int MaxSearchQueryLength = 100;
 
     private static string EscapePattern(string s) =>

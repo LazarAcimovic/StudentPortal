@@ -67,6 +67,7 @@ public class SubjectServiceTests
     {
         var professorId = Guid.NewGuid();
         _userRepo.GetUserByIdAsync(professorId).Returns(MakeProfessor(professorId, isDeleted: false));
+        _subjectRepo.ExistsWithNameAsync(Arg.Any<string>(), Arg.Any<Guid?>()).Returns(false);
         _subjectRepo.AddSubjectAsync(Arg.Any<Subject>()).Returns(ci => ci.Arg<Subject>());
 
         var sut = CreateSut();
@@ -75,6 +76,19 @@ public class SubjectServiceTests
 
         Assert.NotNull(result);
         await _subjectRepo.Received(1).AddSubjectAsync(Arg.Any<Subject>());
+    }
+
+    [Fact]
+    public async Task AddSubjectAsync_DuplicateNameCaseInsensitive_ThrowsAndDoesNotPersist()
+    {
+        var professorId = Guid.NewGuid();
+        _userRepo.GetUserByIdAsync(professorId).Returns(MakeProfessor(professorId, isDeleted: false));
+        _subjectRepo.ExistsWithNameAsync(Arg.Any<string>(), Arg.Any<Guid?>()).Returns(true);
+
+        var sut = CreateSut();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.AddSubjectAsync(MakeDto(professorId)));
+        await _subjectRepo.DidNotReceiveWithAnyArgs().AddSubjectAsync(default);
     }
 
     [Fact]
@@ -101,6 +115,29 @@ public class SubjectServiceTests
     }
 
     [Fact]
+    public async Task UpdateSubjectAsync_DuplicateNameCaseInsensitive_ThrowsAndDoesNotPersist()
+    {
+        var subjectId = Guid.NewGuid();
+        var profId = Guid.NewGuid();
+        _subjectRepo.GetSubjectByIdAsync(subjectId).Returns(new Subject
+        {
+            Id = subjectId, SubjectName = "DB", SubjectCode = "CS101", ECTS = 6, ProfessorId = profId,
+        });
+        _userRepo.GetUserByIdAsync(profId).Returns(MakeProfessor(profId, isDeleted: false));
+        _subjectRepo.ExistsWithNameAsync(Arg.Any<string>(), Arg.Any<Guid?>()).Returns(true);
+
+        var sut = CreateSut();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.UpdateSubjectAsync(subjectId, new SubjectUpdateDto
+            {
+                Id = subjectId, SubjectName = "Databases Renamed", SubjectCode = "CS101", ECTS = 6,
+                ProfessorId = profId, IsDeleted = false,
+            }));
+        await _subjectRepo.DidNotReceiveWithAnyArgs().UpdateSubjectAsync(default);
+    }
+
+    [Fact]
     public async Task UpdateSubjectAsync_KeepsCurrentProfessorEvenIfInactive_Succeeds()
     {
         var subjectId = Guid.NewGuid();
@@ -110,6 +147,7 @@ public class SubjectServiceTests
             Id = subjectId, SubjectName = "DB", SubjectCode = "CS101", ECTS = 6, ProfessorId = profId,
         });
         _userRepo.GetUserByIdAsync(profId).Returns(MakeProfessor(profId, isDeleted: true));
+        _subjectRepo.ExistsWithNameAsync(Arg.Any<string>(), Arg.Any<Guid?>()).Returns(false);
 
         var sut = CreateSut();
 

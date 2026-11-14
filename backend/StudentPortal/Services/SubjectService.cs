@@ -28,13 +28,12 @@ public class SubjectService : ISubjectService
 
     public async Task<SubjectDto> AddSubjectAsync(SubjectCreateDto subjectDto)
     {
-      
         var professor = await _userRepository.GetUserByIdAsync(subjectDto.ProfessorId);
         if (professor == null || professor.IsDeleted)
-        {
-            // A soft-deleted (inactive) user cannot be assigned as a subject's professor.
             return null;
-        }
+
+        if (await _subjectRepository.ExistsWithNameAsync(subjectDto.SubjectName))
+            throw new InvalidOperationException("A subject with this name already exists.");
 
         var subject = _mapper.Map<Subject>(subjectDto);
 
@@ -57,6 +56,9 @@ public class SubjectService : ISubjectService
             throw new InvalidOperationException("The selected professor does not exist.");
         if (professor.IsDeleted && subjectDto.ProfessorId != subjectToUpdate.ProfessorId)
             throw new InvalidOperationException("The selected professor is inactive.");
+
+        if (await _subjectRepository.ExistsWithNameAsync(subjectDto.SubjectName, id))
+            throw new InvalidOperationException("A subject with this name already exists.");
 
         _mapper.Map(subjectDto, subjectToUpdate);
 

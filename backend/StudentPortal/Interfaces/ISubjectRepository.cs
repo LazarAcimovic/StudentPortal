@@ -14,4 +14,5 @@ public interface ISubjectRepository
     Task<IEnumerable<UserSearchResultDto>> GetStudentsBySubjectIdAsync(Guid subjectId);
     Task<(IReadOnlyList<Subject> Items, int TotalCount)> GetPagedAsync(int page, int pageSize);
     Task<(IReadOnlyList<SubjectSearchResultDto> Items, int TotalCount)> SearchAsync(string? query, int page, int pageSize);
+    Task<bool> ExistsWithNameAsync(string name, Guid? excludeId = null);
 }

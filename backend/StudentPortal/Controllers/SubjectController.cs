@@ -60,12 +60,17 @@ namespace StudentPortal.Controllers
         [HttpPost]
         public async Task<ActionResult<SubjectDto>> AddSubject([FromBody] SubjectCreateDto subjectDto)
         {
-            var newSubject = await _subjectService.AddSubjectAsync(subjectDto);
-            if (newSubject == null)
+            try
             {
-                return BadRequest("Subject could not be created. Please check provided data.");
+                var newSubject = await _subjectService.AddSubjectAsync(subjectDto);
+                if (newSubject == null)
+                    return BadRequest("Subject could not be created. Please check provided data.");
+                return CreatedAtAction(nameof(GetSubjectById), new { id = newSubject.Id }, newSubject);
             }
-            return CreatedAtAction(nameof(GetSubjectById), new { id = newSubject.Id }, newSubject);
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
         // PUT: api/subject/{id}
