@@ -27,7 +27,7 @@ const ChangePasswordPage: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newForm = { ...form, [e.target.name]: e.target.value };
     setForm(newForm);
-    if (touched[e.target.name]) {
+    if (touched[e.target.name] || e.target.name === 'confirmNewPassword' || e.target.name === 'newPassword') {
       setErrors(validate(newForm));
     }
   };
@@ -107,9 +107,9 @@ const ChangePasswordPage: React.FC = () => {
             value={form.newPassword}
             onChange={handleChange}
             onBlur={handleBlur}
-            isInvalid={!!(touched.newPassword && errors.newPassword)}
+            isInvalid={!!((touched.newPassword || !!form.newPassword) && errors.newPassword)}
           />
-          {touched.newPassword && errors.newPassword && (
+          {(touched.newPassword || !!form.newPassword) && errors.newPassword && (
             <div className="invalid-feedback d-block">{errors.newPassword}</div>
           )}
         </div>
@@ -123,9 +123,9 @@ const ChangePasswordPage: React.FC = () => {
             value={form.confirmNewPassword}
             onChange={handleChange}
             onBlur={handleBlur}
-            isInvalid={!!(touched.confirmNewPassword && errors.confirmNewPassword)}
+            isInvalid={!!((touched.confirmNewPassword || !!form.confirmNewPassword) && errors.confirmNewPassword)}
           />
-          {touched.confirmNewPassword && errors.confirmNewPassword && (
+          {(touched.confirmNewPassword || !!form.confirmNewPassword) && errors.confirmNewPassword && (
             <div className="invalid-feedback d-block">{errors.confirmNewPassword}</div>
           )}
         </div>
