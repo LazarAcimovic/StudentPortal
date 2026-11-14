@@ -95,7 +95,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
               </div>
               {user.id !== currentUserId && (
                 <button
-                  className="btn btn-warning btn-sm w-100"
+                  className="btn btn-warning btn-sm"
                   onClick={() => onStartEdit(user)}
                 >
                   <FontAwesomeIcon icon={faEdit} /> Edit
