@@ -57,7 +57,7 @@ const StudentsList: React.FC<Props> = ({
   onPageChange,
   onPageSizeChange,
 }) => (
-  <div className="col-12 col-sm-6 col-lg-4">
+  <div className="col-lg-4">
     <div className="card h-100">
       <div className="card-header bg-primary text-white">
         <h5 className="mb-0">
