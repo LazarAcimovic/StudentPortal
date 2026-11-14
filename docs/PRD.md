@@ -35,13 +35,13 @@ StudentPortal is an internal web app for a university faculty where **Admins** m
 
 ### 2.1 Admin
 - Log in / log out.
-- Manage users: create (student, professor, or admin), edit any user **except himself** (first name, last name, email, index number when target is a student, role, soft-delete flag), soft-delete via the `IsDeleted` checkbox.
+- Manage users: create (student, professor, or admin), edit any user **except himself** (first name, last name, email, index number when target is a student, soft-delete flag), soft-delete via the `IsDeleted` checkbox. A user's role is set at creation and cannot be changed afterward (per D-048).
 - Admin's own row in the Users table has **no** Edit button — he uses `/profile` for his own fields and `/profile/change-password` for his own password.
-- When editing a target that is another Admin, the `UserRole` dropdown and `IsDeleted` checkbox are **hidden** (admins cannot demote or soft-delete each other).
+- When editing a target that is another Admin, the `IsDeleted` checkbox is **hidden** (admins cannot soft-delete each other).
 - When editing a target that is a Professor, the `IndexNumber` field is hidden (professors do not have an index number).
 - Manage subjects: create (name, ECTS defaults to 6, assigned professor), edit, delete.
 - Manage enrollments: create (student + subject pair), delete.
-- Edit **own** `FirstName`, `LastName`, `Email`, and password (via `/profile` and `/profile/change-password`). Cannot change own `UserRole` or `IsDeleted`.
+- Edit **own** `FirstName`, `LastName`, `Email`, and password (via `/profile` and `/profile/change-password`). Cannot change own `IsDeleted`.
 - No access to the grading flow — an admin never enters, confirms or appeals a grade.
 - Manage escalated appeal cases (see §4.8): see every escalated case, assign it to an eligible professor, and reassign it when the assignee also fails to act.
 
@@ -57,7 +57,7 @@ StudentPortal is an internal web app for a university faculty where **Admins** m
 - Cannot act on another professor's subjects or students, **except** a case explicitly assigned to them through escalation (see §4.8).
 - Cannot accept or deny an **overdue** appeal (see §4.5). The one exception is an assigned professor acting on an escalated case (§4.8).
 - When assigned an escalated case, resolve it through the normal flow: accept / deny the appeal, or re-enter the exam points and re-confirm.
-- Edit **own** `FirstName`, `LastName`, and password (via `/profile` and `/profile/change-password`). Cannot change own `Email`, `UserRole`, or `IsDeleted` — those are admin-only.
+- Edit **own** `FirstName`, `LastName`, and password (via `/profile` and `/profile/change-password`). Cannot change own `Email` or `IsDeleted` — those are admin-only.
 
 ### 2.3 Student
 - Log in / log out.
@@ -65,7 +65,7 @@ StudentPortal is an internal web app for a university faculty where **Admins** m
 - During the 7-day appeal window after a professor confirms: either click **Write appeal** or click **Confirm grade** (meaning "I agree, lock it in now").
 - Submit **one** appeal per grade confirmation cycle. If a prof misses the 7-day review deadline on that appeal, the student can submit **one more** appeal (see §4.4).
 - Cannot see any other student's data.
-- Edit **own** `FirstName`, `LastName`, and password (via `/profile` and `/profile/change-password`). Cannot change own `Email`, `IndexNumber`, `UserRole`, or `IsDeleted` — those are admin-only.
+- Edit **own** `FirstName`, `LastName`, and password (via `/profile` and `/profile/change-password`). Cannot change own `Email`, `IndexNumber`, or `IsDeleted` — those are admin-only.
 
 ---
 
@@ -255,7 +255,7 @@ Four tabs: **Users**, **Subjects**, **Enrollments**, **Escalations**.
 - Users tab: table with ID, First Name, Last Name, Email, Role, Status (Active/Inactive from `IsDeleted`), Edit button. Above: **Create New User** button.
 - **Admin's own row has no Edit button rendered.** He uses `/profile` for self-service edits.
 - **Create User modal** uses `<UserCreateForm>`: first name, last name, email, role (dropdown), index number (shown only when role=Student), password with show/hide toggle.
-- **Edit User modal** uses the reusable `<UserEditForm>` with `scope='admin'`. Rendered fields depend on the target's role (see field matrix in §5.9 and the component spec in `UI.md` §11.6): Email is always editable; IndexNumber shows only if target is Student; UserRole dropdown and IsDeleted checkbox are hidden when target is another Admin.
+- **Edit User modal** uses the reusable `<UserEditForm>` with `scope='admin'`. Rendered fields depend on the target's role (see field matrix in §5.9 and the component spec in `UI.md` §11.6): Email is always editable; IndexNumber shows only if target is Student; the IsDeleted checkbox is hidden when target is another Admin. There is no role field — a user's role is fixed at creation and cannot be changed through this modal (per D-048).
 - Subjects tab: table with name, **subject code**, ECTS, professor, Edit button + Create button. `SubjectCode` is required on both create and edit (1–20 characters, per D-015) because it is what determines eligible professors for escalation (§4.8).
 - Enrollments tab: table with student, subject, Delete button + Create button.
 - **Escalations tab**: one row per escalated case (§4.8) showing subject, student, original professor, grade, reason, escalated-since, status, and an action that depends on the status — **Assign professor** for `NeedsAssignment`, **Reassign professor** for `NeedsReassignment`, none for `Assigned` or `Resolved`. The assign / reassign modal shows the case detail, the full appeal history, the full assignment history, and the list of eligible professors to choose from. An empty eligible list disables confirmation.
@@ -324,12 +324,13 @@ Accessible to **any authenticated user** (Student, Professor, Admin) — role-ag
 | LastName | ✓ editable | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
 | Email | *hidden* | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
 | IndexNumber | *hidden* | *hidden* | ✓ editable | *hidden* | *hidden* |
-| UserRole | *hidden* | *hidden* | ✓ dropdown | ✓ dropdown | *hidden* |
 | IsDeleted | *hidden* | *hidden* | ✓ checkbox | ✓ checkbox | *hidden* |
+
+UserRole is not a field in any scope — a user's role is fixed at creation and cannot be changed afterward (per D-048).
 
 **Save semantics (self scope):** clicking **Save Changes** inside the modal calls `PUT /api/Account/profile` with only the fields the form rendered. All DTO fields are optional; **missing fields are preserved from the stored row** (not nulled out). Empty-string values fail validation (FirstName and LastName must be non-empty). Server guard: if the caller is **not** Admin and `Email` is present and differs from the stored row → `403 Forbidden`.
 
-**Save semantics (admin scope):** `Save Changes` calls `PUT /api/User/{id}` with the fields the form rendered. Admin cannot soft-delete himself or demote himself; the backend returns `403` even if the UI is bypassed.
+**Save semantics (admin scope):** `Save Changes` calls `PUT /api/User/{id}` with the fields the form rendered. Admin cannot soft-delete himself; the backend returns `403` even if the UI is bypassed. The request carries no role field — role is fixed at creation (per D-048).
 
 ### 5.10 Change password page (`/profile/change-password`)
 Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not a modal) because it is a security-sensitive flow with its own success path (sign-out-everywhere + redirect to login).
@@ -361,8 +362,8 @@ Accessible to **any authenticated user** behind `<AuthGuard>`. Separate URL (not
 - Student-only endpoints enforce the Student role plus a service-level ownership check (student can only touch their own enrollments, grades, and appeals).
 - Self-service profile edit (`PUT /api/Account/profile`) is role-agnostic authenticated. Server guard: non-Admin callers cannot change their own `Email`; attempting to send a different Email returns `403`.
 - Password change (`POST /api/Account/change-password`) requires the correct current password. On success, every refresh row for the user is revoked (sign-out-everywhere, including the current session), the SPA is redirected to `/login`, and the user re-authenticates with the new password.
-- **Authority change revokes sessions (per D-043).** When an admin changes a user's role or soft-deletes/deletes them, every refresh row for that user is revoked — the same sign-out-everywhere a password change triggers — so the user cannot mint fresh access tokens via `/Refresh`. The `role` claim inside an already-issued access token still survives until it expires (≤15 minutes, the documented residual); the 7-day refresh window is closed immediately.
-- Admin cannot soft-delete himself or demote himself; backend returns `403` even if the frontend UI is bypassed.
+- **Authority change revokes sessions (per D-043).** When an admin soft-deletes or deletes a user, every refresh row for that user is revoked — the same sign-out-everywhere a password change triggers — so the user cannot mint fresh access tokens via `/Refresh`; the 7-day refresh window is closed immediately. Role change was the other authority trigger, but it was removed (per D-048), so soft-delete/delete is now the only admin update that revokes sessions.
+- Admin cannot soft-delete himself; backend returns `403` even if the frontend UI is bypassed. A user's role cannot be changed through the admin update at all (per D-048).
 - Mass-assignment is impossible: incoming DTOs for self-service flows do not expose role, soft-delete flag, or password-hash fields.
 - Access token lives in an **httpOnly, Secure, SameSite=Strict** cookie set by the server. The SPA never reads a token in JS.
 - Refresh token lives in a separate httpOnly cookie; on each refresh the server rotates it (new value, old row revoked) and detects re-use (if a previously-rotated refresh token is presented, revoke the entire chain for that user).

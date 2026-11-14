@@ -99,7 +99,7 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 
 **Layer 1 — controller attribute** gates by role:
 
-- `UserController` → `[Authorize]` on the class; read endpoints (`GET /api/User`, `GET /api/User/{id}`) are accessible to any authenticated role (the SPA only surfaces them on admin screens, but the server gate is role-agnostic); create / edit / delete → `[Authorize(Roles = "Admin")]`. `AdminUpdateUserAsync` enforces `targetId != callerId` and blocks self-role-change and self-delete at the service layer (see layer 2).
+- `UserController` → `[Authorize]` on the class; read endpoints (`GET /api/User`, `GET /api/User/{id}`) are accessible to any authenticated role (the SPA only surfaces them on admin screens, but the server gate is role-agnostic); create / edit / delete → `[Authorize(Roles = "Admin")]`. `AdminUpdateUserAsync` blocks self-soft-delete at the service layer (see layer 2); it cannot change a user's role, because the DTO no longer carries one (per D-048).
 - `GradeController` → `[Authorize]`; confirm / reconfirm-exam → `Professor`; student-confirm → `Student`. `GradeService.ConfirmAsync` / `ReconfirmExamAsync` verifies `subject.ProfessorId == callerId`, else `403`; for escalated grades the check is two-tier (see layer 2 and 2b).
 - `AppealController` → `[Authorize]`; submit → `Student`; accept / deny / undo-deny → `Professor`. `AppealService.SubmitAsync` verifies `enrollment.StudentId == callerStudentId`, else `403` (see layer 2).
 - `EscalationController` → `[Authorize(Roles = "Admin")]` on the whole class.
@@ -113,12 +113,12 @@ Everything is `Scoped` (per-request) except `TimeProvider`, which is a singleton
 - `GradeService.ConfirmAsync(enrollmentId, callerProfId)` verifies `subject.ProfessorId == callerProfId`, else `ForbiddenAccessException`.
 - `AppealService.SubmitAsync(gradeId, callerStudentId)` verifies `enrollment.StudentId == callerStudentId`.
 - `UserService.UpdateProfileAsync(callerId, dto)` — if `callerRole != Admin` and the submitted `Email` differs from the stored row → `ForbiddenAccessException`.
-- `UserService.AdminUpdateUserAsync(targetId, callerId, dto)` — `targetId != callerId` for soft-delete and for role change; `target.UserRole != Admin` for both `UserRole` and `IsDeleted` changes. When `UserRole` or `IsDeleted` **actually** changes (not on every save), it calls `IRefreshTokenRepository.RevokeAllForUserAsync(targetId)` so the affected user cannot refresh their session (per D-043).
+- `UserService.AdminUpdateUserAsync(targetId, callerId, dto)` — rejects self-soft-delete (`targetId == callerId && dto.IsDeleted`). The DTO carries no role (per D-048), so the method never changes a user's role; `IndexNumber` tracks the target's existing (immutable) role — kept for a Student, forced `null` otherwise. When `IsDeleted` **actually** flips (not on every save), it calls `IRefreshTokenRepository.RevokeAllForUserAsync(targetId)` so the affected user cannot refresh their session (per D-043).
 - `UserService.DeleteUserAsync(id)` is a soft delete (per D-047): `UserRepository.DeleteUserAsync` sets `IsDeleted = true` on the row instead of removing it. The service also revokes every refresh row for the deleted user (D-043) so their session ends immediately. Hard-deleting is unsafe because `Subjects.ProfessorId → Users.Id` and `Enrollments.StudentId → Users.Id` are `RESTRICT` (DB §3).
 - `SubjectService.DeleteSubjectAsync(id)` is likewise a soft delete (per D-047): `SubjectRepository.DeleteSubjectAsync` sets `IsDeleted = true`. Hard-deleting is unsafe because `Enrollments.SubjectId → Subjects.Id` is `RESTRICT` (DB §3).
 - `UserService.ChangePasswordAsync(callerId, dto)` verifies the current password, then calls `IRefreshTokenRepository.RevokeAllForUserAsync(callerId)`.
 
-Revoking refresh rows closes the 7-day window; the `role` claim in an already-issued access token still survives until `exp` (≤15 min), the accepted residual, because access-token revocation is out of scope (PRD §6, D-043).
+Revoking refresh rows closes the 7-day window; an already-issued access token still authenticates until `exp` (≤15 min), the accepted residual, because access-token revocation is out of scope (PRD §6, D-043).
 
 **Layer 2b — two-tier check for escalated grades** (PRD §4.8, D-017). Once `Grade.AssignedProfessorId` is set, write authority moves to the assignee:
 
@@ -190,8 +190,9 @@ Each validator covers non-null / non-empty, length bounds, email format (`EmailA
 | `Information` | Successful login |
 | `Information` | Logout |
 | `Information` | Password change |
-| `Information` | Role change (admin mutation) |
 | `Information` | Soft-delete (admin mutation) |
+
+The role-change event D-040 originally listed no longer fires: admin role-change was removed (per D-048), so soft-delete is the only admin mutation that logs an `Information` event.
 
 **Secrets.**
 

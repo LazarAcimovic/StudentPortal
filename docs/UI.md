@@ -393,7 +393,7 @@ Below `md`: cards per user.
 
 **Validation is inline, never a popup.** Each field shows a Bootstrap `invalid-feedback` message once it has been touched (the same touched-on-blur pattern as the login page, §5); there is no `alert()`. The Create button stays disabled until the form is valid. A server-side **duplicate email** (`409`) renders under the Email field; any other server error renders as a top-of-form `alert alert-danger` (per D-024).
 
-**Edit user flow** uses the reusable `<UserEditForm scope='admin' user={row} callerRole={ADMIN}>` (see §11.6) opened inside the shared `<Modal>` (§11.1). Field visibility follows the matrix in §11.6 — `IndexNumber` shows only when the target is a Student; `UserRole` and `IsDeleted` are **hidden** when the target is another Admin. **Admin's own row in the Users table renders no Edit button** (no self-edit from admin dashboard — he uses `/profile`, see §9).
+**Edit user flow** uses the reusable `<UserEditForm scope='admin' user={row} callerRole={ADMIN}>` (see §11.6) opened inside the shared `<Modal>` (§11.1). Field visibility follows the matrix in §11.6 — `IndexNumber` shows only when the target is a Student; `IsDeleted` is **hidden** when the target is another Admin. There is **no role field** — a user's role is fixed at creation and cannot be changed here (per D-048). **Admin's own row in the Users table renders no Edit button** (no self-edit from admin dashboard — he uses `/profile`, see §9).
 
 ### 8.4 Subjects tab
 
@@ -614,21 +614,22 @@ type UserEditFormProps = {
 | LastName | ✓ editable | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
 | Email | *hidden* | ✓ editable | ✓ editable | ✓ editable | ✓ editable |
 | IndexNumber | *hidden* | *hidden* | ✓ editable | *hidden* | *hidden* |
-| UserRole | *hidden* | *hidden* | ✓ dropdown | ✓ dropdown | *hidden* |
 | IsDeleted | *hidden* | *hidden* | ✓ checkbox | ✓ checkbox | *hidden* |
+
+UserRole is not a field in any scope — a user's role is fixed at creation and cannot be changed through this form (per D-048).
 
 Three internal rules compute visibility — no deep nesting:
 
 ```ts
 const showEmail       = scope === 'admin' || callerRole === USER_ROLES.ADMIN;
 const showIndexNumber = scope === 'admin' && user.userRole === USER_ROLES.STUDENT;
-const showAdminFields = scope === 'admin' && user.userRole !== USER_ROLES.ADMIN;
-// UserRole + IsDeleted both bound to showAdminFields
+const showIsDeleted   = scope === 'admin' && user.userRole !== USER_ROLES.ADMIN;
+// No role field — role is fixed at creation (per D-048)
 ```
 
 **Endpoints dispatched:**
 - `scope === 'self'` → `PUT /api/Account/profile`, body `{ firstName?, lastName?, email? }` (only the rendered fields are sent; omitted fields are preserved by the backend).
-- `scope === 'admin'` → `PUT /api/User/{user.id}`, body `{ firstName, lastName, email, indexNumber?, userRole, isDeleted }` (all admin-rendered fields).
+- `scope === 'admin'` → `PUT /api/User/{user.id}`, body `{ firstName, lastName, email, indexNumber?, isDeleted }` (all admin-rendered fields; no `userRole` — role is fixed at creation, per D-048).
 
 **Submit button label:** always "Save Changes" regardless of scope.
 
