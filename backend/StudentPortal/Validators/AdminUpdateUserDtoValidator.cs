@@ -20,9 +20,6 @@ namespace StudentPortal.Validators
                 .EmailAddress().WithMessage("Email must be a valid email address.")
                 .MaximumLength(100).WithMessage("Email must not exceed 100 characters.");
 
-            RuleFor(x => x.UserRole)
-                .IsInEnum().WithMessage("User role must be a valid role.");
-
             RuleFor(x => x.IndexNumber)
                 .MaximumLength(20).WithMessage("Index number must not exceed 20 characters.")
                 .When(x => !string.IsNullOrEmpty(x.IndexNumber));

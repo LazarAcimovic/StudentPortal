@@ -15,7 +15,6 @@ public class AdminUserCrudTests : IntegrationTestBase
             LastName = u.LastName,
             Email = u.Email,
             IndexNumber = u.IndexNumber,
-            UserRole = u.Role,
             IsDeleted = false,
         };
         tweak?.Invoke(dto);
@@ -95,55 +94,6 @@ public class AdminUserCrudTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task AdminUpdateUser_CannotDemoteSelf_Returns403()
-    {
-        var client = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
-        var dto = MakeDto(SeedUsers.Admin, d => d.UserRole = RoleEnum.Professor);
-
-        var response = await client.PutAsJsonAsync($"/api/User/{SeedUsers.Admin.Id}", dto);
-
-        ((int)response.StatusCode).Should().Be(403);
-    }
-
-    [Fact]
-    public async Task AdminUpdateUser_CannotChangeRoleOfAnotherAdmin_Returns403()
-    {
-        // Make a second admin via the DB.
-        var otherAdminId = Guid.NewGuid();
-        await WithDbAsync(async db =>
-        {
-            // Hash is for Password123! taken from seed.sql (admin's hash).
-            db.Users.Add(new User
-            {
-                Id = otherAdminId,
-                FirstName = "Second",
-                LastName = "Admin",
-                Email = "second.admin@uni.edu",
-                UserPassword = "AQAAAAIAAYagAAAAEKIzF5k/n5N0AMPcPu5bjZuhTcSTcONR3e3G65CFMs4dEBCjUT4xLAfIZ4MP0d5b0w==",
-                UserRole = RoleEnum.Admin,
-                IsDeleted = false,
-            });
-            await db.SaveChangesAsync();
-        });
-
-        var client = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
-        var dto = new AdminUpdateUserDto
-        {
-            FirstName = "Second",
-            LastName = "Admin",
-            Email = "second.admin@uni.edu",
-            IndexNumber = null,
-            UserRole = RoleEnum.Professor, // trying to demote
-            IsDeleted = false,
-        };
-
-        var response = await client.PutAsJsonAsync($"/api/User/{otherAdminId}", dto);
-
-        ((int)response.StatusCode).Should().Be(403,
-            "PRD §2.1: an admin cannot change another admin's role");
-    }
-
-    [Fact]
     public async Task UpdateUser_MassAssignment_IdInBodyIgnored()
     {
         var client = await CreateAuthenticatedClientAsync(SeedUsers.Admin);
@@ -157,7 +107,6 @@ public class AdminUserCrudTests : IntegrationTestBase
             LastName = target.LastName,
             Email = target.Email,
             IndexNumber = target.IndexNumber,
-            UserRole = target.Role,
             IsDeleted = false,
         };
 

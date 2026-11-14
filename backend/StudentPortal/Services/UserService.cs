@@ -95,12 +95,6 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
         if (targetId == callerId && dto.IsDeleted)
             throw new ForbiddenAccessException("Admin cannot soft-delete themselves.");
 
-        if (targetId == callerId && dto.UserRole != target.UserRole)
-            throw new ForbiddenAccessException("Admin cannot change their own role.");
-
-        if (target.UserRole == RoleEnum.Admin && dto.UserRole != RoleEnum.Admin)
-            throw new ForbiddenAccessException("Admin cannot demote another admin.");
-
         if (!string.Equals(dto.Email, target.Email, StringComparison.OrdinalIgnoreCase))
         {
             var taken = await _userRepository.FindByEmailAsync(dto.Email);
@@ -108,15 +102,15 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
                 throw new EmailAlreadyExistsException("A user with this email already exists.");
         }
 
-        var roleChanged = dto.UserRole != target.UserRole;
         var softDeleted = dto.IsDeleted && !target.IsDeleted;
 
         target.FirstName = dto.FirstName;
         target.LastName = dto.LastName;
         target.Email = dto.Email;
-        target.UserRole = dto.UserRole;
         target.IsDeleted = dto.IsDeleted;
 
+        // Role is immutable on update (deferred to a later MVP, per D-048), so IndexNumber
+        // tracks the user's existing role: a student keeps/updates it, anyone else has none.
         if (target.UserRole == RoleEnum.Student)
             target.IndexNumber = dto.IndexNumber;
         else
@@ -131,16 +125,14 @@ public async Task<UserDto> UpdateProfileAsync(Guid callerId, UpdateProfileDto dt
             throw new EmailAlreadyExistsException("A user with this email already exists.");
         }
 
-        // Authority change revokes every refresh row for the target (D-043), so a demoted
-        // or disabled user cannot mint fresh access tokens via /Refresh. Only when the
-        // authority flags actually changed — not on a name/email-only save.
-        if (roleChanged || softDeleted)
-            await _refreshTokenRepository.RevokeAllForUserAsync(targetId);
-
-        if (roleChanged)
-            _logger.LogInformation("Role changed for UserId {TargetId}: {NewRole}", targetId, dto.UserRole);
+        // Soft-deleting a user is an authority change: revoke every refresh row for the
+        // target (D-043) so a disabled user cannot mint fresh access tokens via /Refresh.
+        // Only when IsDeleted actually flips — not on a name/email-only save.
         if (softDeleted)
+        {
+            await _refreshTokenRepository.RevokeAllForUserAsync(targetId);
             _logger.LogInformation("User soft-deleted: UserId {TargetId} by AdminId {CallerId}", targetId, callerId);
+        }
 
         return _mapper.Map<UserDto>(target);
     }

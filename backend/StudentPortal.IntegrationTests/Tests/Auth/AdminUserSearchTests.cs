@@ -77,7 +77,6 @@ public class AdminUserSearchTests : IntegrationTestBase
             FirstName = target.FirstName,
             LastName = target.LastName,
             Email = target.Email,
-            UserRole = target.Role,
             IsDeleted = true,
         };
         var softDeleteResponse = await admin.PutAsJsonAsync($"/api/User/{target.Id}", softDeleteDto);

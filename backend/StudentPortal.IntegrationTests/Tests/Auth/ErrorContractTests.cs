@@ -66,7 +66,6 @@ public class ErrorContractTests : IntegrationTestBase
             LastName = SeedUsers.Admin.LastName,
             Email = SeedUsers.Admin.Email,
             IndexNumber = SeedUsers.Admin.IndexNumber,
-            UserRole = SeedUsers.Admin.Role,
             IsDeleted = true,
         };
 

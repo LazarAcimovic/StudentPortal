@@ -213,50 +213,17 @@ public class UserServiceTests
             sut.AdminUpdateUserAsync(admin.Id, admin.Id, new AdminUpdateUserDto
             {
                 FirstName = admin.FirstName, LastName = admin.LastName, Email = admin.Email,
-                UserRole = admin.UserRole, IsDeleted = true,
+                IsDeleted = true,
             }));
         await _userRepo.DidNotReceiveWithAnyArgs().UpdateUserAsync(default);
     }
 
     [Fact]
-    public async Task AdminUpdateUserAsync_AdminChangesOwnRole_IsForbidden()
+    public async Task AdminUpdateUserAsync_SoftDeleted_RevokesAllRefreshTokens()
     {
-        // PRD §6: "Admin cannot ... demote himself."
-        var admin = MakeUser(RoleEnum.Admin);
-        _userRepo.GetUserByIdForUpdateAsync(admin.Id).Returns(admin);
-
-        var sut = CreateSut();
-
-        await Assert.ThrowsAsync<ForbiddenAccessException>(() =>
-            sut.AdminUpdateUserAsync(admin.Id, admin.Id, new AdminUpdateUserDto
-            {
-                FirstName = admin.FirstName, LastName = admin.LastName, Email = admin.Email,
-                UserRole = RoleEnum.Professor, IsDeleted = false,
-            }));
-    }
-
-    [Fact]
-    public async Task AdminUpdateUserAsync_DemotingAnotherAdmin_IsForbidden()
-    {
-        // Implementation rule beyond PRD text: an admin cannot demote a fellow admin.
-        var adminA = MakeUser(RoleEnum.Admin);
-        var adminB = MakeUser(RoleEnum.Admin);
-        _userRepo.GetUserByIdForUpdateAsync(adminB.Id).Returns(adminB);
-
-        var sut = CreateSut();
-
-        await Assert.ThrowsAsync<ForbiddenAccessException>(() =>
-            sut.AdminUpdateUserAsync(adminB.Id, adminA.Id, new AdminUpdateUserDto
-            {
-                FirstName = adminB.FirstName, LastName = adminB.LastName, Email = adminB.Email,
-                UserRole = RoleEnum.Student, IsDeleted = false,
-            }));
-    }
-
-    [Fact]
-    public async Task AdminUpdateUserAsync_RoleChanged_RevokesAllRefreshTokens()
-    {
-        // D-043: an authority change signs the user out everywhere.
+        // D-043: soft-deleting a user is an authority change that signs them out everywhere.
+        // (Role change — the other D-043 trigger — was removed per D-048, so IsDeleted is
+        // now the only authority flag an admin update can flip.)
         var admin = MakeUser(RoleEnum.Admin);
         var student = MakeUser(RoleEnum.Student);
         _userRepo.GetUserByIdForUpdateAsync(student.Id).Returns(student);
@@ -266,7 +233,7 @@ public class UserServiceTests
         await sut.AdminUpdateUserAsync(student.Id, admin.Id, new AdminUpdateUserDto
         {
             FirstName = student.FirstName, LastName = student.LastName, Email = student.Email,
-            IndexNumber = student.IndexNumber, UserRole = RoleEnum.Professor, IsDeleted = false,
+            IndexNumber = student.IndexNumber, IsDeleted = true,
         });
 
         await _refreshTokenRepo.Received(1).RevokeAllForUserAsync(student.Id);
@@ -285,7 +252,7 @@ public class UserServiceTests
         await sut.AdminUpdateUserAsync(student.Id, admin.Id, new AdminUpdateUserDto
         {
             FirstName = "Renamed", LastName = student.LastName, Email = student.Email,
-            IndexNumber = student.IndexNumber, UserRole = student.UserRole, IsDeleted = false,
+            IndexNumber = student.IndexNumber, IsDeleted = false,
         });
 
         await _refreshTokenRepo.DidNotReceiveWithAnyArgs().RevokeAllForUserAsync(default);
@@ -306,22 +273,23 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task AdminUpdateUserAsync_PromotingStudentToProfessor_ClearsIndexNumber()
+    public async Task AdminUpdateUserAsync_ProfessorTarget_IndexNumberStaysNull()
     {
-        // PRD §2 implicit: index numbers belong to students only.
-        var student = MakeUser(RoleEnum.Student);
-        _userRepo.GetUserByIdForUpdateAsync(student.Id).Returns(student);
+        // Role is fixed on update (D-048); index numbers belong to students only, so a
+        // professor target has its IndexNumber forced to null regardless of the dto.
+        var professor = MakeUser(RoleEnum.Professor);
+        _userRepo.GetUserByIdForUpdateAsync(professor.Id).Returns(professor);
 
         var sut = CreateSut();
 
-        await sut.AdminUpdateUserAsync(student.Id, Guid.NewGuid(), new AdminUpdateUserDto
+        await sut.AdminUpdateUserAsync(professor.Id, Guid.NewGuid(), new AdminUpdateUserDto
         {
-            FirstName = student.FirstName, LastName = student.LastName, Email = student.Email,
-            UserRole = RoleEnum.Professor, IsDeleted = false, IndexNumber = "ignored",
+            FirstName = professor.FirstName, LastName = professor.LastName, Email = professor.Email,
+            IsDeleted = false, IndexNumber = "ignored",
         });
 
-        Assert.Equal(RoleEnum.Professor, student.UserRole);
-        Assert.Null(student.IndexNumber);
+        Assert.Equal(RoleEnum.Professor, professor.UserRole);
+        Assert.Null(professor.IndexNumber);
     }
 
     [Fact]
@@ -335,7 +303,7 @@ public class UserServiceTests
         await sut.AdminUpdateUserAsync(student.Id, Guid.NewGuid(), new AdminUpdateUserDto
         {
             FirstName = student.FirstName, LastName = student.LastName, Email = student.Email,
-            UserRole = RoleEnum.Student, IsDeleted = false, IndexNumber = "2027/0042",
+            IsDeleted = false, IndexNumber = "2027/0042",
         });
 
         Assert.Equal("2027/0042", student.IndexNumber);
@@ -357,7 +325,7 @@ public class UserServiceTests
             sut.AdminUpdateUserAsync(target.Id, admin.Id, new AdminUpdateUserDto
             {
                 FirstName = target.FirstName, LastName = target.LastName,
-                Email = "taken@uni.edu", UserRole = target.UserRole, IsDeleted = false,
+                Email = "taken@uni.edu", IsDeleted = false,
             }));
         await _userRepo.DidNotReceiveWithAnyArgs().UpdateUserAsync(default);
     }
@@ -375,7 +343,7 @@ public class UserServiceTests
         await sut.AdminUpdateUserAsync(student.Id, admin.Id, new AdminUpdateUserDto
         {
             FirstName = "Janet", LastName = student.LastName,
-            Email = "jane@example.com", UserRole = student.UserRole,
+            Email = "jane@example.com",
             IsDeleted = false, IndexNumber = student.IndexNumber,
         });
 
