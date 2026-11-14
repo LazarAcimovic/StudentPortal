@@ -75,16 +75,18 @@ const StudentsList: React.FC<Props> = ({
           <p className="p-3 text-muted mb-0">No students enrolled in this subject.</p>
         ) : (
           <>
-            <ul className="list-group list-group-flush">
-              {students.map(student => (
-                <StudentItem
-                  key={student.enrollmentId}
-                  student={student}
-                  selectedStudentRow={selectedStudentRow}
-                  onStudentClick={onStudentClick}
-                />
-              ))}
-            </ul>
+            <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+              <ul className="list-group list-group-flush">
+                {students.map(student => (
+                  <StudentItem
+                    key={student.enrollmentId}
+                    student={student}
+                    selectedStudentRow={selectedStudentRow}
+                    onStudentClick={onStudentClick}
+                  />
+                ))}
+              </ul>
+            </div>
             {totalCount >= 1 && (
               <div className="p-2 border-top">
                 <Pagination
